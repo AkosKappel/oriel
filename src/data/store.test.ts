@@ -513,3 +513,57 @@ describe('archive and trash', () => {
     expect(store.items.has(shared)).toBe(true)
   })
 })
+
+describe('import', () => {
+  it('adds exported items with new ids into the owner space, once', async () => {
+    const { parseExport, toJson } = await import('./export')
+    const list = await store.createItem({
+      type: 'list',
+      title: 'Packing',
+      entries: ['Tent', 'Stove'],
+    })
+    const gone = await store.createItem({ type: 'note', title: 'Gone' })
+    await store.trashItem(gone)
+    const file = toJson(store.items.toArray, store.entries.toArray, new Date())
+
+    // Into an empty device with an account, like moving to a new one.
+    await store.deleteItem(list)
+    await store.deleteItem(gone)
+    store.setOwner({ userId: 'user-1', spaceId: 'space-1' })
+    const { items, invalid } = parseExport(file)
+    expect(invalid).toBe(0)
+
+    expect(await store.importItems(items)).toEqual({ added: 1, skipped: 1 })
+    const [imported] = store.items.toArray
+    expect(imported).toMatchObject({
+      title: 'Packing',
+      space_id: 'space-1',
+      created_by: 'user-1',
+    })
+    expect(imported.id).not.toBe(list)
+    const { sortEntries } = await import('./organize')
+    expect(
+      sortEntries(store.entries.toArray).map((entry) => [
+        entry.text,
+        entry.space_id,
+      ]),
+    ).toEqual([
+      ['Tent', 'space-1'],
+      ['Stove', 'space-1'],
+    ])
+
+    expect(await store.importItems(items)).toEqual({ added: 0, skipped: 2 })
+    expect(await countRows('items')).toBe(1)
+  })
+
+  it('refuses a file that is not an Oriel export and skips damaged items', async () => {
+    const { parseExport } = await import('./export')
+    expect(() => parseExport('{"hello": 1}')).toThrow()
+    expect(() => parseExport('not json')).toThrow()
+    const { items, invalid } = parseExport(
+      JSON.stringify({ app: 'oriel', version: 1, items: [{ title: 1 }] }),
+    )
+    expect(items).toEqual([])
+    expect(invalid).toBe(1)
+  })
+})

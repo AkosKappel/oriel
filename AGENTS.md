@@ -63,7 +63,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Spaces and memberships sync to devices (`space`, `space_member` with `member_name` copied at join, so the `user` table never replicates). The client never writes these tables; it calls the server functions and waits for sync.
 - `useSpaces()` (`src/lib/spaces.ts`) gives the user's spaces and role offline; `canEdit` drives read-only screens for viewers.
 - Moving an item between spaces re-inserts it and its entries (`moveItem`), so the server checks edit rights in both spaces.
-- Shared spaces have no owner column: deleting a user does not delete them. Account deletion must remove spaces where the user is the last member (B-06).
+- Shared spaces have no owner column: deleting a user does not delete them. Better Auth's `deleteUser.beforeDelete` calls `releaseSpaces`, which deletes spaces where the user is the only member and refuses while the user is the only owner of a space others use.
 
 ## Offline
 

@@ -4,6 +4,7 @@ import {
   powerSyncCollectionOptions,
 } from '@tanstack/powersync-db-collection'
 import { createCollection, createTransaction } from '@tanstack/react-db'
+import type { ImportedItem } from './export'
 import {
   appSchema,
   bodySchema,
@@ -353,6 +354,66 @@ export function createStore(database: CommonPowerSyncDatabase) {
         items.delete(id)
       })
       return { items: [item], entries: removed }
+    },
+
+    /**
+     * Adds items from an export to the owner's space (or this device without an account), with
+     * new ids: ids from another account would clash with rows the server already has. Items that
+     * are already here (same type, title and creation time) and trashed ones are skipped, so
+     * importing the same file twice changes nothing. One transaction: all or nothing.
+     */
+    async importItems(imported: ImportedItem[]) {
+      await items.preload()
+      const key = (item: Pick<Item, 'type' | 'title' | 'created_at'>) =>
+        `${item.type}\n${item.title}\n${item.created_at}`
+      const present = new Set(items.toArray.map(key))
+      const spaceId = owner?.spaceId ?? null
+      const newItems: Item[] = []
+      const newEntries: Entry[] = []
+
+      for (const item of imported) {
+        const title = titleSchema.safeParse(item.title)
+        const body = bodySchema.safeParse(item.body)
+        if (item.deleted_at || !title.success || !body.success) continue
+        if (present.has(key(item))) continue
+        present.add(key(item))
+        const id = crypto.randomUUID()
+        const { entries: itemEntries, ...fields } = item
+        newItems.push({
+          ...fields,
+          id,
+          space_id: spaceId,
+          created_by: owner?.userId ?? null,
+          title: title.data,
+          body: body.data,
+          completed_by: null,
+          deleted_at: null,
+          deleted_by: null,
+        })
+        for (const entry of itemEntries) {
+          const text = entryTextSchema.safeParse(entry.text)
+          if (!text.success) continue
+          newEntries.push({
+            ...entry,
+            id: crypto.randomUUID(),
+            item_id: id,
+            space_id: spaceId,
+            text: text.data,
+            completed_by: null,
+          })
+        }
+      }
+
+      if (newItems.length > 0) {
+        await inTransaction(() => {
+          items.insert(newItems)
+          if (newEntries.length > 0) entries.insert(newEntries)
+        })
+      }
+      return {
+        added: newItems.length,
+        skipped: imported.length - newItems.length,
+      }
     },
 
     /** Puts deleted rows back with their original ids, for Undo. */

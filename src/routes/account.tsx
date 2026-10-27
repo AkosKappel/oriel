@@ -1,15 +1,22 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
   DialogTrigger,
+  Form,
   Heading,
   Modal,
   ModalOverlay,
 } from 'react-aria-components'
 import { SubPage } from '#/components/sub-page'
-import { pendingChanges, signOut, useAccount } from '#/lib/account'
+import { TextField } from '#/components/ui/text-field'
+import {
+  deleteAccount,
+  pendingChanges,
+  signOut,
+  useAccount,
+} from '#/lib/account'
 import { useOnline } from '#/lib/online'
 import { describeSync, useSyncStatus } from '#/lib/sync-status'
 
@@ -93,7 +100,10 @@ function AccountPage() {
         Spaces and sharing
       </Link>
 
-      <SignOut pending={pending ?? 0} />
+      <div className="flex flex-col">
+        <SignOut pending={pending ?? 0} />
+        <DeleteAccount />
+      </div>
     </SubPage>
   )
 }
@@ -165,6 +175,113 @@ function SignOut({ pending }: { pending: number }) {
                   </Button>
                 </div>
               </>
+            )}
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
+    </DialogTrigger>
+  )
+}
+
+function DeleteAccount() {
+  const online = useOnline()
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function confirm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const password = String(new FormData(event.currentTarget).get('password'))
+    setError(null)
+    setBusy(true)
+    try {
+      const refusal = await deleteAccount(password)
+      if (refusal) {
+        setError(refusal)
+        return
+      }
+      window.location.assign('/')
+    } catch (caught) {
+      console.error('Account deletion failed', caught)
+      setError(
+        'Could not delete the account. Check the connection and try again.',
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <DialogTrigger onOpenChange={() => setError(null)}>
+      <Button
+        className={`${quietButton} -ml-4 w-fit text-muted-foreground hover:text-destructive`}
+      >
+        Delete account
+      </Button>
+      <ModalOverlay
+        isDismissable
+        className="fixed inset-0 z-50 grid place-items-end bg-foreground/20 p-4 sm:place-items-center"
+      >
+        <Modal className="w-full max-w-sm rounded-md bg-background p-6 shadow-lg">
+          <Dialog
+            role="alertdialog"
+            className="flex flex-col gap-3 outline-none"
+          >
+            {({ close }) => (
+              <Form
+                onSubmit={(event) => void confirm(event)}
+                className="flex flex-col gap-3"
+              >
+                <Heading slot="title" className="font-serif text-2xl">
+                  Delete your account?
+                </Heading>
+                <p className="text-sm text-muted-foreground">
+                  Your account, your personal space and every shared space only
+                  you use are deleted for good, on the server and on this
+                  device. Shared spaces others use stay with them. To keep a
+                  copy, export it in{' '}
+                  <Link
+                    to="/settings"
+                    className="text-foreground underline underline-offset-4"
+                  >
+                    Settings
+                  </Link>{' '}
+                  first.
+                </p>
+                <TextField
+                  label="Password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  isRequired
+                />
+                {error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
+                {!online && (
+                  <p className="text-sm text-muted-foreground">
+                    Deleting an account needs a connection.
+                  </p>
+                )}
+                <div className="mt-2 flex justify-end gap-2">
+                  <Button
+                    onPress={close}
+                    autoFocus
+                    className={`${quietButton} text-muted-foreground hover:text-foreground`}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    isPending={busy}
+                    isDisabled={!online}
+                    className={`${quietButton} bg-destructive text-background data-disabled:opacity-60 data-pending:opacity-60`}
+                  >
+                    Delete for good
+                  </Button>
+                </div>
+              </Form>
             )}
           </Dialog>
         </Modal>

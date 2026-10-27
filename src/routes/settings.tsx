@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { type ReactNode, useEffect, useId, useState } from 'react'
-import { Button } from 'react-aria-components'
+import { Button, FileTrigger } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { ChoiceGroup } from '#/components/ui/choice-group'
 import { store } from '#/data/client'
-import { download, toJson, toMarkdown } from '#/data/export'
+import { download, parseExport, toJson, toMarkdown } from '#/data/export'
 import { useAccount } from '#/lib/account'
 import { setTheme, type Theme, useTheme } from '#/lib/theme'
 
@@ -52,10 +52,21 @@ function SettingsPage() {
           >
             Export as Markdown
           </Button>
+          <FileTrigger
+            acceptedFileTypes={['application/json', '.json']}
+            onSelect={(files) => {
+              const file = files?.[0]
+              if (file) void importFrom(file)
+            }}
+          >
+            <Button className={textButton}>Import a JSON export</Button>
+          </FileTrigger>
         </div>
         <p className="text-sm text-muted-foreground">
-          Everything on this device, including shared spaces. JSON keeps every
-          detail; Markdown opens in any notes app.
+          Exports hold everything on this device, including shared spaces. JSON
+          keeps every detail and can be imported again; Markdown opens in any
+          notes app. Imported items join your own space, and items already here
+          are skipped.
         </p>
       </Section>
 
@@ -111,6 +122,29 @@ async function exportAs(format: 'json' | 'markdown') {
   } catch (error) {
     console.error('Export failed', error)
     toast('Could not export. Try again.')
+  }
+}
+
+async function importFrom(file: File) {
+  let parsed: ReturnType<typeof parseExport>
+  try {
+    parsed = parseExport(await file.text())
+  } catch {
+    toast('That file is not an Oriel JSON export.')
+    return
+  }
+  try {
+    const { added, skipped } = await store.importItems(parsed.items)
+    const notes = [
+      skipped > 0 && `${skipped} already here or in the trash`,
+      parsed.invalid > 0 && `${parsed.invalid} could not be read`,
+    ].filter(Boolean)
+    toast(
+      `Imported ${added} ${added === 1 ? 'item' : 'items'}${notes.length > 0 ? ` (${notes.join(', ')})` : ''}.`,
+    )
+  } catch (error) {
+    console.error('Import failed', error)
+    toast('Could not import. Nothing was changed.')
   }
 }
 

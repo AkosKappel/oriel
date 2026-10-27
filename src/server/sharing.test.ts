@@ -164,6 +164,29 @@ describe.skipIf(!process.env.DATABASE_URL)('sharing', async () => {
     expect((await roleOf(family, ben))?.role).toBe('owner')
   })
 
+  it('before an account is deleted, removes spaces nobody else uses and keeps an owner on the rest', async () => {
+    const anna = await newUser('Anna')
+    const ben = await newUser('Ben')
+    const solo = await newSpace(anna, 'Just me')
+    const family = await newSpace(anna, 'Family')
+    await sharing.acceptInvite(
+      ben,
+      await sharing.createInvite(anna, family, 'editor'),
+    )
+    const exists = async (id: string) =>
+      (await db.select().from(space).where(eq(space.id, id))).length === 1
+
+    await expect(sharing.releaseSpaces(anna)).rejects.toThrow(
+      'Family needs another owner first',
+    )
+    expect(await exists(solo)).toBe(true)
+
+    await sharing.setMemberRole(anna, family, ben, 'owner')
+    await sharing.releaseSpaces(anna)
+    expect(await exists(solo)).toBe(false)
+    expect(await exists(family)).toBe(true)
+  })
+
   it('keeps personal spaces private', async () => {
     const anna = await newUser('Anna')
     const personal = await ensurePersonalSpace(anna)

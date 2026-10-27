@@ -128,3 +128,15 @@ export async function signOut() {
   write(null)
   await database.disconnectAndClear()
 }
+
+/**
+ * Deletes the account on the server, then its data on this device. Returns a message the user
+ * should read when the server refuses (a wrong password, a space that still needs an owner).
+ */
+export async function deleteAccount(password: string) {
+  const { error } = await authClient.deleteUser({ password })
+  if (error) return error.message ?? 'Could not delete the account. Try again.'
+  write(null)
+  await database.disconnectAndClear()
+  return null
+}

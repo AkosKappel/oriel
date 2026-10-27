@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { and, count, eq, gt, isNotNull, isNull } from 'drizzle-orm'
+import { and, count, eq, gt, inArray, isNotNull, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '#/server/db'
 import { invite, space, spaceMember, user } from '#/server/db/schema'
@@ -314,5 +314,48 @@ export async function removeMember(
       .where(
         and(eq(spaceMember.spaceId, spaceId), eq(spaceMember.userId, memberId)),
       )
+  })
+}
+
+/**
+ * Runs before an account is deleted. Shared spaces have no owner column, so the user cascade does
+ * not remove them: spaces where the user is the only member are deleted here. A space the user
+ * is the only owner of while others still use it is not handed over silently; the deletion is
+ * refused until someone else is made owner (the same rule as leaving).
+ */
+export async function releaseSpaces(userId: string) {
+  await db.transaction(async (tx) => {
+    const memberships = await tx
+      .select({
+        spaceId: spaceMember.spaceId,
+        role: spaceMember.role,
+        name: space.name,
+      })
+      .from(spaceMember)
+      .innerJoin(space, eq(space.id, spaceMember.spaceId))
+      .where(and(eq(spaceMember.userId, userId), isNull(space.personalOwnerId)))
+
+    const alone: string[] = []
+    const needOwner: string[] = []
+    for (const membership of memberships) {
+      const [{ members }] = await tx
+        .select({ members: count() })
+        .from(spaceMember)
+        .where(eq(spaceMember.spaceId, membership.spaceId))
+      if (members === 1) alone.push(membership.spaceId)
+      else if (
+        membership.role === 'owner' &&
+        (await ownerCount(tx, membership.spaceId)) === 1
+      ) {
+        needOwner.push(membership.name)
+      }
+    }
+
+    if (needOwner.length > 0) {
+      throw new SharingError(
+        `${needOwner.join(', ')} ${needOwner.length === 1 ? 'needs' : 'need'} another owner first. Make someone owner in Spaces, or delete the space.`,
+      )
+    }
+    if (alone.length > 0) await tx.delete(space).where(inArray(space.id, alone))
   })
 }

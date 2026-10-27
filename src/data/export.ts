@@ -1,5 +1,6 @@
+import { z } from 'zod'
 import { organizeItems, sortEntries } from './organize'
-import type { Entry, Item } from './schema'
+import { type Entry, entrySchema, type Item, itemSchema } from './schema'
 
 function entriesByItem(entries: Entry[]) {
   const byItem = new Map<string, Entry[]>()
@@ -61,4 +62,36 @@ export function download(filename: string, content: string, type: string) {
   link.click()
   // Some browsers start the download after this tick; revoking at once can cancel it.
   setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
+// Exports written before archive and trash existed have no such fields.
+const importedItemSchema = itemSchema.extend({
+  archived_at: z.string().nullish().default(null),
+  deleted_at: z.string().nullish().default(null),
+  deleted_by: z.string().nullish().default(null),
+  entries: z.array(entrySchema).default([]),
+})
+
+export type ImportedItem = z.output<typeof importedItemSchema>
+
+const exportFileSchema = z.object({
+  app: z.literal('oriel'),
+  version: z.literal(1),
+  items: z.array(z.unknown()),
+})
+
+/**
+ * Reads a JSON export. Throws when the file is not an Oriel export at all; items that do not
+ * match the format are left out and counted, so one damaged item does not lose the rest.
+ */
+export function parseExport(text: string) {
+  const file = exportFileSchema.parse(JSON.parse(text))
+  const items: ImportedItem[] = []
+  let invalid = 0
+  for (const raw of file.items) {
+    const result = importedItemSchema.safeParse(raw)
+    if (result.success) items.push(result.data)
+    else invalid += 1
+  }
+  return { items, invalid }
 }
