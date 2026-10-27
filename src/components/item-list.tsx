@@ -1,10 +1,20 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { Button } from 'react-aria-components'
+import { toast } from 'sonner'
 import { Checkbox } from '#/components/ui/checkbox'
-import { countEntries, organizeItems, searchItems } from '#/data/organize'
+import {
+  countEntries,
+  itemsInView,
+  organizeItems,
+  searchItems,
+  trashDays,
+  type View,
+} from '#/data/organize'
 import { type Item, type ItemType, priorities } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { formatShortDate } from '#/lib/dates'
 import { canEdit, type SpaceView } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
 
@@ -22,6 +32,7 @@ export function ItemList({
   type,
   spaceId,
   query = '',
+  view,
   spaces,
 }: {
   store: Store
@@ -30,6 +41,8 @@ export function ItemList({
   spaceId?: string
   /** Show only items that contain these words. */
   query?: string
+  /** The archive or the trash instead of home. */
+  view?: View
   spaces: Map<string, SpaceView>
 }) {
   const { data: items, isLoading } = useLiveQuery({
@@ -41,15 +54,31 @@ export function ItemList({
 
   if (isLoading) return null
 
-  const { pinned, open, completed } = organizeItems(
-    searchItems(
+  const shown = searchItems(
+    itemsInView(
       spaceId ? items.filter((item) => item.space_id === spaceId) : items,
-      entries,
-      query,
+      view,
     ),
-    type,
+    entries,
+    query,
   )
   const counts = countEntries(entries)
+
+  if (view) {
+    return (
+      <PastItems
+        view={view}
+        store={store}
+        items={type ? shown.filter((item) => item.type === type) : shown}
+        query={query}
+        counts={counts}
+        spaces={spaces}
+        showSpace={!spaceId}
+      />
+    )
+  }
+
+  const { pinned, open, completed } = organizeItems(shown, type)
 
   if (pinned.length + open.length + completed.length === 0) {
     if (query.trim()) {
@@ -114,6 +143,75 @@ export function ItemList({
   )
 }
 
+const viewTitles: Record<View, string> = { archive: 'Archive', trash: 'Trash' }
+
+/** The archive and the trash: one list, most recent first, each row saying when it went there. */
+function PastItems({
+  view,
+  items,
+  query,
+  ...context
+}: RowContext & { view: View; items: Item[]; query: string }) {
+  async function emptyTrash() {
+    const snapshot = await context.store.deleteTrashedBefore(
+      new Date().toISOString(),
+    )
+    const count = snapshot.items.length
+    toast(
+      count === 1
+        ? 'Deleted 1 item for good'
+        : `Deleted ${count} items for good`,
+      {
+        action: {
+          label: 'Undo',
+          onClick: () => void context.store.restore(snapshot),
+        },
+      },
+    )
+  }
+
+  return (
+    <section aria-labelledby="past-items" className="flex flex-col gap-1">
+      <div className="flex min-h-11 items-center justify-between">
+        <h2 id="past-items" className="font-serif text-2xl">
+          {viewTitles[view]}
+        </h2>
+        <Link
+          to="/"
+          search={(previous) => ({ ...previous, view: undefined })}
+          className="-mr-2 rounded-sm px-2 py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
+        >
+          Close
+        </Link>
+      </div>
+      {view === 'trash' && (
+        <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
+          <p>Deleted items stay here for {trashDays} days.</p>
+          {items.length > 0 && !query.trim() && (
+            <Button
+              onPress={() => void emptyTrash()}
+              className="-mr-2 shrink-0 rounded-sm px-2 py-2 hover:text-destructive data-focus-visible:outline-2"
+            >
+              Empty trash
+            </Button>
+          )}
+        </div>
+      )}
+      {items.length === 0 ? (
+        <p className="pt-6 text-sm text-muted-foreground" role="status">
+          {query.trim()
+            ? `Nothing here mentions “${query.trim()}”.`
+            : view === 'trash'
+              ? 'The trash is empty.'
+              : 'Archive finished lists and old notes to keep them out of the way.'}
+        </p>
+      ) : (
+        <Rows items={items} {...context} />
+      )}
+    </section>
+  )
+}
+
 function Section({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <section aria-label={title ?? 'Notes, lists and tasks'}>
@@ -155,6 +253,11 @@ function ItemRow({
   const done = item.completed_at !== null
   const space = item.space_id ? spaces.get(item.space_id) : undefined
   const detail = [
+    item.deleted_at
+      ? `Deleted ${formatShortDate(item.deleted_at)}`
+      : item.archived_at
+        ? `Archived ${formatShortDate(item.archived_at)}`
+        : null,
     showSpace && space && !space.personal ? space.name : null,
     describe(item, counts),
   ]
@@ -167,7 +270,9 @@ function ItemRow({
         <Checkbox
           className="absolute top-0.5 -left-[2.375rem]"
           isSelected={done}
-          isDisabled={space && !canEdit(space.role)}
+          isDisabled={
+            item.deleted_at !== null || (space && !canEdit(space.role))
+          }
           onChange={(selected) =>
             void store.setItemCompleted(item.id, selected)
           }

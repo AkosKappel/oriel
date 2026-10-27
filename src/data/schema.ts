@@ -18,6 +18,9 @@ const items = new Table(
     completed_by: column.text,
     pinned_at: column.text,
     priority: column.integer,
+    archived_at: column.text,
+    deleted_at: column.text,
+    deleted_by: column.text,
     created_at: column.text,
     updated_at: column.text,
   },
@@ -94,6 +97,10 @@ export const itemSchema = z.object({
   pinned_at: z.string().nullable(),
   // Rows written before the column existed have no value.
   priority: prioritySchema.nullable().transform((value) => value ?? 0),
+  archived_at: z.string().nullable(),
+  // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
+  deleted_at: z.string().nullable(),
+  deleted_by: z.string().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 })

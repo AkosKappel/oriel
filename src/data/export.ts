@@ -28,10 +28,15 @@ export function toJson(items: Item[], entries: Entry[], exportedAt: Date) {
   )
 }
 
-/** A readable copy for any notes app: one heading per item, list entries as Markdown checkboxes. */
+/**
+ * A readable copy for any notes app: one heading per item, list entries as Markdown checkboxes.
+ * The trash is left out; archived items are in.
+ */
 export function toMarkdown(items: Item[], entries: Entry[]) {
   const byItem = entriesByItem(entries)
-  const { pinned, open, completed } = organizeItems(items)
+  const { pinned, open, completed } = organizeItems(
+    items.filter((item) => !item.deleted_at),
+  )
   return `${[...pinned, ...open, ...completed]
     .map((item) => {
       const done = item.completed_at ? 'x' : ' '

@@ -31,6 +31,30 @@ export function organizeItems(items: Item[], type?: ItemType): OrganizedItems {
   return { pinned, open, completed }
 }
 
+export const views = ['archive', 'trash'] as const
+export type View = (typeof views)[number]
+
+/** Days an item stays in the trash before devices delete it for good. */
+export const trashDays = 30
+
+/**
+ * The items one view shows: home has neither archived nor trashed items, the archive the archived
+ * ones that are not in the trash, the trash everything deleted, most recent first.
+ */
+export function itemsInView(items: Item[], view?: View) {
+  if (view === 'trash') {
+    return items
+      .filter((item) => item.deleted_at)
+      .sort((a, b) => newestFirst(a.deleted_at, b.deleted_at))
+  }
+  if (view === 'archive') {
+    return items
+      .filter((item) => item.archived_at && !item.deleted_at)
+      .sort((a, b) => newestFirst(a.archived_at, b.archived_at))
+  }
+  return items.filter((item) => !item.archived_at && !item.deleted_at)
+}
+
 /** Open entries in list order, then checked ones in the order they were checked. */
 export function sortEntries(entries: Entry[]) {
   return [...entries].sort((a, b) => {

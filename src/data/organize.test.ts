@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   countEntries,
+  itemsInView,
   organizeItems,
   searchItems,
   sortEntries,
@@ -18,6 +19,9 @@ function item(overrides: Partial<Item> & Pick<Item, 'id'>): Item {
     completed_by: null,
     pinned_at: null,
     priority: 0,
+    archived_at: null,
+    deleted_at: null,
+    deleted_by: null,
     created_at: '2026-10-01T00:00:00Z',
     updated_at: '2026-10-01T00:00:00Z',
     ...overrides,
@@ -162,5 +166,33 @@ describe('searchItems', () => {
   it('needs every word, in any order', () => {
     expect(ids(searchItems(items, entries, 'street main'))).toEqual(['cafe'])
     expect(ids(searchItems(items, entries, 'main vet'))).toEqual([])
+  })
+})
+
+describe('itemsInView', () => {
+  const items = [
+    item({ id: 'open' }),
+    item({ id: 'archived', archived_at: '2026-10-02T00:00:00Z' }),
+    item({ id: 'trashed', deleted_at: '2026-10-02T00:00:00Z' }),
+    item({
+      id: 'archived-then-trashed',
+      archived_at: '2026-10-01T00:00:00Z',
+      deleted_at: '2026-10-03T00:00:00Z',
+    }),
+  ]
+
+  it('keeps archived and trashed items off home', () => {
+    expect(ids(itemsInView(items))).toEqual(['open'])
+  })
+
+  it('shows the archive without what went to the trash', () => {
+    expect(ids(itemsInView(items, 'archive'))).toEqual(['archived'])
+  })
+
+  it('shows everything trashed, most recent first', () => {
+    expect(ids(itemsInView(items, 'trash'))).toEqual([
+      'archived-then-trashed',
+      'trashed',
+    ])
   })
 })

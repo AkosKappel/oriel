@@ -13,6 +13,9 @@ const item = (overrides: Partial<Item> & Pick<Item, 'id' | 'type'>): Item => ({
   completed_by: null,
   pinned_at: null,
   priority: 0,
+  archived_at: null,
+  deleted_at: null,
+  deleted_by: null,
   created_at: timestamp,
   updated_at: timestamp,
   ...overrides,
@@ -39,6 +42,7 @@ const items = [
     completed_at: timestamp,
   }),
   item({ id: 'idea', type: 'note', title: 'Idea', body: 'Paint the door\n' }),
+  item({ id: 'old', type: 'note', title: 'Torn out', deleted_at: timestamp }),
 ]
 const entries = [
   entry({ id: 'eggs', text: 'Eggs', position: 2 }),
@@ -74,6 +78,7 @@ describe('toMarkdown', () => {
     )
     expect(markdown).toContain('## Idea\n\nPaint the door')
     expect(markdown).toContain('## [x] Call the vet')
+    expect(markdown).not.toContain('Torn out')
     expect(markdown.endsWith('\n')).toBe(true)
   })
 })

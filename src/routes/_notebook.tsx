@@ -13,6 +13,7 @@ import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
 import { SpaceFilter, TypeFilter } from '#/components/type-filter'
 import { database, store } from '#/data/client'
+import { trashDays, views } from '#/data/organize'
 import { itemTypes } from '#/data/schema'
 import { formatDay, greeting } from '#/lib/dates'
 import { canEdit, useSpaces } from '#/lib/spaces'
@@ -22,6 +23,7 @@ const searchSchema = z.object({
   type: z.enum(itemTypes).optional().catch(undefined),
   space: z.uuid().optional().catch(undefined),
   q: z.string().max(200).optional().catch(undefined),
+  view: z.enum(views).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_notebook')({
@@ -37,10 +39,11 @@ export const Route = createFileRoute('/_notebook')({
  */
 function Notebook() {
   const storageFailed = useStorageFailed()
-  const { type, space: spaceId, q } = Route.useSearch()
+  const { type, space: spaceId, q, view } = Route.useSearch()
   const openItemId = useParams({ strict: false }).itemId
   const itemOpen = openItemId !== undefined
   useEscapeToClose(openItemId)
+  usePurgeOldTrash()
   const { spaces, byId } = useSpaces()
   const space = spaceId ? byId.get(spaceId) : undefined
   const now = new Date()
@@ -93,10 +96,32 @@ function Notebook() {
             type={type}
             spaceId={spaceId}
             query={q}
+            view={view}
             spaces={byId}
           />
+          {!view && (
+            <nav
+              aria-label="Put away"
+              className="mt-auto flex gap-x-4 pt-10 text-sm"
+            >
+              <Link
+                to="/"
+                search={(previous) => ({ ...previous, view: 'archive' })}
+                className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
+              >
+                Archive
+              </Link>
+              <Link
+                to="/"
+                search={(previous) => ({ ...previous, view: 'trash' })}
+                className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
+              >
+                Trash
+              </Link>
+            </nav>
+          )}
         </div>
-        {space && !canEdit(space.role) ? (
+        {view ? null : space && !canEdit(space.role) ? (
           <p className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground">
             You can view {space.name}; only its editors can add to it.
           </p>
@@ -139,6 +164,16 @@ function useEscapeToClose(itemId: string | undefined) {
     document.addEventListener('keydown', close)
     return () => document.removeEventListener('keydown', close)
   }, [itemId, navigate])
+}
+
+/** Deletes what has been in the trash for longer than it promises to keep it, once per visit. */
+function usePurgeOldTrash() {
+  useEffect(() => {
+    const cutoff = new Date(Date.now() - trashDays * 86_400_000).toISOString()
+    store.deleteTrashedBefore(cutoff).catch((error: unknown) => {
+      console.error('Could not empty old trash', error)
+    })
+  }, [])
 }
 
 /** True when the browser refuses the local database, which otherwise shows as an empty page. */

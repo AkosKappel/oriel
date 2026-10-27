@@ -441,3 +441,75 @@ describe('persistence', () => {
     expect(batch?.crud.map((entry) => entry.table)).toEqual(['items'])
   })
 })
+
+describe('archive and trash', () => {
+  it('archives, trashes and restores an item without touching its entries', async () => {
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk'],
+    })
+
+    await store.setItemArchived(id, true)
+    expect(store.items.get(id)?.archived_at).not.toBeNull()
+
+    await store.trashItem(id)
+    expect(store.items.get(id)?.deleted_at).not.toBeNull()
+    expect(await countRows('entries')).toBe(1)
+
+    await store.restoreItem(id)
+    await store.setItemArchived(id, false)
+    expect(store.items.get(id)).toMatchObject({
+      archived_at: null,
+      deleted_at: null,
+      deleted_by: null,
+    })
+  })
+
+  it('deletes for good only what was trashed before the cutoff, with its entries', async () => {
+    const old = await store.createItem({
+      type: 'list',
+      title: 'Old list',
+      entries: ['Milk', 'Eggs'],
+    })
+    const recent = await store.createItem({ type: 'note', title: 'Recent' })
+    const kept = await store.createItem({ type: 'note', title: 'Kept' })
+    await store.trashItem(old)
+    const cutoff = new Date().toISOString()
+    await new Promise((resolve) => setTimeout(resolve, 5))
+    await store.trashItem(recent)
+
+    const snapshot = await store.deleteTrashedBefore(cutoff)
+    expect(snapshot.items.map((item) => item.id)).toEqual([old])
+    expect(store.items.has(old)).toBe(false)
+    expect(store.items.has(recent)).toBe(true)
+    expect(store.items.has(kept)).toBe(true)
+    expect(await countRows('entries')).toBe(0)
+
+    await store.restore(snapshot)
+    expect(store.items.get(old)?.deleted_at).not.toBeNull()
+    expect(await countRows('entries')).toBe(2)
+  })
+
+  it("leaves the trash of spaces the owner can only view to the space's editors", async () => {
+    const owner = { userId: 'user-1', spaceId: 'space-1' }
+    store.setOwner(owner)
+    // Memberships arrive by sync; written directly here as sync would.
+    await database.execute(
+      `INSERT INTO space_member (id, space_id, user_id, role, member_name)
+       VALUES ('a', 'space-1', 'user-1', 'owner', 'Me'), ('b', 'shared', 'user-1', 'viewer', 'Me')`,
+    )
+    const mine = await store.createItem({ type: 'note', title: 'Mine' })
+    const shared = await store.createItem(
+      { type: 'note', title: 'Shared' },
+      { spaceId: 'shared' },
+    )
+    await store.trashItem(mine)
+    await store.trashItem(shared)
+
+    const { items } = await store.deleteTrashedBefore(new Date().toISOString())
+    expect(items.map((item) => item.id)).toEqual([mine])
+    expect(store.items.has(mine)).toBe(false)
+    expect(store.items.has(shared)).toBe(true)
+  })
+})

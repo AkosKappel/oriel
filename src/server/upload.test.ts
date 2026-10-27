@@ -148,6 +148,58 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     expect(await findItem(op.id)).toBeUndefined()
   })
 
+  it('archives and trashes items, recording the uploader as whoever deleted it', async () => {
+    const note = put('items', itemRow(aliceSpace, { type: 'note' }))
+    await applyUpload(alice, [note])
+    const patch = (data: Record<string, unknown>): Operation => ({
+      op: 'PATCH',
+      table: 'items',
+      id: note.id,
+      data,
+    })
+
+    await applyUpload(alice, [patch({ archived_at: now })])
+    expect(await findItem(note.id)).toMatchObject({
+      archivedAt: new Date(now),
+      deletedAt: null,
+    })
+
+    await applyUpload(alice, [patch({ deleted_at: now, deleted_by: bob })])
+    expect(await findItem(note.id)).toMatchObject({
+      deletedAt: new Date(now),
+      deletedBy: alice,
+    })
+
+    await applyUpload(alice, [patch({ deleted_at: null })])
+    expect(await findItem(note.id)).toMatchObject({
+      deletedAt: null,
+      deletedBy: null,
+    })
+  })
+
+  it('does not let a viewer move a shared item to the trash', async () => {
+    const note = put('items', itemRow(bobSpace, { type: 'note' }))
+    await applyUpload(bob, [note])
+    await db.insert(spaceMember).values({
+      spaceId: bobSpace,
+      userId: alice,
+      role: 'viewer',
+      memberName: 'Alice',
+    })
+
+    const result = await applyUpload(alice, [
+      { op: 'PATCH', table: 'items', id: note.id, data: { deleted_at: now } },
+    ])
+
+    expect(result.rejected[0]?.reason).toBe('forbidden')
+    expect((await findItem(note.id)).deletedAt).toBeNull()
+    await db
+      .delete(spaceMember)
+      .where(
+        and(eq(spaceMember.spaceId, bobSpace), eq(spaceMember.userId, alice)),
+      )
+  })
+
   it('does not let a viewer change a shared space', async () => {
     await db.insert(spaceMember).values({
       spaceId: bobSpace,

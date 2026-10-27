@@ -224,6 +224,9 @@ export function createStore(database: CommonPowerSyncDatabase) {
           completed_by: null,
           pinned_at: null,
           priority: 0,
+          archived_at: null,
+          deleted_at: null,
+          deleted_by: null,
           created_at: timestamp,
           updated_at: timestamp,
         })
@@ -273,9 +276,72 @@ export function createStore(database: CommonPowerSyncDatabase) {
       }).isPersisted.promise
     },
 
+    async setItemArchived(id: string, archived: boolean) {
+      const timestamp = now()
+      await items.update(id, (draft) => {
+        draft.archived_at = archived ? timestamp : null
+        draft.updated_at = timestamp
+      }).isPersisted.promise
+    },
+
+    /** Moves an item to the trash, on every device; its entries stay with it. */
+    async trashItem(id: string) {
+      const timestamp = now()
+      await items.update(id, (draft) => {
+        draft.deleted_at = timestamp
+        draft.deleted_by = owner?.userId ?? null
+        draft.updated_at = timestamp
+      }).isPersisted.promise
+    },
+
+    /** Takes an item out of the trash, for Undo and the trash view. */
+    async restoreItem(id: string) {
+      await items.update(id, (draft) => {
+        draft.deleted_at = null
+        draft.deleted_by = null
+        draft.updated_at = now()
+      }).isPersisted.promise
+    },
+
     /**
-     * Deletes the item and its entries in one SQLite transaction, so no entry is left orphaned.
-     * Returns what was deleted, for `restore`.
+     * Deletes for good what went to the trash before `cutoff` (ISO time), with entries. Returns
+     * what was deleted, for `restore`. Only items this device may delete: its own, or in a space where the
+     * owner edits; the server refuses the rest anyway, and some editor's device will do them.
+     */
+    async deleteTrashedBefore(cutoff: string): Promise<Snapshot> {
+      await Promise.all([items.preload(), entries.preload(), members.preload()])
+      const editable = new Set(
+        members.toArray
+          .filter(
+            (member) =>
+              member.user_id === owner?.userId && member.role !== 'viewer',
+          )
+          .map((member) => member.space_id),
+      )
+      const doomed = items.toArray.filter(
+        (item) =>
+          item.deleted_at !== null &&
+          item.deleted_at <= cutoff &&
+          (item.space_id === null || editable.has(item.space_id)),
+      )
+      const ids = new Set(doomed.map((item) => item.id))
+      const doomedEntries = entries.toArray.filter((entry) =>
+        ids.has(entry.item_id),
+      )
+      if (doomed.length > 0) {
+        await inTransaction(() => {
+          if (doomedEntries.length > 0) {
+            entries.delete(doomedEntries.map((entry) => entry.id))
+          }
+          items.delete([...ids])
+        })
+      }
+      return { items: doomed, entries: doomedEntries }
+    },
+
+    /**
+     * Deletes the item and its entries for good, in one SQLite transaction, so no entry is left
+     * orphaned. Returns what was deleted, for `restore`.
      */
     async deleteItem(id: string): Promise<Snapshot> {
       await Promise.all([items.preload(), entries.preload()])

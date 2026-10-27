@@ -48,6 +48,8 @@ const itemFields = z.object({
   completed_at: nullableDate,
   pinned_at: nullableDate,
   priority: prioritySchema,
+  archived_at: nullableDate,
+  deleted_at: nullableDate,
   created_at: date,
   updated_at: date,
 })
@@ -58,6 +60,8 @@ const itemPut = itemFields.extend({
   completed_at: nullableDate.default(null),
   pinned_at: nullableDate.default(null),
   priority: prioritySchema.default(0),
+  archived_at: nullableDate.default(null),
+  deleted_at: nullableDate.default(null),
 })
 
 const entryFields = z.object({
@@ -79,10 +83,11 @@ const entryPut = entryFields.extend({
 // (unknown keys are dropped); the client re-sends a moved row as a DELETE and a PUT.
 const itemPatch = itemFields.partial()
 
-// Who checked a row is the uploader, never a value from the client; undefined (completion not in
-// this change) leaves it as it is. A moved row (DELETE plus PUT) is credited to whoever moved it.
-const checkedBy = (completedAt: Date | null | undefined, userId: string) =>
-  completedAt === undefined ? undefined : completedAt ? userId : null
+// Who checked or deleted a row is the uploader, never a value from the client; undefined (the
+// timestamp is not in this change) leaves it as it is. A moved row (DELETE plus PUT) is credited
+// to whoever moved it.
+const markedBy = (at: Date | null | undefined, userId: string) =>
+  at === undefined ? undefined : at ? userId : null
 const entryPatch = entryFields.partial()
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -191,9 +196,12 @@ async function applyOperation(
         title: row.title,
         body: row.body,
         completedAt: row.completed_at,
-        completedBy: checkedBy(row.completed_at, userId),
+        completedBy: markedBy(row.completed_at, userId),
         pinnedAt: row.pinned_at,
         priority: row.priority,
+        archivedAt: row.archived_at,
+        deletedAt: row.deleted_at,
+        deletedBy: markedBy(row.deleted_at, userId),
         createdAt: row.created_at,
         updatedAt: row.updated_at,
       }
@@ -218,9 +226,12 @@ async function applyOperation(
       title: patch.title,
       body: patch.body,
       completedAt: patch.completed_at,
-      completedBy: checkedBy(patch.completed_at, userId),
+      completedBy: markedBy(patch.completed_at, userId),
       pinnedAt: patch.pinned_at,
       priority: patch.priority,
+      archivedAt: patch.archived_at,
+      deletedAt: patch.deleted_at,
+      deletedBy: markedBy(patch.deleted_at, userId),
       createdAt: patch.created_at,
       updatedAt: patch.updated_at,
     }
@@ -252,7 +263,7 @@ async function applyOperation(
       spaceId: row.space_id,
       text: row.text,
       completedAt: row.completed_at,
-      completedBy: checkedBy(row.completed_at, userId),
+      completedBy: markedBy(row.completed_at, userId),
       position: row.position,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -276,7 +287,7 @@ async function applyOperation(
   const values = {
     text: patch.text,
     completedAt: patch.completed_at,
-    completedBy: checkedBy(patch.completed_at, userId),
+    completedBy: markedBy(patch.completed_at, userId),
     position: patch.position,
     createdAt: patch.created_at,
     updatedAt: patch.updated_at,

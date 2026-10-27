@@ -161,6 +161,10 @@ export const items = pgTable(
     completedBy: text().references(() => user.id, { onDelete: 'set null' }),
     pinnedAt: timestamp({ withTimezone: true }),
     priority: smallint().default(0).notNull(),
+    archivedAt: timestamp({ withTimezone: true }),
+    // In the trash since then; devices delete it for good after 30 days.
+    deletedAt: timestamp({ withTimezone: true }),
+    deletedBy: text().references(() => user.id, { onDelete: 'set null' }),
     ...timestamps,
   },
   (t) => [

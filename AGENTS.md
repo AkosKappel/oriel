@@ -34,7 +34,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - `src/data/store.ts`: `createStore(database)` builds the TanStack DB collections and every write operation. Writes validate input, apply optimistically and resolve once stored in SQLite. Writes that span tables use one `createTransaction` with `PowerSyncTransactor`.
 - `src/data/client.ts`: the browser database and store. Routes that read it set `ssr: false`; during server rendering PowerSync only opens a placeholder.
 - `src/data/capture.ts` and `src/data/organize.ts` hold the pure parsing and sorting rules; keep that logic out of components and cover it with unit tests.
-- Deletes return a `Snapshot`; `restore(snapshot)` is how every Undo works.
+- Deleting an item moves it to the trash (`deleted_at`, Undo with `restoreItem`); archived and trashed items are kept off home by `itemsInView`. Permanent deletes return a `Snapshot`, and `restore(snapshot)` undoes them.
 - Tests run the same store against real SQLite through `@powersync/node` (`src/data/store.test.ts`).
 - `@tanstack/react-db` and `@tanstack/powersync-db-collection` are pinned together; both must depend on the same `@tanstack/db` version.
 

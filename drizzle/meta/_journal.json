@@ -36,6 +36,13 @@
       "when": 1793117652060,
       "tag": "0004_invite_email",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793123003068,
+      "tag": "0005_trash_and_archive",
+      "breakpoints": true
     }
   ]
 }

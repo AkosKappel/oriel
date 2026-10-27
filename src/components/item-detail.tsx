@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Pin, Trash2 } from 'lucide-react'
+import { Archive, ArrowLeft, Pin, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button, ToggleButton } from 'react-aria-components'
 import { toast } from 'sonner'
@@ -71,7 +71,10 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const pinned = item.pinned_at !== null
   const space = item.space_id ? byId.get(item.space_id) : undefined
   // Viewers get a read-only page; the server refuses their writes anyway.
-  const editable = !space || canEdit(space.role)
+  const canChange = !space || canEdit(space.role)
+  // Trashed items are read-only until restored.
+  const editable = canChange && item.deleted_at === null
+  const archived = item.archived_at !== null
   // Only other people are named; your own notes and checks need no label.
   const otherName = (userId: string | null) =>
     userId && userId !== account?.userId
@@ -79,6 +82,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       : undefined
   const author = otherName(item.created_by)
   const doneBy = item.completed_at ? otherName(item.completed_by) : undefined
+  const deletedBy = item.deleted_at ? otherName(item.deleted_by) : undefined
   const moveTargets = spaces.filter((target) => canEdit(target.role))
 
   async function move(spaceId: string) {
@@ -86,10 +90,28 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     toast(`Moved to ${byId.get(spaceId)?.name}`)
   }
 
-  async function remove() {
+  async function trash() {
+    await navigate({ to: '/', search: true })
+    await store.trashItem(item.id)
+    toast(`${label} moved to the trash`, {
+      action: { label: 'Undo', onClick: () => void store.restoreItem(item.id) },
+    })
+  }
+
+  async function archive(next: boolean) {
+    await store.setItemArchived(item.id, next)
+    toast(next ? `${label} archived` : `${label} back from the archive`, {
+      action: {
+        label: 'Undo',
+        onClick: () => void store.setItemArchived(item.id, !next),
+      },
+    })
+  }
+
+  async function deleteForever() {
     await navigate({ to: '/', search: true })
     const snapshot = await store.deleteItem(item.id)
-    toast(`${label} deleted`, {
+    toast(`${label} deleted for good`, {
       action: { label: 'Undo', onClick: () => void store.restore(snapshot) },
     })
   }
@@ -108,6 +130,14 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         </Link>
         <div className={cn('-mr-3 flex', !editable && 'hidden')}>
           <ToggleButton
+            isSelected={archived}
+            onChange={(selected) => void archive(selected)}
+            aria-label="Archive"
+            className={cn(iconButton, 'data-selected:text-foreground')}
+          >
+            <Archive aria-hidden className="size-[1.125rem]" />
+          </ToggleButton>
+          <ToggleButton
             isSelected={pinned}
             onChange={(selected) => void store.setItemPinned(item.id, selected)}
             aria-label="Pin to the top"
@@ -121,8 +151,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             )}
           </ToggleButton>
           <Button
-            onPress={() => void remove()}
-            aria-label={`Delete ${label.toLowerCase()}`}
+            onPress={() => void trash()}
+            aria-label={`Move ${label.toLowerCase()} to the trash`}
             className={cn(iconButton, 'hover:text-destructive')}
           >
             <Trash2 aria-hidden className="size-[1.125rem]" />
@@ -131,6 +161,30 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       </header>
 
       <div className="pl-10">
+        {item.deleted_at && (
+          <div className="mb-6 flex flex-col gap-1 text-sm text-muted-foreground">
+            <p>
+              In the trash since {formatShortDate(item.deleted_at)}
+              {deletedBy && `, deleted by ${deletedBy}`}.
+            </p>
+            {canChange && (
+              <div className="-ml-2 flex gap-2">
+                <Button
+                  onPress={() => void store.restoreItem(item.id)}
+                  className="rounded-sm px-2 py-2 text-foreground underline underline-offset-4 data-focus-visible:outline-2"
+                >
+                  Restore
+                </Button>
+                <Button
+                  onPress={() => void deleteForever()}
+                  className="rounded-sm px-2 py-2 hover:text-destructive data-focus-visible:outline-2"
+                >
+                  Delete forever
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
         {/* The title is edited in place; the heading keeps the page outline for screen readers. */}
         <h1 className="sr-only">{item.title}</h1>
         <p className="text-xs text-muted-foreground">
@@ -139,7 +193,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           {author && ` · by ${author}`}
           {doneBy && ` · done by ${doneBy}`}
           {pinned && ' · Pinned'}
-          {!editable && ' · View only'}
+          {archived && ' · Archived'}
+          {!canChange && ' · View only'}
         </p>
         <div className="relative">
           {item.type === 'task' && (
