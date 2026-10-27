@@ -4,6 +4,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import viteReact from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
+import { serviceWorker } from './scripts/service-worker-plugin'
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
@@ -17,5 +18,6 @@ export default defineConfig({
     tailwindcss(),
     tanstackStart(),
     viteReact(),
+    serviceWorker(),
   ],
 })

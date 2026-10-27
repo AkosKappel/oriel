@@ -7,8 +7,10 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import type { CSSProperties, ReactNode } from 'react'
+import { type CSSProperties, type ReactNode, useEffect } from 'react'
 import { Toaster } from 'sonner'
+import { OfflineBanner } from '#/components/offline-banner'
+import { registerServiceWorker } from '#/lib/service-worker'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -36,10 +38,13 @@ export const Route = createRootRoute({
         content: '#1c1a17',
         media: '(prefers-color-scheme: dark)',
       },
+      { name: 'apple-mobile-web-app-title', content: 'Oriel' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
       { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      { rel: 'manifest', href: '/manifest.webmanifest' },
     ],
   }),
   shellComponent: RootDocument,
@@ -48,12 +53,15 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: ReactNode }) {
+  useEffect(registerServiceWorker, [])
+
   return (
     <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body>
+        <OfflineBanner />
         {children}
         {/* Just above the capture bar, where the thumb already is for Undo. */}
         <Toaster

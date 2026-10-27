@@ -36,6 +36,12 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Tests run the same store against real SQLite through `@powersync/node` (`src/data/store.test.ts`).
 - `@tanstack/react-db` and `@tanstack/powersync-db-collection` are pinned together; both must depend on the same `@tanstack/db` version.
 
+## Offline
+
+- `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and emits `sw.js` with the client build. It must be emitted during the build: Nitro only serves files it knows when it bundles.
+- The worker only runs in production builds; test offline with `npm run build` and `npm start`.
+- Long text fields save when the page is hidden, not only on unmount.
+
 ## Conventions
 
 - Imports from `src` use the `#/` alias (`#/lib/utils`).

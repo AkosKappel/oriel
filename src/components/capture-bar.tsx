@@ -12,6 +12,7 @@ import { itemIcons, itemLabels } from '#/components/item-icon'
 import { parseCapture } from '#/data/capture'
 import { type ItemType, itemTypes, newItemSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { requestPersistentStorage } from '#/lib/storage'
 
 const placeholders: Record<ItemType, string> = {
   note: 'Write a note',
@@ -98,10 +99,12 @@ export function CaptureBar({
     setText('')
     setError(null)
     store.createItem(draft).then(
-      (id) =>
+      (id) => {
         toast(`${itemLabels[draft.type]} saved`, {
           action: { label: 'Undo', onClick: () => void store.deleteItem(id) },
-        }),
+        })
+        void requestPersistentStorage()
+      },
       (saveError: unknown) => {
         console.error('Could not save the captured item', saveError)
         setText(captured)

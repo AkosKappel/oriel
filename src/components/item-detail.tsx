@@ -188,7 +188,7 @@ function PriorityField({ store, item }: { store: Store; item: Item }) {
 
 const saveDelay = 500
 
-/** Saves while typing (debounced) and on leaving the page, so no keystroke is lost. */
+/** Saves while typing (debounced), on leaving the page and when the app is hidden. */
 function BodyField({ store, item }: { store: Store; item: Item }) {
   const [body, setBody] = useState(item.body)
   const flush = useRef(() => {})
@@ -205,7 +205,17 @@ function BodyField({ store, item }: { store: Store; item: Item }) {
     return () => clearTimeout(timer)
   }, [body])
 
-  useEffect(() => () => flush.current(), [])
+  // Leaving the page unmounts the field; closing the tab or switching apps only hides it.
+  useEffect(() => {
+    const flushWhenHidden = () => {
+      if (document.visibilityState === 'hidden') flush.current()
+    }
+    document.addEventListener('visibilitychange', flushWhenHidden)
+    return () => {
+      document.removeEventListener('visibilitychange', flushWhenHidden)
+      flush.current()
+    }
+  }, [])
 
   return (
     <textarea
