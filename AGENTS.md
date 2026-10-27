@@ -36,6 +36,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - `src/data/capture.ts` and `src/data/organize.ts` hold the pure parsing and sorting rules; keep that logic out of components and cover it with unit tests.
 - Deleting an item moves it to the trash (`deleted_at`, Undo with `restoreItem`); archived and trashed items are kept off home by `itemsInView`. Permanent deletes return a `Snapshot`, and `restore(snapshot)` undoes them.
 - Tests run the same store against real SQLite through `@powersync/node` (`src/data/store.test.ts`).
+- Component tests (`src/components/*.test.tsx`) use Testing Library in jsdom (`// @vitest-environment jsdom` per file). They mock `#/data/client` with `#/test/client` (that store on Node SQLite) and render through `renderPage` from `#/test/dom` (router, toaster, empty tables after each test). Click Undo with `findUndo(message)`; query by role and label, as a user would.
 - `@tanstack/react-db` and `@tanstack/powersync-db-collection` are pinned together; both must depend on the same `@tanstack/db` version.
 
 ## Server and accounts

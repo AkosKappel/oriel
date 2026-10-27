@@ -46,7 +46,11 @@ describe.skipIf(!process.env.DATABASE_URL)('personal space', async () => {
     )
   })
 
-  it('gives every new account its personal space at sign-up', async () => {
+  // Sign-up hashes the password with scrypt, slow on purpose; next to the other test files
+  // running in parallel it can take longer than the default 5 seconds.
+  it('gives every new account its personal space at sign-up', {
+    timeout: 30_000,
+  }, async () => {
     const email = `test-${crypto.randomUUID()}@example.com`
     const { user: signedUp } = await auth.api.signUpEmail({
       body: { name: 'New user', email, password: 'a-long-password' },
