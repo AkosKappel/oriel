@@ -81,8 +81,36 @@ jobs:
           name: playwright-traces
           path: test-results/
 
+  # Desktop Lighthouse on home, sign-in and settings: accessibility, best practices and SEO 100,
+  # a compressed JavaScript budget per route, and performance 90 as a warning until the
+  # PowerSync client loads only where it is needed (backlog U-07). CI only, never on the server.
+  lighthouse:
+    runs-on: ubuntu-latest
+    env:
+      # Pages render without the database; the settings only have to be valid.
+      DATABASE_URL: postgres://lighthouse:unused@localhost:5432/none
+      BETTER_AUTH_SECRET: ci-only-auth-secret-not-used-for-accounts
+      PORT: 3200
+      BETTER_AUTH_URL: http://localhost:3200
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
+        with:
+          configPath: ./lighthouserc.json
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-report
+          path: lighthouse-report/
+
   image:
-    needs: [check, e2e]
+    needs: [check, e2e, lighthouse]
     runs-on: ubuntu-latest
     permissions:
       contents: read

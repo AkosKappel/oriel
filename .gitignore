@@ -19,3 +19,5 @@ playwright-report
 
 # Local planning file
 BACKLOG.md
+lighthouse-report
+.lighthouseci
