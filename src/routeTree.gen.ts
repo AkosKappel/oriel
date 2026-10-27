@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NotebookRouteImport } from './routes/_notebook'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as NotebookIndexRouteImport } from './routes/_notebook/index'
@@ -30,6 +31,11 @@ const NotebookRoute = NotebookRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShareRoute = ShareRouteImport.update({
@@ -91,6 +97,7 @@ const ApiSyncUploadRoute = ApiSyncUploadRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof NotebookIndexRoute
   '/account': typeof AccountRoute
+  '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/account': typeof AccountRoute
+  '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_notebook': typeof NotebookRouteWithChildren
   '/account': typeof AccountRoute
+  '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/settings'
     | '/share'
     | '/sign-in'
     | '/api/health'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/account'
+    | '/settings'
     | '/share'
     | '/sign-in'
     | '/api/health'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_notebook'
     | '/account'
+    | '/settings'
     | '/share'
     | '/sign-in'
     | '/api/health'
@@ -181,6 +193,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   NotebookRoute: typeof NotebookRouteWithChildren
   AccountRoute: typeof AccountRoute
+  SettingsRoute: typeof SettingsRoute
   ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/share': {
@@ -305,6 +325,7 @@ const NotebookRouteWithChildren = NotebookRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   NotebookRoute: NotebookRouteWithChildren,
   AccountRoute: AccountRoute,
+  SettingsRoute: SettingsRoute,
   ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,
   ApiHealthRoute: ApiHealthRoute,

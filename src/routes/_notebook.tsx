@@ -1,5 +1,6 @@
 import {
   createFileRoute,
+  Link,
   Outlet,
   useNavigate,
   useParams,
@@ -62,7 +63,15 @@ function Notebook() {
         <header className="flex flex-col gap-1 pt-6 pb-4 pl-10">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{formatDay(now)}</p>
-            <AccountLink />
+            <div className="flex gap-4">
+              <Link
+                to="/settings"
+                className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
+              >
+                Settings
+              </Link>
+              <AccountLink />
+            </div>
           </div>
           <h1 className="font-serif text-4xl tracking-tight">
             {greeting(now)}

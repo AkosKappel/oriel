@@ -12,6 +12,7 @@ import { Toaster } from 'sonner'
 import { OfflineBanner } from '#/components/offline-banner'
 import { useFocusAfterNavigation } from '#/lib/route-focus'
 import { registerServiceWorker } from '#/lib/service-worker'
+import { themeScript, useTheme } from '#/lib/theme'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -28,16 +29,6 @@ export const Route = createRootRoute({
       {
         name: 'description',
         content: 'One calm place for notes, lists and tasks.',
-      },
-      {
-        name: 'theme-color',
-        content: '#f8f6f1',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        name: 'theme-color',
-        content: '#1c1a17',
-        media: '(prefers-color-scheme: dark)',
       },
       { name: 'apple-mobile-web-app-title', content: 'Oriel' },
     ],
@@ -60,11 +51,26 @@ const toastLift =
 function RootDocument({ children }: { children: ReactNode }) {
   useEffect(registerServiceWorker, [])
   useFocusAfterNavigation()
+  const theme = useTheme()
 
   return (
-    <html lang="en">
+    // The theme script sets `data-theme` before React hydrates.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Here rather than in `head`, which keeps only one meta per name. */}
+        <meta
+          name="theme-color"
+          content="#f8f6f1"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#1c1a17"
+          media="(prefers-color-scheme: dark)"
+        />
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant from our own code, no user input */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
         <OfflineBanner />
@@ -72,7 +78,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         {/* Just above the capture bar when it is shown, where the thumb already is for Undo. */}
         <Toaster
           position="bottom-center"
-          theme="system"
+          theme={theme}
           // One message at a time; quick capture would otherwise stack them.
           visibleToasts={1}
           offset={{ bottom: toastLift }}
