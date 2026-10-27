@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { and, count, eq, gt, isNull } from 'drizzle-orm'
+import { and, count, eq, gt, isNotNull, isNull } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '#/server/db'
 import { invite, space, spaceMember, user } from '#/server/db/schema'
@@ -13,9 +13,12 @@ import { invite, space, spaceMember, user } from '#/server/db/schema'
 
 export const spaceNameSchema = z.string().trim().min(1, 'Add a name').max(60)
 export const inviteRoleSchema = z.enum(['editor', 'viewer'])
+export const inviteEmailSchema = z.email('Check the email address').max(254)
 export type MemberRole = 'owner' | 'editor' | 'viewer'
 
 const inviteLifetimeDays = 7
+// Accounts are not email-verified, so emailed invites are capped to keep Oriel from being a spam relay.
+const emailedInvitesPerDay = 20
 
 /** A refusal the user should read, as opposed to a failure. */
 export class SharingError extends Error {}
@@ -101,15 +104,38 @@ export async function deleteSpace(actorId: string, spaceId: string) {
   })
 }
 
-/** Returns the secret token for the link; only its hash is stored. */
+/**
+ * Returns the secret token for the link; only its hash is stored. With an email, the invite is
+ * recorded for that address (the caller sends the email).
+ */
 export async function createInvite(
   actorId: string,
   spaceId: string,
   role: z.infer<typeof inviteRoleSchema>,
+  email?: string,
 ) {
   const parsedRole = inviteRoleSchema.parse(role)
+  const parsedEmail =
+    email === undefined ? null : inviteEmailSchema.parse(email)
   return db.transaction(async (tx) => {
     await requireOwner(tx, spaceId, actorId)
+    if (parsedEmail) {
+      const [{ sent }] = await tx
+        .select({ sent: count() })
+        .from(invite)
+        .where(
+          and(
+            eq(invite.createdBy, actorId),
+            isNotNull(invite.email),
+            gt(invite.createdAt, new Date(Date.now() - 86_400_000)),
+          ),
+        )
+      if (sent >= emailedInvitesPerDay) {
+        throw new SharingError(
+          'That is a lot of invites for one day. Share the link instead, or try again tomorrow.',
+        )
+      }
+    }
     const [found] = await tx
       .select({ personalOwnerId: space.personalOwnerId })
       .from(space)
@@ -124,6 +150,7 @@ export async function createInvite(
       spaceId,
       tokenHash: hashToken(token),
       role: parsedRole,
+      email: parsedEmail,
       createdBy: actorId,
       expiresAt: new Date(Date.now() + inviteLifetimeDays * 86_400_000),
     })
@@ -136,7 +163,12 @@ export async function listInvites(actorId: string, spaceId: string) {
   return db.transaction(async (tx) => {
     await requireOwner(tx, spaceId, actorId)
     return tx
-      .select({ id: invite.id, role: invite.role, expiresAt: invite.expiresAt })
+      .select({
+        id: invite.id,
+        role: invite.role,
+        email: invite.email,
+        expiresAt: invite.expiresAt,
+      })
       .from(invite)
       .where(
         and(

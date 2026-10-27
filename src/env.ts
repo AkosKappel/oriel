@@ -22,6 +22,13 @@ const schema = z.object({
     (value) => value || undefined,
     z.url().optional(),
   ),
+  // Optional: without it, emails are printed to the server output (development and CI).
+  RESEND_API_KEY: z.preprocess(
+    (value) => value || undefined,
+    z.string().optional(),
+  ),
+  // Must be on a domain verified in Resend; onboarding@resend.dev only reaches the account owner.
+  EMAIL_FROM: z.string().default('Oriel <onboarding@resend.dev>'),
 })
 
 const result = schema.safeParse(process.env)

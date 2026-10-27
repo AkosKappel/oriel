@@ -72,11 +72,13 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const space = item.space_id ? byId.get(item.space_id) : undefined
   // Viewers get a read-only page; the server refuses their writes anyway.
   const editable = !space || canEdit(space.role)
-  const author =
-    item.created_by && item.created_by !== account?.userId
-      ? space?.members.find((member) => member.user_id === item.created_by)
-          ?.member_name
+  // Only other people are named; your own notes and checks need no label.
+  const otherName = (userId: string | null) =>
+    userId && userId !== account?.userId
+      ? space?.members.find((member) => member.user_id === userId)?.member_name
       : undefined
+  const author = otherName(item.created_by)
+  const doneBy = item.completed_at ? otherName(item.completed_by) : undefined
   const moveTargets = spaces.filter((target) => canEdit(target.role))
 
   async function move(spaceId: string) {
@@ -131,6 +133,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           {label} · {formatShortDate(item.created_at)}
           {space && !space.personal && ` · ${space.name}`}
           {author && ` · by ${author}`}
+          {doneBy && ` · done by ${doneBy}`}
           {pinned && ' · Pinned'}
           {!editable && ' · View only'}
         </p>
@@ -164,7 +167,12 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         )}
 
         {item.type === 'list' ? (
-          <EntryList store={store} itemId={item.id} readOnly={!editable} />
+          <EntryList
+            store={store}
+            itemId={item.id}
+            readOnly={!editable}
+            checkedBy={otherName}
+          />
         ) : (
           <BodyField store={store} item={item} readOnly={!editable} />
         )}

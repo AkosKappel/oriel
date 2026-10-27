@@ -127,6 +127,8 @@ export const invite = pgTable(
       .references(() => space.id, { onDelete: 'cascade' }),
     tokenHash: text().notNull().unique(),
     role: memberRole().notNull(),
+    // Set when the invite was emailed, so owners see who an open link is for.
+    email: text(),
     createdBy: text()
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
@@ -156,6 +158,7 @@ export const items = pgTable(
     title: text().notNull(),
     body: text().default('').notNull(),
     completedAt: timestamp({ withTimezone: true }),
+    completedBy: text().references(() => user.id, { onDelete: 'set null' }),
     pinnedAt: timestamp({ withTimezone: true }),
     priority: smallint().default(0).notNull(),
     ...timestamps,
@@ -181,6 +184,7 @@ export const entries = pgTable(
       .references(() => space.id, { onDelete: 'cascade' }),
     text: text().notNull(),
     completedAt: timestamp({ withTimezone: true }),
+    completedBy: text().references(() => user.id, { onDelete: 'set null' }),
     position: doublePrecision().default(0).notNull(),
     ...timestamps,
   },

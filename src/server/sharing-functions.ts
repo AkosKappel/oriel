@@ -1,7 +1,9 @@
 import { createMiddleware, createServerFn } from '@tanstack/react-start'
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { z } from 'zod'
+import { env } from '#/env'
 import { auth } from '#/server/auth'
+import { sendInviteEmail } from '#/server/email'
 import * as sharing from '#/server/sharing'
 
 // Sharing actions need a connection; content inside a shared space still works offline through
@@ -11,7 +13,13 @@ const signedIn = createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
     const session = await auth.api.getSession({ headers: getRequestHeaders() })
     if (!session) throw new Error('Sign in to share spaces.')
-    return next({ context: { userId: session.user.id } })
+    return next({
+      context: {
+        userId: session.user.id,
+        name: session.user.name,
+        email: session.user.email,
+      },
+    })
   },
 )
 
@@ -40,19 +48,42 @@ export const deleteSpace = createServerFn({ method: 'POST' })
 
 export const createInvite = createServerFn({ method: 'POST' })
   .middleware([signedIn])
-  .validator(spaceInput.extend({ role: sharing.inviteRoleSchema }))
-  .handler(({ data, context }) =>
-    sharing.createInvite(context.userId, data.spaceId, data.role),
+  .validator(
+    spaceInput.extend({
+      role: sharing.inviteRoleSchema,
+      email: sharing.inviteEmailSchema.optional(),
+    }),
   )
+  .handler(async ({ data, context }) => {
+    const token = await sharing.createInvite(
+      context.userId,
+      data.spaceId,
+      data.role,
+      data.email,
+    )
+    const invite = await sharing.describeInvite(token)
+    const emailed =
+      data.email && invite
+        ? await sendInviteEmail({
+            to: data.email,
+            inviterName: context.name,
+            inviterEmail: context.email,
+            spaceName: invite.spaceName,
+            url: new URL(`/invite/${token}`, env.BETTER_AUTH_URL).href,
+          })
+        : false
+    return { token, emailed }
+  })
 
 export const listInvites = createServerFn({ method: 'GET' })
   .middleware([signedIn])
   .validator(spaceInput)
   .handler(async ({ data, context }) =>
     (await sharing.listInvites(context.userId, data.spaceId)).map(
-      ({ id, role, expiresAt }) => ({
+      ({ id, role, email, expiresAt }) => ({
         id,
         role,
+        email,
         expiresAt: expiresAt.toISOString(),
       }),
     ),

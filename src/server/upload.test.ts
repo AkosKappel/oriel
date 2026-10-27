@@ -81,6 +81,49 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     })
   })
 
+  it('records the uploader as whoever checked a row, never the client value', async () => {
+    const list = put('items', itemRow(aliceSpace, { type: 'list' }))
+    const milk = put('entries', entryRow(list.id, aliceSpace))
+    await applyUpload(alice, [list, milk])
+    const checkedBy = async () =>
+      (
+        await db
+          .select({ by: entries.completedBy })
+          .from(entries)
+          .where(eq(entries.id, milk.id))
+      )[0].by
+
+    await applyUpload(alice, [
+      {
+        op: 'PATCH',
+        table: 'entries',
+        id: milk.id,
+        data: { completed_at: now, completed_by: bob },
+      },
+    ])
+    expect(await checkedBy()).toBe(alice)
+
+    await applyUpload(alice, [
+      {
+        op: 'PATCH',
+        table: 'entries',
+        id: milk.id,
+        data: { text: 'Oat milk' },
+      },
+    ])
+    expect(await checkedBy()).toBe(alice)
+
+    await applyUpload(alice, [
+      {
+        op: 'PATCH',
+        table: 'entries',
+        id: milk.id,
+        data: { completed_at: null },
+      },
+    ])
+    expect(await checkedBy()).toBeNull()
+  })
+
   it('skips rows made before the account existed, then accepts them once claimed', async () => {
     const id = crypto.randomUUID()
     const result = await applyUpload(alice, [

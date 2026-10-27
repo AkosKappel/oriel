@@ -78,6 +78,11 @@ const entryPut = entryFields.extend({
 // Moving a row to another space or list is not an edit, so a PATCH cannot change those columns
 // (unknown keys are dropped); the client re-sends a moved row as a DELETE and a PUT.
 const itemPatch = itemFields.partial()
+
+// Who checked a row is the uploader, never a value from the client; undefined (completion not in
+// this change) leaves it as it is. A moved row (DELETE plus PUT) is credited to whoever moved it.
+const checkedBy = (completedAt: Date | null | undefined, userId: string) =>
+  completedAt === undefined ? undefined : completedAt ? userId : null
 const entryPatch = entryFields.partial()
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
@@ -186,6 +191,7 @@ async function applyOperation(
         title: row.title,
         body: row.body,
         completedAt: row.completed_at,
+        completedBy: checkedBy(row.completed_at, userId),
         pinnedAt: row.pinned_at,
         priority: row.priority,
         createdAt: row.created_at,
@@ -212,6 +218,7 @@ async function applyOperation(
       title: patch.title,
       body: patch.body,
       completedAt: patch.completed_at,
+      completedBy: checkedBy(patch.completed_at, userId),
       pinnedAt: patch.pinned_at,
       priority: patch.priority,
       createdAt: patch.created_at,
@@ -245,6 +252,7 @@ async function applyOperation(
       spaceId: row.space_id,
       text: row.text,
       completedAt: row.completed_at,
+      completedBy: checkedBy(row.completed_at, userId),
       position: row.position,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -268,6 +276,7 @@ async function applyOperation(
   const values = {
     text: patch.text,
     completedAt: patch.completed_at,
+    completedBy: checkedBy(patch.completed_at, userId),
     position: patch.position,
     createdAt: patch.created_at,
     updatedAt: patch.updated_at,

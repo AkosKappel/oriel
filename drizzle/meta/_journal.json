@@ -22,6 +22,20 @@
       "when": 1793110143683,
       "tag": "0002_sharing",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793117554448,
+      "tag": "0003_completed_by",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793117652060,
+      "tag": "0004_invite_email",
+      "breakpoints": true
     }
   ]
 }

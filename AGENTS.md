@@ -58,6 +58,8 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 ## Sharing
 
 - Rules live in `src/server/sharing.ts` (owners invite, rename, change roles, remove; a personal space is never shared; a space always keeps an owner; invites are single use, 7 days, stored as a SHA-256 hash). `src/server/sharing-functions.ts` wraps them as authenticated server functions; errors carry user-facing messages.
+- Invites can be emailed (`src/server/email.ts`, Resend over `fetch`; printed to the console without `RESEND_API_KEY`). Accounts are not email-verified, so emailed invites are capped per user per day.
+- `completed_by` on items and entries is set by the upload endpoint to the uploader, never taken from the client.
 - Spaces and memberships sync to devices (`space`, `space_member` with `member_name` copied at join, so the `user` table never replicates). The client never writes these tables; it calls the server functions and waits for sync.
 - `useSpaces()` (`src/lib/spaces.ts`) gives the user's spaces and role offline; `canEdit` drives read-only screens for viewers.
 - Moving an item between spaces re-inserts it and its entries (`moveItem`), so the server checks edit rights in both spaces.

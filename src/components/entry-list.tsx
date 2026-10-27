@@ -14,10 +14,13 @@ export function EntryList({
   store,
   itemId,
   readOnly = false,
+  checkedBy = () => undefined,
 }: {
   store: Store
   itemId: string
   readOnly?: boolean
+  /** The name to show beside an entry someone else checked. */
+  checkedBy?: (userId: string | null) => string | undefined
 }) {
   const { data } = useLiveQuery({
     query: (q) =>
@@ -62,6 +65,9 @@ export function EntryList({
             store={store}
             entry={entry}
             readOnly={readOnly}
+            checker={
+              entry.completed_at ? checkedBy(entry.completed_by) : undefined
+            }
           />
         ))}
       </ul>
@@ -74,10 +80,12 @@ function EntryRow({
   store,
   entry,
   readOnly,
+  checker,
 }: {
   store: Store
   entry: Entry
   readOnly: boolean
+  checker?: string
 }) {
   const done = entry.completed_at !== null
 
@@ -131,6 +139,12 @@ function EntryRow({
           done && 'text-muted-foreground line-through decoration-1',
         )}
       />
+      {checker && (
+        <span className="shrink-0 pl-2 text-xs text-muted-foreground">
+          <span className="sr-only">checked by </span>
+          {checker}
+        </span>
+      )}
       {/* Quiet until hovered on desktop; always there on touch, where hover does not exist. */}
       {!readOnly && (
         <Button

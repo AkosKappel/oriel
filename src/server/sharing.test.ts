@@ -95,6 +95,28 @@ describe.skipIf(!process.env.DATABASE_URL)('sharing', async () => {
     expect(await roleOf(family, ben)).toBeUndefined()
   })
 
+  it('records who an emailed invite is for, and caps emailed invites per day', async () => {
+    const anna = await newUser('Anna')
+    const family = await newSpace(anna, 'Family')
+
+    await sharing.createInvite(anna, family, 'editor', 'ben@example.com')
+    expect(await sharing.listInvites(anna, family)).toMatchObject([
+      { role: 'editor', email: 'ben@example.com' },
+    ])
+
+    await expect(
+      sharing.createInvite(anna, family, 'editor', 'not an address'),
+    ).rejects.toThrow()
+    for (let sent = 1; sent < 20; sent++) {
+      await sharing.createInvite(anna, family, 'viewer', `${sent}@example.com`)
+    }
+    await expect(
+      sharing.createInvite(anna, family, 'viewer', 'one@too-many.com'),
+    ).rejects.toThrow('a lot of invites')
+    // Links without an email are not limited.
+    await sharing.createInvite(anna, family, 'viewer')
+  })
+
   it('lets only owners invite, rename, change roles and remove others', async () => {
     const anna = await newUser('Anna')
     const ben = await newUser('Ben')

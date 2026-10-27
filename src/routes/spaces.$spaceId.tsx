@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useCallback, useEffect, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
   DialogTrigger,
+  Form,
   Heading,
   Modal,
   ModalOverlay,
@@ -11,6 +12,7 @@ import {
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { ChoiceGroup } from '#/components/ui/choice-group'
+import { TextField } from '#/components/ui/text-field'
 import type { Member, MemberRole } from '#/data/schema'
 import { useAccount } from '#/lib/account'
 import { formatShortDate } from '#/lib/dates'
@@ -69,6 +71,9 @@ function SpacePage() {
   }
 
   const owner = space.role === 'owner'
+  // An owner can leave only while another owner stays; the last owner deletes the space instead.
+  const otherOwners =
+    space.members.filter((member) => member.role === 'owner').length > 1
   return (
     <SubPage back="/spaces">
       <SpaceName space={space} />
@@ -81,7 +86,10 @@ function SpacePage() {
         <>
           <Members space={space} />
           {owner && <Invites spaceId={space.id} />}
-          <Leave space={space} />
+          <div className="flex flex-wrap gap-x-6">
+            {(!owner || otherOwners) && <Leave space={space} action="leave" />}
+            {owner && <Leave space={space} action="delete" />}
+          </div>
         </>
       )}
     </SubPage>
@@ -201,11 +209,18 @@ function MemberRow({
   )
 }
 
-type OpenInvite = { id: string; role: string; expiresAt: string }
+type OpenInvite = {
+  id: string
+  role: string
+  email: string | null
+  expiresAt: string
+}
 
 function Invites({ spaceId }: { spaceId: string }) {
   const [role, setRole] = useState<'editor' | 'viewer'>('editor')
+  const [email, setEmail] = useState('')
   const [link, setLink] = useState<string | null>(null)
+  const [sentTo, setSentTo] = useState<string | null>(null)
   const [open, setOpen] = useState<OpenInvite[]>([])
 
   const refresh = useCallback(() => {
@@ -213,10 +228,18 @@ function Invites({ spaceId }: { spaceId: string }) {
   }, [spaceId])
   useEffect(refresh, [refresh])
 
-  async function create() {
+  async function create(event: FormEvent) {
+    event.preventDefault()
+    const to = email.trim() || undefined
     await attempt(async () => {
-      const token = await createInvite({ data: { spaceId, role } })
+      const { token, emailed } = await createInvite({
+        data: { spaceId, role, email: to },
+      })
       setLink(`${window.location.origin}/invite/${token}`)
+      setSentTo(emailed ? (to ?? null) : null)
+      if (to && !emailed)
+        toast('The email could not be sent. Share the link instead.')
+      setEmail('')
       refresh()
     })
   }
@@ -245,15 +268,28 @@ function Invites({ spaceId }: { spaceId: string }) {
         value={role}
         onChange={setRole}
       />
-      <Button
-        onPress={() => void create()}
-        className="h-11 w-fit rounded-sm bg-foreground px-4 text-sm text-background data-focus-visible:outline-2 data-focus-visible:outline-offset-2"
+      <Form
+        onSubmit={(event) => void create(event)}
+        className="flex flex-col gap-3"
       >
-        Create invite link
-      </Button>
+        <TextField
+          label="Their email (optional)"
+          type="email"
+          autoComplete="off"
+          value={email}
+          onChange={setEmail}
+        />
+        <Button
+          type="submit"
+          className="h-11 w-fit rounded-sm bg-foreground px-4 text-sm text-background data-focus-visible:outline-2 data-focus-visible:outline-offset-2"
+        >
+          {email.trim() ? 'Send invite' : 'Create invite link'}
+        </Button>
+      </Form>
       {link && (
         <div className="flex flex-col gap-1">
-          <p className="text-xs text-muted-foreground">
+          <p role="status" className="text-xs text-muted-foreground">
+            {sentTo ? `Invite sent to ${sentTo}. ` : ''}
             One person can join with this link within 7 days. It is shown only
             now.
           </p>
@@ -279,7 +315,7 @@ function Invites({ spaceId }: { spaceId: string }) {
               className="flex items-center justify-between text-sm text-muted-foreground"
             >
               <span>
-                Open link ·{' '}
+                {invite.email ?? 'Open link'} ·{' '}
                 {invite.role === 'viewer' ? 'view only' : 'can edit'} · until{' '}
                 {formatShortDate(invite.expiresAt)}
               </span>
@@ -302,20 +338,26 @@ function Invites({ spaceId }: { spaceId: string }) {
   )
 }
 
-function Leave({ space }: { space: SpaceView }) {
+function Leave({
+  space,
+  action,
+}: {
+  space: SpaceView
+  action: 'leave' | 'delete'
+}) {
   const account = useAccount()
   const navigate = useNavigate()
-  const owner = space.role === 'owner'
+  const deleting = action === 'delete'
 
   async function confirm(close: () => void) {
     const left = await attempt(
       () =>
-        owner
+        deleting
           ? deleteSpace({ data: { spaceId: space.id } })
           : removeMember({
               data: { spaceId: space.id, memberId: account?.userId ?? '' },
             }),
-      owner ? `${space.name} was deleted.` : `You left ${space.name}.`,
+      deleting ? `${space.name} was deleted.` : `You left ${space.name}.`,
     )
     if (left) {
       close()
@@ -326,7 +368,7 @@ function Leave({ space }: { space: SpaceView }) {
   return (
     <DialogTrigger>
       <Button className={`${textButton} w-fit hover:text-destructive`}>
-        {owner ? 'Delete space' : 'Leave space'}
+        {deleting ? 'Delete space' : 'Leave space'}
       </Button>
       <ModalOverlay
         isDismissable
@@ -340,10 +382,10 @@ function Leave({ space }: { space: SpaceView }) {
             {({ close }) => (
               <>
                 <Heading slot="title" className="font-serif text-2xl">
-                  {owner ? `Delete ${space.name}?` : `Leave ${space.name}?`}
+                  {deleting ? `Delete ${space.name}?` : `Leave ${space.name}?`}
                 </Heading>
                 <p className="text-sm text-muted-foreground">
-                  {owner
+                  {deleting
                     ? 'Everything in it is deleted for every member. This cannot be undone.'
                     : 'Its notes and lists disappear from your devices. An owner can invite you again.'}
                 </p>
@@ -359,7 +401,7 @@ function Leave({ space }: { space: SpaceView }) {
                     onPress={() => void confirm(close)}
                     className="h-11 rounded-sm bg-destructive px-4 text-sm text-background data-focus-visible:outline-2"
                   >
-                    {owner ? 'Delete' : 'Leave'}
+                    {deleting ? 'Delete' : 'Leave'}
                   </Button>
                 </div>
               </>

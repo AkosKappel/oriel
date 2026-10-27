@@ -15,6 +15,7 @@ const items = new Table(
     title: column.text,
     body: column.text,
     completed_at: column.text,
+    completed_by: column.text,
     pinned_at: column.text,
     priority: column.integer,
     created_at: column.text,
@@ -29,6 +30,7 @@ const entries = new Table(
     space_id: column.text,
     text: column.text,
     completed_at: column.text,
+    completed_by: column.text,
     position: column.real,
     created_at: column.text,
     updated_at: column.text,
@@ -87,6 +89,8 @@ export const itemSchema = z.object({
   title: z.string(),
   body: z.string(),
   completed_at: z.string().nullable(),
+  // Set by the server to whoever checked it; the client fills it in early for its own checks.
+  completed_by: z.string().nullable(),
   pinned_at: z.string().nullable(),
   // Rows written before the column existed have no value.
   priority: prioritySchema.nullable().transform((value) => value ?? 0),
@@ -102,6 +106,7 @@ export const entrySchema = z.object({
   space_id: z.string().nullable(),
   text: z.string(),
   completed_at: z.string().nullable(),
+  completed_by: z.string().nullable(),
   // Sort key within a list. Real numbers leave room to move an entry between two others later.
   position: z
     .number()

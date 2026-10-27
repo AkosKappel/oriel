@@ -103,6 +103,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
       space_id: spaceId,
       text,
       completed_at: null,
+      completed_by: null,
       position: base + index,
       created_at: timestamp,
       updated_at: timestamp,
@@ -220,6 +221,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           title,
           body,
           completed_at: null,
+          completed_by: null,
           pinned_at: null,
           priority: 0,
           created_at: timestamp,
@@ -250,6 +252,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
       const timestamp = now()
       await items.update(id, (draft) => {
         draft.completed_at = completed ? timestamp : null
+        draft.completed_by = completed ? (owner?.userId ?? null) : null
         draft.updated_at = timestamp
       }).isPersisted.promise
     },
@@ -314,6 +317,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
       const timestamp = now()
       await entries.update(id, (draft) => {
         draft.completed_at = completed ? timestamp : null
+        draft.completed_by = completed ? (owner?.userId ?? null) : null
         draft.updated_at = timestamp
       }).isPersisted.promise
     },
