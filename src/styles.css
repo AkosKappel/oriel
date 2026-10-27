@@ -70,6 +70,12 @@
     font-optical-sizing: auto;
   }
 
+  /* Headings receive focus after a page change only so screen readers start there; no ring. */
+  h1[tabindex="-1"]:focus,
+  main[tabindex="-1"]:focus {
+    outline: none;
+  }
+
   ::selection {
     @apply bg-primary/20;
   }

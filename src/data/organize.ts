@@ -61,3 +61,33 @@ export function countEntries(entries: Entry[]) {
   }
   return counts
 }
+
+/** Lower case without accents, so "cafe" finds "Café" and "Kávé" finds "kave". */
+const fold = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+
+/**
+ * Items whose title, text or list entries contain every word of the query, in any order. An empty
+ * query keeps everything.
+ */
+export function searchItems(items: Item[], entries: Entry[], query: string) {
+  const words = fold(query).split(/\s+/).filter(Boolean)
+  if (words.length === 0) return items
+
+  const entryText = new Map<string, string>()
+  for (const entry of entries) {
+    entryText.set(
+      entry.item_id,
+      `${entryText.get(entry.item_id) ?? ''}\n${entry.text}`,
+    )
+  }
+  return items.filter((item) => {
+    const text = fold(
+      `${item.title}\n${item.body}${entryText.get(item.id) ?? ''}`,
+    )
+    return words.every((word) => text.includes(word))
+  })
+}

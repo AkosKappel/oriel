@@ -10,6 +10,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { type CSSProperties, type ReactNode, useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { OfflineBanner } from '#/components/offline-banner'
+import { useFocusAfterNavigation } from '#/lib/route-focus'
 import { registerServiceWorker } from '#/lib/service-worker'
 import appCss from '../styles.css?url'
 
@@ -58,6 +59,7 @@ const toastLift =
 
 function RootDocument({ children }: { children: ReactNode }) {
   useEffect(registerServiceWorker, [])
+  useFocusAfterNavigation()
 
   return (
     <html lang="en">

@@ -2,7 +2,7 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Checkbox } from '#/components/ui/checkbox'
-import { countEntries, organizeItems } from '#/data/organize'
+import { countEntries, organizeItems, searchItems } from '#/data/organize'
 import { type Item, type ItemType, priorities } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { canEdit, type SpaceView } from '#/lib/spaces'
@@ -21,12 +21,15 @@ export function ItemList({
   store,
   type,
   spaceId,
+  query = '',
   spaces,
 }: {
   store: Store
   type?: ItemType
   /** Show one space only. */
   spaceId?: string
+  /** Show only items that contain these words. */
+  query?: string
   spaces: Map<string, SpaceView>
 }) {
   const { data: items, isLoading } = useLiveQuery({
@@ -39,12 +42,23 @@ export function ItemList({
   if (isLoading) return null
 
   const { pinned, open, completed } = organizeItems(
-    spaceId ? items.filter((item) => item.space_id === spaceId) : items,
+    searchItems(
+      spaceId ? items.filter((item) => item.space_id === spaceId) : items,
+      entries,
+      query,
+    ),
     type,
   )
   const counts = countEntries(entries)
 
   if (pinned.length + open.length + completed.length === 0) {
+    if (query.trim()) {
+      return (
+        <p className="pt-6 text-sm text-muted-foreground" role="status">
+          Nothing here mentions “{query.trim()}”.
+        </p>
+      )
+    }
     return (
       <div className="flex flex-1 flex-col justify-center gap-2 pb-16">
         <p className="font-serif text-2xl italic">A blank page.</p>

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { countEntries, organizeItems, sortEntries } from './organize'
+import {
+  countEntries,
+  organizeItems,
+  searchItems,
+  sortEntries,
+} from './organize'
 import type { Entry, Item } from './schema'
 
 function item(overrides: Partial<Item> & Pick<Item, 'id'>): Item {
@@ -129,5 +134,33 @@ describe('countEntries', () => {
     })
     expect(counts.get('packing')).toMatchObject({ total: 1, open: 1 })
     expect(counts.get('missing')).toBeUndefined()
+  })
+})
+
+describe('searchItems', () => {
+  const items = [
+    item({ id: 'vet', title: 'Call the vet', body: 'About Bodri' }),
+    item({ id: 'list', type: 'list', title: 'Groceries' }),
+    item({ id: 'cafe', type: 'note', title: 'Café on Main Street' }),
+  ]
+  const entries = [entry({ id: 'oat', text: 'Oat milk' })]
+
+  it('keeps everything for an empty query', () => {
+    expect(ids(searchItems(items, entries, '  '))).toEqual([
+      'vet',
+      'list',
+      'cafe',
+    ])
+  })
+
+  it('matches titles, text and list entries, ignoring case and accents', () => {
+    expect(ids(searchItems(items, entries, 'bodri'))).toEqual(['vet'])
+    expect(ids(searchItems(items, entries, 'MILK'))).toEqual(['list'])
+    expect(ids(searchItems(items, entries, 'cafe'))).toEqual(['cafe'])
+  })
+
+  it('needs every word, in any order', () => {
+    expect(ids(searchItems(items, entries, 'street main'))).toEqual(['cafe'])
+    expect(ids(searchItems(items, entries, 'main vet'))).toEqual([])
   })
 })

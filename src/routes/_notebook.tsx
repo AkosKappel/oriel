@@ -1,9 +1,15 @@
-import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Outlet,
+  useNavigate,
+  useParams,
+} from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { AccountLink } from '#/components/account-link'
 import { CaptureBar } from '#/components/capture-bar'
 import { ItemList } from '#/components/item-list'
+import { SearchField } from '#/components/search-field'
 import { SpaceFilter, TypeFilter } from '#/components/type-filter'
 import { database, store } from '#/data/client'
 import { itemTypes } from '#/data/schema'
@@ -14,6 +20,7 @@ import { cn } from '#/lib/utils'
 const searchSchema = z.object({
   type: z.enum(itemTypes).optional().catch(undefined),
   space: z.uuid().optional().catch(undefined),
+  q: z.string().max(200).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/_notebook')({
@@ -29,14 +36,17 @@ export const Route = createFileRoute('/_notebook')({
  */
 function Notebook() {
   const storageFailed = useStorageFailed()
-  const { type, space: spaceId } = Route.useSearch()
-  const itemOpen = useParams({ strict: false }).itemId !== undefined
+  const { type, space: spaceId, q } = Route.useSearch()
+  const openItemId = useParams({ strict: false }).itemId
+  const itemOpen = openItemId !== undefined
+  useEscapeToClose(openItemId)
   const { spaces, byId } = useSpaces()
   const space = spaceId ? byId.get(spaceId) : undefined
   const now = new Date()
-  // One main landmark: the list on its own, the item when one is open.
-  const ListArea = itemOpen ? 'section' : 'main'
-  const ItemArea = itemOpen ? 'main' : 'div'
+  // One main landmark: the list on its own, the item when one is open. Roles switch instead of
+  // tags, so opening an item does not remount the list and drop focus from the clicked row.
+  const listRole = itemOpen ? 'region' : 'main'
+  const itemRole = itemOpen ? 'main' : undefined
 
   if (storageFailed) return <StorageProblem />
 
@@ -61,13 +71,22 @@ function Notebook() {
             <SpaceFilter spaces={spaces} active={spaceId} />
           )}
           <TypeFilter active={type} />
+          <SearchField query={q} />
         </header>
-        <ListArea
+        {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is always region or main, both take a label */}
+        <div
+          role={listRole}
           aria-label={itemOpen ? 'Everything' : undefined}
           className="flex flex-1 flex-col pb-6 pl-10"
         >
-          <ItemList store={store} type={type} spaceId={spaceId} spaces={byId} />
-        </ListArea>
+          <ItemList
+            store={store}
+            type={type}
+            spaceId={spaceId}
+            query={q}
+            spaces={byId}
+          />
+        </div>
         {space && !canEdit(space.role) ? (
           <p className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground">
             You can view {space.name}; only its editors can add to it.
@@ -76,16 +95,41 @@ function Notebook() {
           <CaptureBar store={store} preferredType={type} spaceId={space?.id} />
         )}
       </div>
-      <ItemArea
+      <div
+        role={itemRole}
         className={cn(
           'flex min-h-dvh flex-col pt-[max(0.5rem,env(safe-area-inset-top))] lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:pt-6',
           !itemOpen && 'hidden lg:flex',
         )}
       >
         <Outlet />
-      </ItemArea>
+      </div>
     </div>
   )
+}
+
+/**
+ * Escape closes the open item and puts focus back on its row in the list. Text fields keep Escape
+ * for themselves (it reverts an edit), and so do dialogs, which stop the event first.
+ */
+function useEscapeToClose(itemId: string | undefined) {
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!itemId) return
+    async function close(event: KeyboardEvent) {
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      const target = event.target as HTMLElement
+      if (target.closest('input, textarea, [contenteditable="true"]')) return
+      await navigate({ to: '/', search: true })
+      requestAnimationFrame(() =>
+        document
+          .querySelector<HTMLElement>(`a[href^="/items/${itemId}"]`)
+          ?.focus(),
+      )
+    }
+    document.addEventListener('keydown', close)
+    return () => document.removeEventListener('keydown', close)
+  }, [itemId, navigate])
 }
 
 /** True when the browser refuses the local database, which otherwise shows as an empty page. */
