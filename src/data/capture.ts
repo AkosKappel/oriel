@@ -1,4 +1,5 @@
-import type { ItemType } from './schema'
+import { fold } from './organize'
+import type { Item, ItemType } from './schema'
 
 export type CaptureDraft = {
   type: ItemType
@@ -72,4 +73,39 @@ export function parseCapture(
     }
   }
   return { type, title, body: '', entries }
+}
+
+export type AppendDraft =
+  | { list: Item; entries: string[] }
+  | { list: null; name: string }
+
+/**
+ * Reads "+Groceries eggs, milk" (or "+Groceries" with entries on the next lines) as entries for a
+ * list that already exists. The list is the one whose title the text starts with, ignoring case and
+ * accents; the longest title wins, so "+Weekly shop" beats "+Weekly". Returns null for text that
+ * does not start with "+".
+ */
+export function parseAppend(text: string, lists: Item[]): AppendDraft | null {
+  const trimmed = text.trimStart()
+  if (!trimmed.startsWith('+')) return null
+  const [first, ...rest] = trimmed.slice(1).split(/\r?\n/)
+  const firstLine = first.trim()
+
+  const list = [...lists]
+    .sort((a, b) => b.title.length - a.title.length)
+    .find((candidate) => {
+      const head = firstLine.slice(0, candidate.title.length)
+      const next = firstLine.charAt(candidate.title.length)
+      return fold(head) === fold(candidate.title) && /^[\s:,]?$/.test(next)
+    })
+  if (!list) return { list: null, name: firstLine }
+
+  const inline = firstLine
+    .slice(list.title.length)
+    .replace(/^\s*:?\s*/, '')
+    .split(',')
+  const entries = [...inline, ...rest]
+    .map((line) => stripBullet(line.trim()).trim())
+    .filter(Boolean)
+  return { list, entries }
 }

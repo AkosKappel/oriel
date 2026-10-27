@@ -1,3 +1,4 @@
+import { useLiveQuery } from '@tanstack/react-db'
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -10,9 +11,11 @@ import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
 import { itemLabels } from '#/components/item-labels'
 import { ChoiceGroup } from '#/components/ui/choice-group'
-import { parseCapture } from '#/data/capture'
+import { parseAppend, parseCapture } from '#/data/capture'
+import { itemsInView } from '#/data/organize'
 import { type ItemType, itemTypes, newItemSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { canEdit, useSpaces } from '#/lib/spaces'
 import { requestPersistentStorage } from '#/lib/storage'
 import { cn } from '#/lib/utils'
 
@@ -49,6 +52,7 @@ function isEditable(target: EventTarget | null) {
 /**
  * Always-visible capture field at the bottom of the screen. Enter saves and keeps the focus for
  * the next item; Shift+Enter starts a new line. `/` or `n` focuses it from anywhere on the page.
+ * "+Groceries eggs, milk" adds to a list that exists instead (see `parseAppend`).
  */
 export function CaptureBar({
   store,
@@ -105,7 +109,22 @@ export function CaptureBar({
     return () => window.removeEventListener('keydown', focusOnShortcut)
   }, [])
 
-  const draft = parseCapture(text, type)
+  const { byId } = useSpaces()
+  const { data: items } = useLiveQuery({
+    query: (q) => q.from({ item: store.items }),
+  })
+  const appendDraft = text.trimStart().startsWith('+')
+    ? parseAppend(
+        text,
+        itemsInView(items).filter(
+          (item) =>
+            item.type === 'list' &&
+            (spaceId ? item.space_id === spaceId : true) &&
+            (!item.space_id || canEdit(byId.get(item.space_id)?.role)),
+        ),
+      )
+    : null
+  const draft = appendDraft ? null : parseCapture(text, type)
 
   function chooseType(next: ItemType) {
     setType(next)
@@ -121,7 +140,42 @@ export function CaptureBar({
     tapped.current = false
   }
 
+  function append() {
+    if (!appendDraft) return
+    if (!appendDraft.list) {
+      setError('No list starts with that name')
+      return
+    }
+    const { list, entries } = appendDraft
+    if (entries.length === 0) {
+      setError(`Type what to add to ${list.title}`)
+      return
+    }
+    const captured = text
+    setText('')
+    setError(null)
+    store.addEntries(list.id, entries).then(
+      (ids) => {
+        toast(`Added ${entries.length} to ${list.title}`, {
+          action: {
+            label: 'Undo',
+            onClick: () => void Promise.all(ids.map(store.deleteEntry)),
+          },
+        })
+      },
+      (saveError: unknown) => {
+        console.error('Could not add to the list', saveError)
+        setText(captured)
+        setError('Could not add. Keep each entry under 500 characters.')
+      },
+    )
+  }
+
   function save() {
+    if (appendDraft) {
+      append()
+      return
+    }
     if (!draft) return
     const result = newItemSchema.safeParse(draft)
     if (!result.success) {
@@ -164,9 +218,15 @@ export function CaptureBar({
 
   const hint =
     error ??
-    (draft?.type === 'list' && draft.entries.length > 0
-      ? `${draft.title} · ${draft.entries.length} ${draft.entries.length === 1 ? 'item' : 'items'}`
-      : '')
+    (appendDraft?.list
+      ? appendDraft.entries.length > 0
+        ? `Add ${appendDraft.entries.length} to ${appendDraft.list.title}`
+        : `Adding to ${appendDraft.list.title}`
+      : appendDraft
+        ? 'No list starts with that name yet'
+        : draft?.type === 'list' && draft.entries.length > 0
+          ? `${draft.title} · ${draft.entries.length} ${draft.entries.length === 1 ? 'item' : 'items'}`
+          : '')
 
   return (
     <form

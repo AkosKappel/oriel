@@ -87,7 +87,7 @@ export function countEntries(entries: Entry[]) {
 }
 
 /** Lower case without accents, so "cafe" finds "Café" and "Kávé" finds "kave". */
-const fold = (text: string) =>
+export const fold = (text: string) =>
   text
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')

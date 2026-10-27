@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { parseCapture, readEntryLine } from './capture'
+import { parseAppend, parseCapture, readEntryLine } from './capture'
+import type { Item } from './schema'
 
 describe('parseCapture', () => {
   it('returns null for blank text', () => {
@@ -95,5 +96,46 @@ describe('readEntryLine', () => {
       checked: false,
     })
     expect(readEntryLine('1. tea')).toEqual({ text: 'tea', checked: false })
+  })
+})
+
+describe('parseAppend', () => {
+  const list = (title: string) => ({ id: title, title }) as Item
+  const lists = [list('Weekly'), list('Weekly shop'), list('Kávé')]
+
+  it('ignores text without a leading plus', () => {
+    expect(parseAppend('Groceries: milk', lists)).toBeNull()
+  })
+
+  it('adds comma-separated entries to the longest matching list title', () => {
+    expect(parseAppend('+weekly shop eggs, oat milk ,', lists)).toEqual({
+      list: lists[1],
+      entries: ['eggs', 'oat milk'],
+    })
+    expect(parseAppend('+Weekly: eggs', lists)).toEqual({
+      list: lists[0],
+      entries: ['eggs'],
+    })
+  })
+
+  it('ignores accents in the name and reads entries from further lines', () => {
+    expect(parseAppend('+kave\n- beans\n2.5 kg sugar', lists)).toEqual({
+      list: lists[2],
+      entries: ['beans', '2.5 kg sugar'],
+    })
+  })
+
+  it('only matches whole words and reports an unknown list by name', () => {
+    expect(parseAppend('+Weeklyish eggs', lists)).toEqual({
+      list: null,
+      name: 'Weeklyish eggs',
+    })
+  })
+
+  it('finds the list before any entries are typed', () => {
+    expect(parseAppend('+Weekly shop', lists)).toEqual({
+      list: lists[1],
+      entries: [],
+    })
   })
 })

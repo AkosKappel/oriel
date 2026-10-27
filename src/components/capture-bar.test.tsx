@@ -7,6 +7,8 @@ import { findUndo, renderPage } from '#/test/dom'
 import { CaptureBar } from './capture-bar'
 
 vi.mock('#/data/client', () => import('#/test/client'))
+// Without an account: no spaces, every list takes new entries.
+vi.mock('#/lib/account', () => ({ useAccount: () => null }))
 
 const titles = () => store.items.toArray.map((item) => item.title)
 
@@ -69,6 +71,37 @@ describe('CaptureBar', () => {
     await user.click(await findUndo('Task saved'))
 
     await waitFor(() => expect(titles()).toEqual([]))
+  })
+
+  it('adds to an existing list with "+name", with Undo', async () => {
+    const user = userEvent.setup()
+    const listId = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['bread'],
+    })
+    renderPage(<CaptureBar store={store} preferredType="note" />)
+    const field = await screen.findByRole('textbox', { name: 'New note' })
+    const texts = () =>
+      store.entries.toArray
+        .filter((entry) => entry.item_id === listId)
+        .map((entry) => entry.text)
+        .sort()
+
+    await user.type(field, '+Shop eggs')
+    expect(screen.getByText('No list starts with that name yet')).toBeTruthy()
+    await user.clear(field)
+
+    await user.type(field, '+groceries eggs, milk')
+    expect(screen.getByText('Add 2 to Groceries')).toBeTruthy()
+    await user.keyboard('{Enter}')
+
+    await waitFor(() => expect(texts()).toEqual(['bread', 'eggs', 'milk']))
+    expect(titles()).toEqual(['Groceries'])
+    expect(field).toHaveProperty('value', '')
+
+    await user.click(await findUndo('Added 2 to Groceries'))
+    await waitFor(() => expect(texts()).toEqual(['bread']))
   })
 
   it('focuses the field when / is pressed anywhere else', async () => {
