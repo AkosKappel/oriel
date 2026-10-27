@@ -1,7 +1,4 @@
 import { useSyncExternalStore } from 'react'
-import { toast } from 'sonner'
-import { database, store } from '#/data/client'
-import { SyncConnector } from '#/data/connector'
 import type { Owner } from '#/data/schema'
 import { authClient } from '#/lib/auth-client'
 import { getAccount } from '#/server/account'
@@ -10,6 +7,9 @@ import { getAccount } from '#/server/account'
  * The signed-in account as this device knows it. Kept in localStorage, so new items get the
  * right owner and the UI knows who is signed in even offline; the session cookie stays the proof
  * for the server.
+ *
+ * This module stays light: the local database (`#/data/client`) loads only on the pages that use
+ * it, or here when signing in or out. The database module starts sync for this account itself.
  */
 export type Account = Owner & {
   name: string
@@ -34,9 +34,6 @@ function read(): Account | null {
 
 function write(account: Account | null) {
   current = account
-  store.setOwner(
-    account && { userId: account.userId, spaceId: account.spaceId },
-  )
   try {
     if (account) localStorage.setItem(storageKey, JSON.stringify(account))
     else localStorage.removeItem(storageKey)
@@ -47,39 +44,30 @@ function write(account: Account | null) {
   for (const listener of listeners) listener()
 }
 
-const connector = new SyncConnector({
-  onRejected: (count) =>
-    toast(
-      `${count} ${count === 1 ? 'change was' : 'changes were'} not accepted by the server and ${count === 1 ? 'was' : 'were'} undone.`,
-    ),
-  onSignedOut: () => {
-    // Keep the data and the owner: signing in again as the same person continues where it was.
-    if (current && !current.needsSignIn)
-      write({ ...current, needsSignIn: true })
-  },
-})
+export const currentAccount = () => current
 
-function connect() {
-  database.connect(connector).catch((error: unknown) => {
-    console.error('Could not start sync', error)
-  })
+/** Calls `onChange` whenever the account changes; returns the unsubscribe function. */
+export function subscribeAccount(onChange: () => void) {
+  listeners.add(onChange)
+  return () => {
+    listeners.delete(onChange)
+  }
 }
 
-if (current) {
-  store.setOwner({ userId: current.userId, spaceId: current.spaceId })
-  connect()
+/** The server no longer accepts the session: keep the data, wait for sign-in as the same person. */
+export function markNeedsSignIn() {
+  if (current && !current.needsSignIn) write({ ...current, needsSignIn: true })
 }
 
 export function useAccount() {
   return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener)
-      return () => listeners.delete(listener)
-    },
+    subscribeAccount,
     () => current,
     () => null,
   )
 }
+
+const loadClient = () => import('#/data/client')
 
 export class DifferentAccountError extends Error {
   constructor() {
@@ -103,13 +91,15 @@ export async function completeSignIn() {
     throw new DifferentAccountError()
   }
   write(account)
+  const { store, startSync } = await loadClient()
   const claimed = await store.claimLocalData(account)
-  connect()
+  startSync()
   return claimed
 }
 
 /** Changes made on this device that the server has not received yet. */
 export async function pendingChanges() {
+  const { database } = await loadClient()
   return (await database.getUploadQueueStats()).count
 }
 
@@ -126,7 +116,7 @@ export async function signOut() {
   }
   await authClient.signOut()
   write(null)
-  await database.disconnectAndClear()
+  await (await loadClient()).database.disconnectAndClear()
 }
 
 /**
@@ -137,6 +127,6 @@ export async function deleteAccount(password: string) {
   const { error } = await authClient.deleteUser({ password })
   if (error) return error.message ?? 'Could not delete the account. Try again.'
   write(null)
-  await database.disconnectAndClear()
+  await (await loadClient()).database.disconnectAndClear()
   return null
 }

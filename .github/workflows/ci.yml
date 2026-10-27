@@ -82,8 +82,8 @@ jobs:
           path: test-results/
 
   # Desktop Lighthouse on home, sign-in and settings: accessibility, best practices and SEO 100,
-  # a compressed JavaScript budget per route, and performance 90 as a warning until the
-  # PowerSync client loads only where it is needed (backlog U-07). CI only, never on the server.
+  # a compressed JavaScript budget per route, and performance 90 (a warning on home, which loads
+  # the local database; see backlog U-07). CI only, never on the server.
   lighthouse:
     runs-on: ubuntu-latest
     env:

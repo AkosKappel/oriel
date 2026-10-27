@@ -1,4 +1,11 @@
 import { PowerSyncDatabase } from '@powersync/web'
+import { toast } from 'sonner'
+import {
+  currentAccount,
+  markNeedsSignIn,
+  subscribeAccount,
+} from '#/lib/account'
+import { SyncConnector } from './connector'
 import { appSchema } from './schema'
 import { createStore, type Store } from './store'
 
@@ -21,3 +28,33 @@ if (import.meta.hot) {
   import.meta.hot.data.store = store
   import.meta.hot.accept(() => window.location.reload())
 }
+
+const connector = new SyncConnector({
+  onRejected: (count) =>
+    toast(
+      `${count} ${count === 1 ? 'change was' : 'changes were'} not accepted by the server and ${count === 1 ? 'was' : 'were'} undone.`,
+    ),
+  // Keep the data and the owner: signing in again as the same person continues where it was.
+  onSignedOut: markNeedsSignIn,
+})
+
+/** Connects the database to the sync service for the remembered account. */
+export function startSync() {
+  database.connect(connector).catch((error: unknown) => {
+    console.error('Could not start sync', error)
+  })
+}
+
+// New items belong to whoever is signed in on this device, also offline.
+function followAccount() {
+  const account = currentAccount()
+  store.setOwner(
+    account && { userId: account.userId, spaceId: account.spaceId },
+  )
+}
+followAccount()
+subscribeAccount(followAccount)
+
+// Pages that open the database also sync it; pages that do not (sign-in, settings) never load
+// PowerSync at all.
+if (typeof window !== 'undefined' && currentAccount()) startSync()

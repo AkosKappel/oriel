@@ -4,7 +4,6 @@ import { Button, FileTrigger } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { ChoiceGroup } from '#/components/ui/choice-group'
-import { store } from '#/data/client'
 import { download, parseExport, toJson, toMarkdown } from '#/data/export'
 import { useAccount } from '#/lib/account'
 import { setTheme, type Theme, useTheme } from '#/lib/theme'
@@ -105,6 +104,8 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 async function exportAs(format: 'json' | 'markdown') {
   try {
+    // Settings never needs the local database otherwise, so it loads only for this.
+    const { store } = await import('#/data/client')
     await Promise.all([store.items.preload(), store.entries.preload()])
     const items = store.items.toArray
     const entries = store.entries.toArray
@@ -134,6 +135,7 @@ async function importFrom(file: File) {
     return
   }
   try {
+    const { store } = await import('#/data/client')
     const { added, skipped } = await store.importItems(parsed.items)
     const notes = [
       skipped > 0 && `${skipped} already here or in the trash`,
