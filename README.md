@@ -119,7 +119,8 @@ docker run -p 3000:3000 --env-file .env ghcr.io/akoskappel/oriel
 | `npm run check`       | Lint and format check (Biome)          |
 | `npm run check:fix`   | Fix lint and formatting                |
 | `npm run typecheck`   | Type-check the project                 |
-| `npm test`            | Run the unit tests                     |
+| `npm test`            | Run the unit and component tests       |
+| `npm run test:e2e`    | Run the end-to-end tests (Playwright)  |
 | `npm run db:generate` | Create a migration from schema changes |
 | `npm run db:migrate`  | Apply migrations                       |
 

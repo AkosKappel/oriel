@@ -49,8 +49,40 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # The production build against the real stack: PostgreSQL with logical replication and the
+  # PowerSync Service, from compose.yaml (service containers cannot set wal_level). Desktop and
+  # mobile Chrome, with axe. CI only; locally the suite runs with one worker.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Throwaway settings for this run: the example passwords, a fresh auth secret and new
+      # sync keys. Nothing here is a real secret.
+      - name: Configure the test stack
+        run: |
+          grep -vE '^(BETTER_AUTH_SECRET|SYNC_JWT_PRIVATE_KEY|PS_JWT_KID|PS_JWT_PUBLIC_X)=' .env.example > .env
+          echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32)" >> .env
+          node scripts/generate-sync-keys.mjs >> .env
+      - run: docker compose up -d --wait db
+      - run: npm run db:migrate
+      - run: ./scripts/setup-powersync-db.sh
+      - run: docker compose up -d --wait powersync
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: test-results/
+
   image:
-    needs: [check]
+    needs: [check, e2e]
     runs-on: ubuntu-latest
     permissions:
       contents: read

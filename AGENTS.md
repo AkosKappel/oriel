@@ -12,6 +12,7 @@ npm only (`package-lock.json`).
 | `npm run check:fix`   | Biome format, lint and import sort                  |
 | `npm run typecheck`   | Regenerates the route tree, then `tsc`              |
 | `npm test`            | Vitest, `src/**/*.test.{ts,tsx}`                    |
+| `npm run test:e2e`    | Playwright against the built app and the services   |
 | `npm run build`       | Production build into `.output/`                    |
 | `npm run db:generate` | Migration from changes in `src/server/db/schema.ts` |
 | `npm run db:migrate`  | Apply migrations (`docker compose up -d db` first)  |
@@ -36,6 +37,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - `src/data/capture.ts` and `src/data/organize.ts` hold the pure parsing and sorting rules; keep that logic out of components and cover it with unit tests.
 - Deleting an item moves it to the trash (`deleted_at`, Undo with `restoreItem`); archived and trashed items are kept off home by `itemsInView`. Permanent deletes return a `Snapshot`, and `restore(snapshot)` undoes them.
 - Tests run the same store against real SQLite through `@powersync/node` (`src/data/store.test.ts`).
+- End-to-end tests (`e2e/`, Playwright, desktop and mobile Chrome, axe) run against `npm run build` with the database and PowerSync up; one worker locally, two in CI. Each test signs up its own `e2e-…@example.com` accounts, sending its own `X-Forwarded-For` to the auth routes only; the teardown deletes them. CI builds the stack from `compose.yaml` with throwaway keys.
 - Component tests (`src/components/*.test.tsx`) use Testing Library in jsdom (`// @vitest-environment jsdom` per file). They mock `#/data/client` with `#/test/client` (that store on Node SQLite) and render through `renderPage` from `#/test/dom` (router, toaster, empty tables after each test). Click Undo with `findUndo(message)`; query by role and label, as a user would.
 - `@tanstack/react-db` and `@tanstack/powersync-db-collection` are pinned together; both must depend on the same `@tanstack/db` version.
 

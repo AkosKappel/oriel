@@ -259,7 +259,7 @@ function ItemRow({
         ? `Archived ${formatShortDate(item.archived_at)}`
         : null,
     showSpace && space && !space.personal ? space.name : null,
-    describe(item, counts),
+    describeItem(item, counts),
   ]
     .filter(Boolean)
     .join(' · ')
@@ -304,7 +304,7 @@ function ItemRow({
   )
 }
 
-function describe(item: Item, counts: EntryCounts) {
+function describeItem(item: Item, counts: EntryCounts) {
   if (item.type === 'list') {
     const { total = 0, open = 0, upNext = [] } = counts.get(item.id) ?? {}
     if (total === 0) return 'Empty list'
