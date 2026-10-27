@@ -16,6 +16,8 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiSyncTokenRouteImport } from './routes/api/sync/token'
+import { Route as ApiSyncUploadRouteImport } from './routes/api/sync/upload'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +54,16 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSyncTokenRoute = ApiSyncTokenRouteImport.update({
+  id: '/api/sync/token',
+  path: '/api/sync/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSyncUploadRoute = ApiSyncUploadRouteImport.update({
+  id: '/api/sync/upload',
+  path: '/api/sync/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +73,8 @@ export interface FileRoutesByFullPath {
   '/api/health': typeof ApiHealthRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/sync/token': typeof ApiSyncTokenRoute
+  '/api/sync/upload': typeof ApiSyncUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +84,8 @@ export interface FileRoutesByTo {
   '/api/health': typeof ApiHealthRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/sync/token': typeof ApiSyncTokenRoute
+  '/api/sync/upload': typeof ApiSyncUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +96,8 @@ export interface FileRoutesById {
   '/api/health': typeof ApiHealthRoute
   '/items/$itemId': typeof ItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/sync/token': typeof ApiSyncTokenRoute
+  '/api/sync/upload': typeof ApiSyncUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +109,8 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/items/$itemId'
     | '/api/auth/$'
+    | '/api/sync/token'
+    | '/api/sync/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +120,8 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/items/$itemId'
     | '/api/auth/$'
+    | '/api/sync/token'
+    | '/api/sync/upload'
   id:
     | '__root__'
     | '/'
@@ -109,6 +131,8 @@ export interface FileRouteTypes {
     | '/api/health'
     | '/items/$itemId'
     | '/api/auth/$'
+    | '/api/sync/token'
+    | '/api/sync/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +143,8 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiSyncTokenRoute: typeof ApiSyncTokenRoute
+  ApiSyncUploadRoute: typeof ApiSyncUploadRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +198,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/sync/token': {
+      id: '/api/sync/token'
+      path: '/api/sync/token'
+      fullPath: '/api/sync/token'
+      preLoaderRoute: typeof ApiSyncTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sync/upload': {
+      id: '/api/sync/upload'
+      path: '/api/sync/upload'
+      fullPath: '/api/sync/upload'
+      preLoaderRoute: typeof ApiSyncUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +223,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthRoute: ApiHealthRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiSyncTokenRoute: ApiSyncTokenRoute,
+  ApiSyncUploadRoute: ApiSyncUploadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -57,24 +57,33 @@ No account is needed: everything works on the device. Creating an account (email
 flowchart LR
   UI[React UI] <--> DB[TanStack DB collections]
   DB <--> Local[(SQLite in the browser)]
-  Local <-->|PowerSync| Server[(PostgreSQL)]
+  Local -->|upload queue| Upload[App: /api/sync/upload]
+  Upload --> PG[(PostgreSQL)]
+  PG -->|logical replication| PS[PowerSync Service]
+  PS -->|sync stream| Local
 ```
 
-The UI only talks to local data. PowerSync uploads local changes when the device is online and streams changes from other devices back. The server decides who may see and change what.
+- **Reads** always come from the local SQLite database, so the app is instant and works offline.
+- **Writes** land locally first and wait in PowerSync's upload queue. When online, the app's upload endpoint validates every change and checks that the user may edit that space (owner or editor) before writing it to PostgreSQL. Refused changes are reported and replaced by the server's version.
+- **Downloads** come from the self-hosted PowerSync Service, which follows PostgreSQL through logical replication and sends each device only the spaces its user is a member of (`powersync/sync-config.yaml`).
+- **Tokens** for the PowerSync Service are short-lived Ed25519 JWTs signed by the app; the service holds only the public key.
 
 ## Getting started
 
-Requires Node.js 24 and Docker (for the PostgreSQL database).
+Requires Node.js 24 and Docker (PostgreSQL and the PowerSync Service).
 
 ```bash
 npm install
-cp .env.example .env    # then set DB_PASSWORD, the same password in DATABASE_URL, and BETTER_AUTH_SECRET
+cp .env.example .env    # set the passwords, BETTER_AUTH_SECRET, and the same DB password in DATABASE_URL
+node scripts/generate-sync-keys.mjs >> .env
 docker compose up -d db
 npm run db:migrate
+./scripts/setup-powersync-db.sh
+docker compose up -d powersync
 npm run dev
 ```
 
-The app runs at http://localhost:3000. Without the database it still works fully on the device; only accounts need it.
+The app runs at http://localhost:3000 and the PowerSync Service at http://localhost:8086. Without the database the app still works fully on the device; accounts and sync need both services.
 
 ## Scripts
 

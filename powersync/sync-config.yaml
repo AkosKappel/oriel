@@ -1,0 +1,13 @@
+# What each user's device downloads: everything in the spaces they are a member of.
+# Writes do not go through here; the app's upload endpoint checks them (src/server/upload.ts).
+config:
+  edition: 3
+  # Timestamps arrive as `2026-10-27T12:00:00.000Z`, the same format the client writes.
+  timestamp_max_precision: milliseconds
+
+streams:
+  my_spaces:
+    auto_subscribe: true
+    queries:
+      - SELECT * FROM items WHERE space_id IN (SELECT space_id FROM space_member WHERE user_id = auth.user_id())
+      - SELECT * FROM entries WHERE space_id IN (SELECT space_id FROM space_member WHERE user_id = auth.user_id())

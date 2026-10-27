@@ -1,22 +1,9 @@
 import { CloudOff } from 'lucide-react'
-import { useSyncExternalStore } from 'react'
-
-function subscribe(onChange: () => void) {
-  window.addEventListener('online', onChange)
-  window.addEventListener('offline', onChange)
-  return () => {
-    window.removeEventListener('online', onChange)
-    window.removeEventListener('offline', onChange)
-  }
-}
+import { useOnline } from '#/lib/online'
 
 /** A quiet note while offline; editing never stops, so this informs rather than warns. */
 export function OfflineBanner() {
-  const online = useSyncExternalStore(
-    subscribe,
-    () => navigator.onLine,
-    () => true,
-  )
+  const online = useOnline()
   if (online) return null
 
   return (

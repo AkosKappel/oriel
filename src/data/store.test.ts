@@ -244,14 +244,21 @@ describe('ownership', () => {
     expect(store.items.get(shared)?.space_id).toBe('shared')
   })
 
-  it('queues the claim for upload, so the server receives the items with their space', async () => {
-    await store.createItem({ type: 'note', title: 'Idea' })
+  it('queues the claim as full rows, so the server can create them', async () => {
+    const id = await store.createItem({ type: 'note', title: 'Idea' })
     await store.claimLocalData(owner)
+
     const batch = await database.getCrudBatch(10)
-    const patch = batch?.crud.find((entry) => entry.op === 'PATCH')
-    expect(patch?.opData).toMatchObject({
+    const claimOps = batch?.crud.slice(-2)
+    expect(claimOps?.map((entry) => [entry.op, entry.id])).toEqual([
+      ['DELETE', id],
+      ['PUT', id],
+    ])
+    expect(claimOps?.[1].opData).toMatchObject({
       space_id: 'space-1',
       created_by: 'user-1',
+      title: 'Idea',
+      type: 'note',
     })
   })
 })

@@ -1,4 +1,4 @@
-import type { CommonPowerSyncDatabase } from '@powersync/common'
+import type { CommonPowerSyncDatabase, Transaction } from '@powersync/common'
 import {
   PowerSyncTransactor,
   powerSyncCollectionOptions,
@@ -21,6 +21,19 @@ import {
 } from './schema'
 
 export type Snapshot = { items: Item[]; entries: Entry[] }
+
+type Row = Record<string, string | number | null>
+
+/** Deletes a row and inserts it again with the given values; see `claimLocalData`. */
+async function reinsert(tx: Transaction, table: 'items' | 'entries', row: Row) {
+  // Column names come from our own rows, never from user input.
+  const columns = Object.keys(row)
+  await tx.execute(`DELETE FROM ${table} WHERE id = ?`, [row.id])
+  await tx.execute(
+    `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
+    Object.values(row),
+  )
+}
 
 /**
  * Collections and write operations over one PowerSync database. Writes apply optimistically and
@@ -110,30 +123,37 @@ export function createStore(database: CommonPowerSyncDatabase) {
      * Moves everything created without an account into the owner's space, in one transaction, so
      * signing up keeps all local data. Rows that already belong to a space are left alone.
      * Returns how many items were claimed.
+     *
+     * Each row is deleted and inserted again rather than updated: the upload queue then carries
+     * the whole row with its space (a DELETE and a PUT). An update would upload as a PATCH of a
+     * row the server never received, which it cannot create from a few columns.
      */
     async claimLocalData(claimant: Owner) {
-      await Promise.all([items.preload(), entries.preload()])
-      const unclaimedItems = items.toArray.filter((item) => !item.space_id)
-      const unclaimedEntries = entries.toArray.filter(
-        (entry) => !entry.space_id,
-      )
-      if (unclaimedItems.length + unclaimedEntries.length === 0) return 0
-
-      await inTransaction(() => {
-        for (const item of unclaimedItems) {
-          items.update(item.id, (draft) => {
-            draft.space_id = claimant.spaceId
-            draft.created_by = claimant.userId
+      const claimed = await database.writeTransaction(async (tx) => {
+        const unclaimedItems = await tx.getAll<Row>(
+          'SELECT * FROM items WHERE space_id IS NULL',
+        )
+        for (const row of unclaimedItems) {
+          await reinsert(tx, 'items', {
+            ...row,
+            space_id: claimant.spaceId,
+            created_by: claimant.userId,
           })
         }
-        for (const entry of unclaimedEntries) {
-          entries.update(entry.id, (draft) => {
-            draft.space_id =
-              items.get(entry.item_id)?.space_id ?? claimant.spaceId
+        const unclaimedEntries = await tx.getAll<Row>(
+          `SELECT entries.*, items.space_id AS list_space_id
+           FROM entries LEFT JOIN items ON items.id = entries.item_id
+           WHERE entries.space_id IS NULL`,
+        )
+        for (const { list_space_id, ...row } of unclaimedEntries) {
+          await reinsert(tx, 'entries', {
+            ...row,
+            space_id: list_space_id ?? claimant.spaceId,
           })
         }
+        return unclaimedItems.length
       })
-      return unclaimedItems.length
+      return claimed
     },
 
     /** Creates an item, and for a list its entries, in one transaction. */

@@ -1,0 +1,40 @@
+# PowerSync Service configuration. Values tagged `!env` come from the PS_ variables that
+# compose.yaml passes in from .env.
+
+replication:
+  connections:
+    - type: postgresql
+      uri: !env PS_SOURCE_URL
+      # Inside the Compose network only.
+      sslmode: disable
+
+# Sync buckets live in their own database on the same server (supported from Postgres 14).
+storage:
+  type: postgresql
+  uri: !env PS_STORAGE_URL
+  sslmode: disable
+
+port: 8080
+
+sync_config:
+  path: sync-config.yaml
+
+# Tokens are signed by the app (src/server/sync-token.ts) with an Ed25519 key; this is its
+# public half, so the service never needs to reach the app to verify them.
+client_auth:
+  jwks:
+    keys:
+      - kty: OKP
+        crv: Ed25519
+        alg: EdDSA
+        kid: !env PS_JWT_KID
+        x: !env PS_JWT_PUBLIC_X
+  audience: ["oriel"]
+
+telemetry:
+  disable_telemetry_sharing: true
+
+system:
+  logging:
+    level: info
+    format: text

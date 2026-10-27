@@ -46,6 +46,15 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Accounts are optional. The client remembers the account in localStorage (`src/lib/account.ts`) so new items get `space_id` and `created_by` offline. At sign-in, `claimLocalData` moves rows without a space into the personal space; signing out clears the device (`disconnectAndClear`).
 - Server tests (`src/server/*.test.ts`) need the database and are skipped without `DATABASE_URL`; they clean up the users they create.
 
+## Sync
+
+- PowerSync Service 1.27 runs in `compose.yaml` (port 8086, config in `powersync/`). It replicates `items`, `entries` and `space_member` through the `powersync` publication (migration `0001`); auth tables are never replicated. Roles and the separate `powersync_storage` database come from `scripts/setup-powersync-db.sh` (idempotent).
+- Downloads: `powersync/sync-config.yaml`, edition 3 sync streams, scoped by `space_member`. Timestamps arrive in the same ISO format the client writes (`timestamp_max_precision: milliseconds`).
+- Uploads: `src/data/connector.ts` sends the queue to `/api/sync/upload`; `src/server/upload.ts` validates and checks membership per operation in a savepoint. Rejected operations are reported and dropped; 401 and 5xx keep the batch for a retry. Keep the server rules in step with the client's Zod schemas (both import `src/data/schema.ts`).
+- Tokens: `/api/sync/token` signs an Ed25519 JWT (`src/server/sync-token.ts`, `sub` = user id, `aud` = `oriel`, 15 minutes). Keys from `scripts/generate-sync-keys.mjs`; PowerSync gets the public key via `PS_` variables. Without the keys, sync is off and the app stays local.
+- Claiming re-inserts rows (DELETE plus full PUT) so the server can create them; a PATCH of a row it never received would be skipped.
+- Server upload tests (`src/server/upload.test.ts`) cover the permission rules; extend them with every new rule.
+
 ## Offline
 
 - `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and emits `sw.js` with the client build. It must be emitted during the build: Nitro only serves files it knows when it bundles.

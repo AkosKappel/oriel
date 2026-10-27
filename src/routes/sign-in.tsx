@@ -5,7 +5,7 @@ import { Button, Form } from 'react-aria-components'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { TextField } from '#/components/ui/text-field'
-import { completeSignIn } from '#/lib/account'
+import { completeSignIn, DifferentAccountError } from '#/lib/account'
 import { authClient } from '#/lib/auth-client'
 
 const searchSchema = z.object({
@@ -54,9 +54,11 @@ function SignIn() {
     } catch (caught) {
       console.error('Sign-in failed', caught)
       setError(
-        navigator.onLine
-          ? 'Something went wrong. Try again.'
-          : 'You are offline. Signing in needs a connection.',
+        caught instanceof DifferentAccountError
+          ? caught.message
+          : navigator.onLine
+            ? 'Something went wrong. Try again.'
+            : 'You are offline. Signing in needs a connection.',
       )
     } finally {
       setBusy(false)
