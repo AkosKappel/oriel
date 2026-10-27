@@ -17,7 +17,7 @@ psql -d oriel -v role_password="$PS_ROLE_PASSWORD" -v storage_password="$PS_STOR
 SELECT format('CREATE ROLE powersync_role WITH REPLICATION LOGIN PASSWORD %L', :'role_password')
 WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'powersync_role') \gexec
 ALTER ROLE powersync_role WITH PASSWORD :'role_password';
-GRANT SELECT ON items, entries, space_member TO powersync_role;
+GRANT SELECT ON items, entries, space_member, space TO powersync_role;
 
 SELECT format('CREATE ROLE powersync_storage WITH LOGIN PASSWORD %L', :'storage_password')
 WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'powersync_storage') \gexec

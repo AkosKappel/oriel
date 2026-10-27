@@ -108,9 +108,37 @@ export const spaceMember = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     role: memberRole().notNull(),
+    // Copied from the user at join, so devices can show who did what without the user table
+    // (and its emails) ever being replicated.
+    memberName: text().notNull(),
     ...timestamps,
   },
   (t) => [primaryKey({ columns: [t.spaceId, t.userId] }), index().on(t.userId)],
+)
+
+// An invite link to a shared space. Only a hash of the token is stored: the link itself is shown
+// once to the owner who made it. Single use, and it expires.
+export const invite = pgTable(
+  'invite',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    spaceId: uuid()
+      .notNull()
+      .references(() => space.id, { onDelete: 'cascade' }),
+    tokenHash: text().notNull().unique(),
+    role: memberRole().notNull(),
+    createdBy: text()
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    acceptedBy: text().references(() => user.id, { onDelete: 'set null' }),
+    acceptedAt: timestamp({ withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    index().on(t.spaceId),
+    check('invite_role', sql`${t.role} <> 'owner'`),
+  ],
 )
 
 // Items and entries mirror the client's PowerSync tables (src/data/schema.ts) and use the

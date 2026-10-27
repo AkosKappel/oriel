@@ -5,6 +5,7 @@ import { Checkbox } from '#/components/ui/checkbox'
 import { countEntries, organizeItems } from '#/data/organize'
 import { type Item, type ItemType, priorities } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { canEdit, type SpaceView } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
 
 const emptyMessages: Record<ItemType | 'all', string> = {
@@ -16,7 +17,18 @@ const emptyMessages: Record<ItemType | 'all', string> = {
 
 type EntryCounts = ReturnType<typeof countEntries>
 
-export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
+export function ItemList({
+  store,
+  type,
+  spaceId,
+  spaces,
+}: {
+  store: Store
+  type?: ItemType
+  /** Show one space only. */
+  spaceId?: string
+  spaces: Map<string, SpaceView>
+}) {
   const { data: items, isLoading } = useLiveQuery({
     query: (q) => q.from({ item: store.items }),
   })
@@ -26,7 +38,10 @@ export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
 
   if (isLoading) return null
 
-  const { pinned, open, completed } = organizeItems(items, type)
+  const { pinned, open, completed } = organizeItems(
+    spaceId ? items.filter((item) => item.space_id === spaceId) : items,
+    type,
+  )
   const counts = countEntries(entries)
 
   if (pinned.length + open.length + completed.length === 0) {
@@ -44,12 +59,24 @@ export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
     <div className="flex flex-col gap-8">
       {pinned.length > 0 && (
         <Section title="Pinned">
-          <Rows store={store} items={pinned} counts={counts} />
+          <Rows
+            store={store}
+            items={pinned}
+            counts={counts}
+            spaces={spaces}
+            showSpace={!spaceId}
+          />
         </Section>
       )}
       {open.length > 0 && (
         <Section title={pinned.length > 0 ? 'Everything else' : undefined}>
-          <Rows store={store} items={open} counts={counts} />
+          <Rows
+            store={store}
+            items={open}
+            counts={counts}
+            spaces={spaces}
+            showSpace={!spaceId}
+          />
         </Section>
       )}
       {completed.length > 0 && (
@@ -60,7 +87,13 @@ export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
             </span>
             <span className="hidden group-open:inline">Hide completed</span>
           </summary>
-          <Rows store={store} items={completed} counts={counts} />
+          <Rows
+            store={store}
+            items={completed}
+            counts={counts}
+            spaces={spaces}
+            showSpace={!spaceId}
+          />
         </details>
       )}
     </div>
@@ -76,19 +109,19 @@ function Section({ title, children }: { title?: string; children: ReactNode }) {
   )
 }
 
-function Rows({
-  store,
-  items,
-  counts,
-}: {
+type RowContext = {
   store: Store
-  items: Item[]
   counts: EntryCounts
-}) {
+  spaces: Map<string, SpaceView>
+  /** Name the space of shared items, when not already filtered to one space. */
+  showSpace: boolean
+}
+
+function Rows({ items, ...context }: RowContext & { items: Item[] }) {
   return (
     <ul>
       {items.map((item) => (
-        <ItemRow key={item.id} store={store} item={item} counts={counts} />
+        <ItemRow key={item.id} item={item} {...context} />
       ))}
     </ul>
   )
@@ -102,13 +135,17 @@ function ItemRow({
   store,
   item,
   counts,
-}: {
-  store: Store
-  item: Item
-  counts: EntryCounts
-}) {
+  spaces,
+  showSpace,
+}: RowContext & { item: Item }) {
   const done = item.completed_at !== null
-  const detail = describe(item, counts)
+  const space = item.space_id ? spaces.get(item.space_id) : undefined
+  const detail = [
+    showSpace && space && !space.personal ? space.name : null,
+    describe(item, counts),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
   return (
     <li className="relative">
@@ -116,6 +153,7 @@ function ItemRow({
         <Checkbox
           className="absolute top-0.5 -left-[2.375rem]"
           isSelected={done}
+          isDisabled={space && !canEdit(space.role)}
           onChange={(selected) =>
             void store.setItemCompleted(item.id, selected)
           }

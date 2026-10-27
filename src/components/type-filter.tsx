@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { type ItemType, itemTypes } from '#/data/schema'
+import type { SpaceView } from '#/lib/spaces'
 
 const labels: Record<ItemType, string> = {
   note: 'Notes',
@@ -7,24 +8,63 @@ const labels: Record<ItemType, string> = {
   task: 'Tasks',
 }
 
-const options = [
+const typeOptions = [
   { type: undefined, label: 'Everything' },
   ...itemTypes.map((type) => ({ type, label: labels[type] })),
 ]
 
-/** Filter links keep the choice in the URL, so it survives reloads and the back button. */
+const linkClass =
+  'shrink-0 py-2 text-muted-foreground underline-offset-[6px] hover:text-foreground focus-visible:rounded-sm focus-visible:outline-2 aria-[current=page]:text-foreground aria-[current=page]:underline aria-[current=page]:decoration-[1.5px]'
+
+/** Filters live in the URL, so they survive reloads and the back button; each keeps the other. */
 export function TypeFilter({ active }: { active?: ItemType }) {
   return (
     <nav aria-label="Show" className="flex gap-x-4 text-sm">
-      {options.map(({ type, label }) => (
+      {typeOptions.map(({ type, label }) => (
         <Link
           key={label}
           to="/"
-          search={type ? { type } : {}}
+          search={(previous) => ({ ...previous, type })}
           aria-current={active === type ? 'page' : undefined}
-          className="py-2 text-muted-foreground underline-offset-[6px] hover:text-foreground focus-visible:rounded-sm focus-visible:outline-2 aria-[current=page]:text-foreground aria-[current=page]:underline aria-[current=page]:decoration-[1.5px]"
+          className={linkClass}
         >
           {label}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+/** Shown once there is more than one space: everything, or one space at a time. */
+export function SpaceFilter({
+  spaces,
+  active,
+}: {
+  spaces: SpaceView[]
+  active?: string
+}) {
+  return (
+    <nav
+      aria-label="Space"
+      className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
+    >
+      <Link
+        to="/"
+        search={(previous) => ({ ...previous, space: undefined })}
+        aria-current={active ? undefined : 'page'}
+        className={linkClass}
+      >
+        All spaces
+      </Link>
+      {spaces.map((space) => (
+        <Link
+          key={space.id}
+          to="/"
+          search={(previous) => ({ ...previous, space: space.id })}
+          aria-current={active === space.id ? 'page' : undefined}
+          className={linkClass}
+        >
+          {space.name}
         </Link>
       ))}
     </nav>

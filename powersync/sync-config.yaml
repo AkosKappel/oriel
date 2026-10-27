@@ -1,5 +1,6 @@
-# What each user's device downloads: everything in the spaces they are a member of.
-# Writes do not go through here; the app's upload endpoint checks them (src/server/upload.ts).
+# What each user's device downloads: the spaces they are a member of, everything in them, and
+# who else is in them. Writes do not go through here; the app's upload endpoint and the sharing
+# server functions check them (src/server/upload.ts, src/server/sharing.ts).
 config:
   edition: 3
   # Timestamps arrive as `2026-10-27T12:00:00.000Z`, the same format the client writes.
@@ -9,5 +10,8 @@ streams:
   my_spaces:
     auto_subscribe: true
     queries:
+      - SELECT * FROM space WHERE id IN (SELECT space_id FROM space_member WHERE user_id = auth.user_id())
+      # PowerSync needs an id column; a membership is identified by its space and user.
+      - SELECT space_id || ':' || user_id AS id, space_id, user_id, role, member_name FROM space_member WHERE space_id IN (SELECT space_id FROM space_member WHERE user_id = auth.user_id())
       - SELECT * FROM items WHERE space_id IN (SELECT space_id FROM space_member WHERE user_id = auth.user_id())
       - SELECT * FROM entries WHERE space_id IN (SELECT space_id FROM space_member WHERE user_id = auth.user_id())

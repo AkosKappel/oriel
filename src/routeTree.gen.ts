@@ -14,7 +14,10 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
+import { Route as SpacesIndexRouteImport } from './routes/spaces.index'
+import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiSyncTokenRouteImport } from './routes/api/sync/token'
 import { Route as ApiSyncUploadRouteImport } from './routes/api/sync/upload'
@@ -44,9 +47,24 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
   id: '/items/$itemId',
   path: '/items/$itemId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpacesIndexRoute = SpacesIndexRouteImport.update({
+  id: '/spaces/',
+  path: '/spaces/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
+  id: '/spaces/$spaceId',
+  path: '/spaces/$spaceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -71,7 +89,10 @@ export interface FileRoutesByFullPath {
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
+  '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/spaces/': typeof SpacesIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/token': typeof ApiSyncTokenRoute
   '/api/sync/upload': typeof ApiSyncUploadRoute
@@ -82,7 +103,10 @@ export interface FileRoutesByTo {
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
+  '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/spaces': typeof SpacesIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/token': typeof ApiSyncTokenRoute
   '/api/sync/upload': typeof ApiSyncUploadRoute
@@ -94,7 +118,10 @@ export interface FileRoutesById {
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/items/$itemId': typeof ItemsItemIdRoute
+  '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/spaces/': typeof SpacesIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/token': typeof ApiSyncTokenRoute
   '/api/sync/upload': typeof ApiSyncUploadRoute
@@ -107,7 +134,10 @@ export interface FileRouteTypes {
     | '/share'
     | '/sign-in'
     | '/api/health'
+    | '/invite/$token'
     | '/items/$itemId'
+    | '/spaces/$spaceId'
+    | '/spaces/'
     | '/api/auth/$'
     | '/api/sync/token'
     | '/api/sync/upload'
@@ -118,7 +148,10 @@ export interface FileRouteTypes {
     | '/share'
     | '/sign-in'
     | '/api/health'
+    | '/invite/$token'
     | '/items/$itemId'
+    | '/spaces/$spaceId'
+    | '/spaces'
     | '/api/auth/$'
     | '/api/sync/token'
     | '/api/sync/upload'
@@ -129,7 +162,10 @@ export interface FileRouteTypes {
     | '/share'
     | '/sign-in'
     | '/api/health'
+    | '/invite/$token'
     | '/items/$itemId'
+    | '/spaces/$spaceId'
+    | '/spaces/'
     | '/api/auth/$'
     | '/api/sync/token'
     | '/api/sync/upload'
@@ -141,7 +177,10 @@ export interface RootRouteChildren {
   ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   ItemsItemIdRoute: typeof ItemsItemIdRoute
+  SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
+  SpacesIndexRoute: typeof SpacesIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiSyncTokenRoute: typeof ApiSyncTokenRoute
   ApiSyncUploadRoute: typeof ApiSyncUploadRoute
@@ -184,11 +223,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/items/$itemId': {
       id: '/items/$itemId'
       path: '/items/$itemId'
       fullPath: '/items/$itemId'
       preLoaderRoute: typeof ItemsItemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spaces/': {
+      id: '/spaces/'
+      path: '/spaces'
+      fullPath: '/spaces/'
+      preLoaderRoute: typeof SpacesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/spaces/$spaceId': {
+      id: '/spaces/$spaceId'
+      path: '/spaces/$spaceId'
+      fullPath: '/spaces/$spaceId'
+      preLoaderRoute: typeof SpacesSpaceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -221,7 +281,10 @@ const rootRouteChildren: RootRouteChildren = {
   ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,
   ApiHealthRoute: ApiHealthRoute,
+  InviteTokenRoute: InviteTokenRoute,
   ItemsItemIdRoute: ItemsItemIdRoute,
+  SpacesSpaceIdRoute: SpacesSpaceIdRoute,
+  SpacesIndexRoute: SpacesIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiSyncTokenRoute: ApiSyncTokenRoute,
   ApiSyncUploadRoute: ApiSyncUploadRoute,

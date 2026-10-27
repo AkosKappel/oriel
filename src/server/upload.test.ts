@@ -106,9 +106,12 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
   })
 
   it('does not let a viewer change a shared space', async () => {
-    await db
-      .insert(spaceMember)
-      .values({ spaceId: bobSpace, userId: alice, role: 'viewer' })
+    await db.insert(spaceMember).values({
+      spaceId: bobSpace,
+      userId: alice,
+      role: 'viewer',
+      memberName: 'Alice',
+    })
     const op = put('items', itemRow(bobSpace))
 
     const result = await applyUpload(alice, [op])

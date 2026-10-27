@@ -17,11 +17,11 @@ export function Checkbox({
     <AriaCheckbox
       {...props}
       className={cn(
-        'group grid size-11 shrink-0 cursor-pointer place-items-center',
+        'group grid size-11 shrink-0 cursor-pointer place-items-center data-disabled:cursor-default',
         className,
       )}
     >
-      <span className="grid size-[1.125rem] place-items-center rounded-full border-[1.5px] border-faint transition-colors group-hover:border-muted-foreground group-data-focus-visible:outline-2 group-data-focus-visible:outline-offset-2 group-data-selected:border-foreground group-data-selected:bg-foreground motion-reduce:transition-none">
+      <span className="grid size-[1.125rem] place-items-center rounded-full border-[1.5px] border-faint transition-colors group-hover:border-muted-foreground group-data-disabled:opacity-50 group-data-focus-visible:outline-2 group-data-focus-visible:outline-offset-2 group-data-selected:border-foreground group-data-selected:bg-foreground motion-reduce:transition-none">
         <Check
           aria-hidden
           strokeWidth={3}

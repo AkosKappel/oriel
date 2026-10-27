@@ -3,13 +3,15 @@ import { z } from 'zod'
 import { AccountLink } from '#/components/account-link'
 import { CaptureBar } from '#/components/capture-bar'
 import { ItemList } from '#/components/item-list'
-import { TypeFilter } from '#/components/type-filter'
+import { SpaceFilter, TypeFilter } from '#/components/type-filter'
 import { store } from '#/data/client'
 import { itemTypes } from '#/data/schema'
 import { formatDay, greeting } from '#/lib/dates'
+import { canEdit, useSpaces } from '#/lib/spaces'
 
 const searchSchema = z.object({
   type: z.enum(itemTypes).optional().catch(undefined),
+  space: z.uuid().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/')({
@@ -20,7 +22,9 @@ export const Route = createFileRoute('/')({
 })
 
 function Home() {
-  const { type } = Route.useSearch()
+  const { type, space: spaceId } = Route.useSearch()
+  const { spaces, byId } = useSpaces()
+  const space = spaceId ? byId.get(spaceId) : undefined
   const now = new Date()
 
   return (
@@ -32,12 +36,19 @@ function Home() {
           <AccountLink />
         </div>
         <h1 className="font-serif text-4xl tracking-tight">{greeting(now)}</h1>
+        {spaces.length > 1 && <SpaceFilter spaces={spaces} active={spaceId} />}
         <TypeFilter active={type} />
       </header>
       <main className="flex flex-1 flex-col pb-6 pl-10">
-        <ItemList store={store} type={type} />
+        <ItemList store={store} type={type} spaceId={spaceId} spaces={byId} />
       </main>
-      <CaptureBar store={store} preferredType={type} />
+      {space && !canEdit(space.role) ? (
+        <p className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground">
+          You can view {space.name}; only its editors can add to it.
+        </p>
+      ) : (
+        <CaptureBar store={store} preferredType={type} spaceId={space?.id} />
+      )}
     </div>
   )
 }

@@ -10,7 +10,15 @@ import { type Entry, entryTextSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { cn } from '#/lib/utils'
 
-export function EntryList({ store, itemId }: { store: Store; itemId: string }) {
+export function EntryList({
+  store,
+  itemId,
+  readOnly = false,
+}: {
+  store: Store
+  itemId: string
+  readOnly?: boolean
+}) {
   const { data } = useLiveQuery({
     query: (q) =>
       q
@@ -38,7 +46,7 @@ export function EntryList({ store, itemId }: { store: Store; itemId: string }) {
               ? 'All done'
               : `${open} of ${total} left`}
         </p>
-        {checked > 0 && (
+        {checked > 0 && !readOnly && (
           <Button
             onPress={() => void clearChecked()}
             className="-mr-2 rounded-sm px-2 py-2 hover:text-foreground data-focus-visible:outline-2"
@@ -53,15 +61,24 @@ export function EntryList({ store, itemId }: { store: Store; itemId: string }) {
             key={`${entry.id}:${entry.text}`}
             store={store}
             entry={entry}
+            readOnly={readOnly}
           />
         ))}
       </ul>
-      <AddEntry store={store} itemId={itemId} />
+      {!readOnly && <AddEntry store={store} itemId={itemId} />}
     </section>
   )
 }
 
-function EntryRow({ store, entry }: { store: Store; entry: Entry }) {
+function EntryRow({
+  store,
+  entry,
+  readOnly,
+}: {
+  store: Store
+  entry: Entry
+  readOnly: boolean
+}) {
   const done = entry.completed_at !== null
 
   async function remove() {
@@ -89,6 +106,7 @@ function EntryRow({ store, entry }: { store: Store; entry: Entry }) {
       <Checkbox
         className="absolute -left-[2.375rem]"
         isSelected={done}
+        isDisabled={readOnly}
         onChange={(selected) =>
           void store.setEntryCompleted(entry.id, selected)
         }
@@ -96,6 +114,7 @@ function EntryRow({ store, entry }: { store: Store; entry: Entry }) {
       />
       <input
         defaultValue={entry.text}
+        readOnly={readOnly}
         aria-label="Item text"
         maxLength={500}
         enterKeyHint="done"
@@ -113,13 +132,15 @@ function EntryRow({ store, entry }: { store: Store; entry: Entry }) {
         )}
       />
       {/* Quiet until hovered on desktop; always there on touch, where hover does not exist. */}
-      <Button
-        onPress={() => void remove()}
-        aria-label={`Remove ${entry.text}`}
-        className="-mr-3 grid size-11 shrink-0 place-items-center rounded-sm text-faint hover:text-foreground data-focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:data-focus-visible:opacity-100"
-      >
-        <X aria-hidden className="size-4" />
-      </Button>
+      {!readOnly && (
+        <Button
+          onPress={() => void remove()}
+          aria-label={`Remove ${entry.text}`}
+          className="-mr-3 grid size-11 shrink-0 place-items-center rounded-sm text-faint hover:text-foreground data-focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:data-focus-visible:opacity-100"
+        >
+          <X aria-hidden className="size-4" />
+        </Button>
+      )}
     </li>
   )
 }

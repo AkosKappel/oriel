@@ -15,7 +15,9 @@ import {
   titleSchema,
 } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { useAccount } from '#/lib/account'
 import { formatShortDate } from '#/lib/dates'
+import { canEdit, useSpaces } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
 
 const iconButton =
@@ -63,8 +65,24 @@ export function ItemDetail({
 
 function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const navigate = useNavigate()
+  const account = useAccount()
+  const { spaces, byId } = useSpaces()
   const label = itemLabels[item.type]
   const pinned = item.pinned_at !== null
+  const space = item.space_id ? byId.get(item.space_id) : undefined
+  // Viewers get a read-only page; the server refuses their writes anyway.
+  const editable = !space || canEdit(space.role)
+  const author =
+    item.created_by && item.created_by !== account?.userId
+      ? space?.members.find((member) => member.user_id === item.created_by)
+          ?.member_name
+      : undefined
+  const moveTargets = spaces.filter((target) => canEdit(target.role))
+
+  async function move(spaceId: string) {
+    await store.moveItem(item.id, spaceId)
+    toast(`Moved to ${byId.get(spaceId)?.name}`)
+  }
 
   async function remove() {
     await navigate({ to: '/' })
@@ -84,7 +102,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           <ArrowLeft aria-hidden className="size-4" />
           Everything
         </Link>
-        <div className="-mr-3 flex">
+        <div className={cn('-mr-3 flex', !editable && 'hidden')}>
           <ToggleButton
             isSelected={pinned}
             onChange={(selected) => void store.setItemPinned(item.id, selected)}
@@ -111,20 +129,24 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       <div className="pl-10">
         <p className="text-xs text-muted-foreground">
           {label} · {formatShortDate(item.created_at)}
+          {space && !space.personal && ` · ${space.name}`}
+          {author && ` · by ${author}`}
           {pinned && ' · Pinned'}
+          {!editable && ' · View only'}
         </p>
         <div className="relative">
           {item.type === 'task' && (
             <Checkbox
               className="absolute top-1 -left-[2.375rem]"
               isSelected={item.completed_at !== null}
+              isDisabled={!editable}
               onChange={(selected) =>
                 void store.setItemCompleted(item.id, selected)
               }
               aria-label="Done"
             />
           )}
-          <TitleField store={store} item={item} />
+          <TitleField store={store} item={item} readOnly={!editable} />
         </div>
 
         {item.type === 'task' && (
@@ -133,6 +155,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             showLabel
             choices={priorityChoices}
             value={String(item.priority)}
+            isDisabled={!editable}
             onChange={(value) =>
               void store.setItemPriority(item.id, Number(value) as Priority)
             }
@@ -141,16 +164,38 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         )}
 
         {item.type === 'list' ? (
-          <EntryList store={store} itemId={item.id} />
+          <EntryList store={store} itemId={item.id} readOnly={!editable} />
         ) : (
-          <BodyField store={store} item={item} />
+          <BodyField store={store} item={item} readOnly={!editable} />
+        )}
+
+        {editable && item.space_id && moveTargets.length > 1 && (
+          <ChoiceGroup
+            label="Space"
+            showLabel
+            choices={moveTargets.map((target) => ({
+              value: target.id,
+              label: target.name,
+            }))}
+            value={item.space_id}
+            onChange={(spaceId) => void move(spaceId)}
+            className="mt-8"
+          />
         )}
       </div>
     </article>
   )
 }
 
-function TitleField({ store, item }: { store: Store; item: Item }) {
+function TitleField({
+  store,
+  item,
+  readOnly,
+}: {
+  store: Store
+  item: Item
+  readOnly: boolean
+}) {
   function save(field: HTMLTextAreaElement) {
     const result = titleSchema.safeParse(field.value)
     if (!result.success) {
@@ -166,6 +211,7 @@ function TitleField({ store, item }: { store: Store; item: Item }) {
       // Remounts when the title changes elsewhere (another tab), so it never shows stale text.
       key={item.title}
       defaultValue={item.title}
+      readOnly={readOnly}
       aria-label="Title"
       rows={1}
       maxLength={200}
@@ -188,7 +234,15 @@ function TitleField({ store, item }: { store: Store; item: Item }) {
 const saveDelay = 500
 
 /** Saves while typing (debounced), on leaving the page and when the app is hidden. */
-function BodyField({ store, item }: { store: Store; item: Item }) {
+function BodyField({
+  store,
+  item,
+  readOnly,
+}: {
+  store: Store
+  item: Item
+  readOnly: boolean
+}) {
   const [body, setBody] = useState(item.body)
   const flush = useRef(() => {})
   flush.current = () => {
@@ -219,6 +273,7 @@ function BodyField({ store, item }: { store: Store; item: Item }) {
   return (
     <textarea
       value={body}
+      readOnly={readOnly}
       onChange={(event) => setBody(event.target.value)}
       placeholder={item.type === 'note' ? 'Write something' : 'Add details'}
       aria-label={item.type === 'note' ? 'Note' : 'Details'}

@@ -53,9 +53,12 @@ function isEditable(target: EventTarget | null) {
 export function CaptureBar({
   store,
   preferredType,
+  spaceId,
 }: {
   store: Store
   preferredType?: ItemType
+  /** The space being viewed; new items go there instead of the personal space. */
+  spaceId?: string
 }) {
   const [type, setType] = useState<ItemType>(
     () => preferredType ?? readStoredType(),
@@ -109,7 +112,7 @@ export function CaptureBar({
     const captured = text
     setText('')
     setError(null)
-    store.createItem(draft).then(
+    store.createItem(draft, { spaceId }).then(
       (id) => {
         toast(`${itemLabels[draft.type]} saved`, {
           action: { label: 'Undo', onClick: () => void store.deleteItem(id) },

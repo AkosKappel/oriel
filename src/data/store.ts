@@ -12,11 +12,13 @@ import {
   entryTextSchema,
   type Item,
   itemSchema,
+  memberSchema,
   type NewItem,
   newItemSchema,
   type Owner,
   type Priority,
   prioritySchema,
+  spaceSchema,
   titleSchema,
 } from './schema'
 
@@ -59,6 +61,27 @@ export function createStore(database: CommonPowerSyncDatabase) {
       database,
       table: appSchema.props.entries,
       schema: entrySchema,
+      onDeserializationError,
+    }),
+  )
+
+  // Read-only on the device: filled by sync, changed through the sharing server functions.
+  const spaces = createCollection(
+    powerSyncCollectionOptions({
+      id: 'spaces',
+      database,
+      table: appSchema.props.space,
+      schema: spaceSchema,
+      onDeserializationError,
+    }),
+  )
+
+  const members = createCollection(
+    powerSyncCollectionOptions({
+      id: 'members',
+      database,
+      table: appSchema.props.space_member,
+      schema: memberSchema,
       onDeserializationError,
     }),
   )
@@ -113,6 +136,8 @@ export function createStore(database: CommonPowerSyncDatabase) {
   return {
     items,
     entries,
+    spaces,
+    members,
 
     /** Sets who new items belong to: the signed-in user's personal space, or nobody. */
     setOwner(next: Owner | null) {
@@ -156,15 +181,40 @@ export function createStore(database: CommonPowerSyncDatabase) {
       return claimed
     },
 
+    /**
+     * Moves an item and its entries to another space, re-inserted for the same reason as in
+     * `claimLocalData`: the server checks the move as a delete in one space and a create in the
+     * other, and needs edit rights in both.
+     */
+    async moveItem(itemId: string, spaceId: string) {
+      await database.writeTransaction(async (tx) => {
+        const [item] = await tx.getAll<Row>(
+          'SELECT * FROM items WHERE id = ?',
+          [itemId],
+        )
+        if (!item || item.space_id === spaceId) return
+        const itemEntries = await tx.getAll<Row>(
+          'SELECT * FROM entries WHERE item_id = ?',
+          [itemId],
+        )
+        await reinsert(tx, 'items', { ...item, space_id: spaceId })
+        for (const entry of itemEntries) {
+          await reinsert(tx, 'entries', { ...entry, space_id: spaceId })
+        }
+      })
+    },
+
     /** Creates an item, and for a list its entries, in one transaction. */
-    async createItem(input: NewItem) {
+    async createItem(input: NewItem, options: { spaceId?: string } = {}) {
       const { type, title, body, entries: texts } = newItemSchema.parse(input)
+      // A shared space when capturing into one, otherwise the owner's personal space.
+      const spaceId = options.spaceId ?? owner?.spaceId ?? null
       const id = crypto.randomUUID()
       const timestamp = now()
       await inTransaction(() => {
         items.insert({
           id,
-          space_id: owner?.spaceId ?? null,
+          space_id: spaceId,
           created_by: owner?.userId ?? null,
           type,
           title,
@@ -176,9 +226,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           updated_at: timestamp,
         })
         if (texts.length > 0) {
-          entries.insert(
-            newEntries(id, owner?.spaceId ?? null, texts, timestamp),
-          )
+          entries.insert(newEntries(id, spaceId, texts, timestamp))
         }
       })
       return id

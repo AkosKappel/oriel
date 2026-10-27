@@ -13,6 +13,7 @@ export function ChoiceGroup<T extends string>({
   choices,
   value,
   onChange,
+  isDisabled,
   className,
 }: {
   label: string
@@ -20,6 +21,7 @@ export function ChoiceGroup<T extends string>({
   choices: readonly Choice<T>[]
   value: T
   onChange: (value: T) => void
+  isDisabled?: boolean
   className?: string
 }) {
   return (
@@ -27,6 +29,7 @@ export function ChoiceGroup<T extends string>({
       aria-label={showLabel ? undefined : label}
       orientation="horizontal"
       value={value}
+      isDisabled={isDisabled}
       onChange={(next) => onChange(next as T)}
       className={cn('flex flex-wrap items-center gap-x-4 text-sm', className)}
     >
@@ -35,7 +38,7 @@ export function ChoiceGroup<T extends string>({
         <Radio
           key={choice.value}
           value={choice.value}
-          className="cursor-pointer py-2 text-muted-foreground underline-offset-[6px] transition-colors hover:text-foreground data-focus-visible:rounded-sm data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-selected:text-foreground data-selected:underline data-selected:decoration-[1.5px] motion-reduce:transition-none"
+          className="cursor-pointer py-2 text-muted-foreground underline-offset-[6px] transition-colors hover:text-foreground data-disabled:cursor-default data-disabled:hover:text-muted-foreground data-focus-visible:rounded-sm data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-selected:text-foreground data-selected:underline data-selected:decoration-[1.5px] motion-reduce:transition-none"
         >
           {choice.label}
         </Radio>

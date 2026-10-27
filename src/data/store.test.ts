@@ -263,6 +263,48 @@ describe('ownership', () => {
   })
 })
 
+describe('spaces', () => {
+  const owner = { userId: 'user-1', spaceId: 'personal' }
+
+  it('captures into a chosen space instead of the personal one', async () => {
+    store.setOwner(owner)
+    const id = await store.createItem(
+      { type: 'list', title: 'Party', entries: ['Cake'] },
+      { spaceId: 'family' },
+    )
+    expect(store.items.get(id)?.space_id).toBe('family')
+    expect(store.entries.toArray[0].space_id).toBe('family')
+  })
+
+  it('moves an item with its entries, uploaded as a delete and a full create', async () => {
+    store.setOwner(owner)
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk', 'Eggs'],
+    })
+    const queuedBefore = (await database.getCrudBatch(100))?.crud.length ?? 0
+
+    await store.moveItem(id, 'family')
+
+    expect(
+      await database.getAll('SELECT DISTINCT space_id FROM items'),
+    ).toEqual([{ space_id: 'family' }])
+    expect(
+      await database.getAll('SELECT DISTINCT space_id FROM entries'),
+    ).toEqual([{ space_id: 'family' }])
+    const moveOps = (await database.getCrudBatch(100))?.crud.slice(queuedBefore)
+    expect(moveOps?.map((entry) => `${entry.table} ${entry.op}`)).toEqual([
+      'items DELETE',
+      'items PUT',
+      'entries DELETE',
+      'entries PUT',
+      'entries DELETE',
+      'entries PUT',
+    ])
+  })
+})
+
 describe('creating a list with entries', () => {
   it('stores the list and its entries together', async () => {
     const id = await store.createItem({

@@ -55,6 +55,14 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Claiming re-inserts rows (DELETE plus full PUT) so the server can create them; a PATCH of a row it never received would be skipped.
 - Server upload tests (`src/server/upload.test.ts`) cover the permission rules; extend them with every new rule.
 
+## Sharing
+
+- Rules live in `src/server/sharing.ts` (owners invite, rename, change roles, remove; a personal space is never shared; a space always keeps an owner; invites are single use, 7 days, stored as a SHA-256 hash). `src/server/sharing-functions.ts` wraps them as authenticated server functions; errors carry user-facing messages.
+- Spaces and memberships sync to devices (`space`, `space_member` with `member_name` copied at join, so the `user` table never replicates). The client never writes these tables; it calls the server functions and waits for sync.
+- `useSpaces()` (`src/lib/spaces.ts`) gives the user's spaces and role offline; `canEdit` drives read-only screens for viewers.
+- Moving an item between spaces re-inserts it and its entries (`moveItem`), so the server checks edit rights in both spaces.
+- Shared spaces have no owner column: deleting a user does not delete them. Account deletion must remove spaces where the user is the last member (B-06).
+
 ## Offline
 
 - `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and emits `sw.js` with the client build. It must be emitted during the build: Nitro only serves files it knows when it bundles.

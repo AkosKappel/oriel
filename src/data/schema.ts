@@ -36,7 +36,27 @@ const entries = new Table(
   { indexes: { item: ['item_id'] } },
 )
 
-export const appSchema = new Schema({ items, entries })
+// Spaces and memberships arrive from the server only; the app never writes them locally (sharing
+// changes go through server functions), so they are never in the upload queue.
+
+const space = new Table({
+  name: column.text,
+  personal_owner_id: column.text,
+  created_at: column.text,
+  updated_at: column.text,
+})
+
+const space_member = new Table(
+  {
+    space_id: column.text,
+    user_id: column.text,
+    role: column.text,
+    member_name: column.text,
+  },
+  { indexes: { space: ['space_id'] } },
+)
+
+export const appSchema = new Schema({ items, entries, space, space_member })
 
 export const itemTypes = ['note', 'list', 'task'] as const
 
@@ -121,3 +141,26 @@ export type NewItem = z.input<typeof newItemSchema>
 
 /** Who new items belong to on this device: set after sign-in, null without an account. */
 export type Owner = { userId: string; spaceId: string }
+
+export const memberRoles = ['owner', 'editor', 'viewer'] as const
+export type MemberRole = (typeof memberRoles)[number]
+
+export const spaceSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  personal_owner_id: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export type Space = z.infer<typeof spaceSchema>
+
+export const memberSchema = z.object({
+  id: z.string(),
+  space_id: z.string(),
+  user_id: z.string(),
+  role: z.enum(memberRoles),
+  member_name: z.string(),
+})
+
+export type Member = z.infer<typeof memberSchema>

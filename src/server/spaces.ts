@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { db } from '#/server/db'
-import { space, spaceMember } from '#/server/db/schema'
+import { space, spaceMember, user } from '#/server/db/schema'
 
 /**
  * Returns the user's personal space, creating it with its owner membership if it does not exist
@@ -16,9 +16,16 @@ export async function ensurePersonalSpace(userId: string) {
       .returning({ id: space.id })
 
     if (created) {
-      await tx
-        .insert(spaceMember)
-        .values({ spaceId: created.id, userId, role: 'owner' })
+      const [owner] = await tx
+        .select({ name: user.name })
+        .from(user)
+        .where(eq(user.id, userId))
+      await tx.insert(spaceMember).values({
+        spaceId: created.id,
+        userId,
+        role: 'owner',
+        memberName: owner.name,
+      })
       return created.id
     }
 

@@ -39,6 +39,13 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 No account is needed: everything works on the device. Creating an account (email and password, with Better Auth) gives you a personal space on the server, and everything you made before signing up moves into it, so nothing is lost. Signing out removes the data from the device, so the next person to use it starts clean.
 
+## Sharing
+
+- **Spaces:** your personal space is only yours. Create a shared space (a household, a trip), invite people, and move notes and lists into it. Members see changes from each other within a second.
+- **Invites:** an owner creates a link that one person can use within 7 days; only a hash of it is stored. Someone without an account is asked to create one when opening it, and anything already on their device comes along.
+- **Roles:** owners manage the space and its members, editors change content, viewers only read (their screens are read-only, and the server refuses their writes). A space always keeps an owner.
+- **Leaving:** removing someone, or leaving, takes the space off their devices on the next sync.
+
 ## Tech stack
 
 - [TanStack Start](https://tanstack.com/start) (React 19, file-based routing) on Vite and Nitro

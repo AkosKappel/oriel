@@ -1,5 +1,4 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   Button,
@@ -9,6 +8,7 @@ import {
   Modal,
   ModalOverlay,
 } from 'react-aria-components'
+import { SubPage } from '#/components/sub-page'
 import { pendingChanges, signOut, useAccount } from '#/lib/account'
 import { useOnline } from '#/lib/online'
 import { describeSync, useSyncStatus } from '#/lib/sync-status'
@@ -59,44 +59,42 @@ function AccountPage() {
       : 'Offline'
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pt-[max(0.5rem,env(safe-area-inset-top))]">
+    <SubPage>
+      <div className="flex flex-col gap-1">
+        <p className="text-sm text-muted-foreground">{account.email}</p>
+        <h1 className="font-serif text-4xl tracking-tight">{account.name}</h1>
+      </div>
+
+      <section aria-label="Sync" className="flex flex-col gap-1">
+        <p className="font-serif text-lg">{state}</p>
+        <p className="text-sm text-muted-foreground">
+          {status?.lastSyncedAt
+            ? `Last synced ${timeFormat.format(status.lastSyncedAt)}. `
+            : ''}
+          {pending
+            ? `${pending} ${pending === 1 ? 'change' : 'changes'} waiting to upload.`
+            : 'Everything on this device is saved to your account.'}
+        </p>
+        {account.needsSignIn && (
+          <Link
+            to="/sign-in"
+            search={{ mode: 'sign-in' }}
+            className="w-fit text-sm underline underline-offset-4"
+          >
+            Sign in again to keep syncing
+          </Link>
+        )}
+      </section>
+
       <Link
-        to="/"
-        className="-ml-3 flex h-11 w-fit items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
+        to="/spaces"
+        className="w-fit font-serif text-lg underline decoration-1 underline-offset-4"
       >
-        <ArrowLeft aria-hidden className="size-4" />
-        Everything
+        Spaces and sharing
       </Link>
-      <main className="flex flex-col gap-8 pt-8 pb-12 pl-10">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm text-muted-foreground">{account.email}</p>
-          <h1 className="font-serif text-4xl tracking-tight">{account.name}</h1>
-        </div>
 
-        <section aria-label="Sync" className="flex flex-col gap-1">
-          <p className="font-serif text-lg">{state}</p>
-          <p className="text-sm text-muted-foreground">
-            {status?.lastSyncedAt
-              ? `Last synced ${timeFormat.format(status.lastSyncedAt)}. `
-              : ''}
-            {pending
-              ? `${pending} ${pending === 1 ? 'change' : 'changes'} waiting to upload.`
-              : 'Everything on this device is saved to your account.'}
-          </p>
-          {account.needsSignIn && (
-            <Link
-              to="/sign-in"
-              search={{ mode: 'sign-in' }}
-              className="w-fit text-sm underline underline-offset-4"
-            >
-              Sign in again to keep syncing
-            </Link>
-          )}
-        </section>
-
-        <SignOut pending={pending ?? 0} />
-      </main>
-    </div>
+      <SignOut pending={pending ?? 0} />
+    </SubPage>
   )
 }
 
