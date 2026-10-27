@@ -339,6 +339,53 @@ export function createStore(database: CommonPowerSyncDatabase) {
       }
       return { items: [], entries: removed }
     },
+
+    /**
+     * Unchecks every entry of a list, to use it again (a weekly shopping list). Returns the
+     * entries as they were, for `restoreChecks`.
+     */
+    async uncheckAllEntries(itemId: string): Promise<Entry[]> {
+      await entries.preload()
+      const checked = entries.toArray.filter(
+        (entry) => entry.item_id === itemId && entry.completed_at !== null,
+      )
+      if (checked.length > 0) {
+        const timestamp = now()
+        await inTransaction(() => {
+          entries.update(
+            checked.map((entry) => entry.id),
+            (drafts) => {
+              for (const draft of drafts) {
+                draft.completed_at = null
+                draft.completed_by = null
+                draft.updated_at = timestamp
+              }
+            },
+          )
+        })
+      }
+      return checked
+    },
+
+    /** Puts back who checked what and when, for Undo after `uncheckAllEntries`. */
+    async restoreChecks(previous: Entry[]) {
+      const present = previous.filter((entry) => entries.has(entry.id))
+      if (present.length === 0) return
+      const byId = new Map(present.map((entry) => [entry.id, entry]))
+      await inTransaction(() => {
+        entries.update(
+          present.map((entry) => entry.id),
+          (drafts) => {
+            for (const draft of drafts) {
+              const before = byId.get(draft.id)
+              draft.completed_at = before?.completed_at ?? null
+              draft.completed_by = before?.completed_by ?? null
+              draft.updated_at = now()
+            }
+          },
+        )
+      })
+    },
   }
 }
 

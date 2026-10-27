@@ -10,6 +10,9 @@ import { type Entry, entryTextSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { cn } from '#/lib/utils'
 
+const listAction =
+  'rounded-sm px-2 py-2 hover:text-foreground data-focus-visible:outline-2'
+
 export function EntryList({
   store,
   itemId,
@@ -39,6 +42,16 @@ export function EntryList({
     })
   }
 
+  async function uncheckAll() {
+    const previous = await store.uncheckAllEntries(itemId)
+    toast(`Unchecked ${previous.length}`, {
+      action: {
+        label: 'Undo',
+        onClick: () => void store.restoreChecks(previous),
+      },
+    })
+  }
+
   return (
     <section aria-label="Items" className="flex flex-col">
       <div className="flex min-h-9 items-center justify-between text-xs text-muted-foreground">
@@ -50,12 +63,14 @@ export function EntryList({
               : `${open} of ${total} left`}
         </p>
         {checked > 0 && !readOnly && (
-          <Button
-            onPress={() => void clearChecked()}
-            className="-mr-2 rounded-sm px-2 py-2 hover:text-foreground data-focus-visible:outline-2"
-          >
-            Clear checked
-          </Button>
+          <div className="-mr-2 flex">
+            <Button onPress={() => void uncheckAll()} className={listAction}>
+              Uncheck all
+            </Button>
+            <Button onPress={() => void clearChecked()} className={listAction}>
+              Clear checked
+            </Button>
+          </div>
         )}
       </div>
       <ul>

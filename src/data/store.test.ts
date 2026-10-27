@@ -174,6 +174,37 @@ describe('undo', () => {
     await store.restore(snapshot)
     expect(store.entries.get(milk.id)?.completed_at).not.toBeNull()
   })
+
+  it('unchecks every entry of one list and can check them again', async () => {
+    const list = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk', 'Eggs'],
+    })
+    const other = await store.createItem({
+      type: 'list',
+      title: 'Hardware',
+      entries: ['Screws'],
+    })
+    for (const entry of store.entries.toArray) {
+      await store.setEntryCompleted(entry.id, true)
+    }
+    const checkedAt = (id: string) => store.entries.get(id)?.completed_at
+
+    const previous = await store.uncheckAllEntries(list)
+    expect(previous).toHaveLength(2)
+    const rows = await database.getAll<{ item_id: string; done: number }>(
+      'SELECT item_id, completed_at IS NOT NULL AS done FROM entries',
+    )
+    expect(rows.filter((row) => row.done).map((row) => row.item_id)).toEqual([
+      other,
+    ])
+
+    await store.restoreChecks(previous)
+    for (const entry of previous) {
+      expect(checkedAt(entry.id)).toBe(entry.completed_at)
+    }
+  })
 })
 
 describe('ownership', () => {
