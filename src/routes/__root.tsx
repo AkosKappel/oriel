@@ -4,6 +4,7 @@ import {
   type ErrorComponentProps,
   HeadContent,
   Link,
+  ScriptOnce,
   Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -11,6 +12,7 @@ import { type CSSProperties, type ReactNode, useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { OfflineBanner } from '#/components/offline-banner'
 import { useFocusAfterNavigation } from '#/lib/route-focus'
+import { contentSecurityPolicy } from '#/lib/security-headers'
 import { registerServiceWorker } from '#/lib/service-worker'
 import { themeScript, useTheme } from '#/lib/theme'
 import appCss from '../styles.css?url'
@@ -39,6 +41,16 @@ export const Route = createRootRoute({
       { rel: 'manifest', href: '/manifest.webmanifest' },
     ],
   }),
+  // Pages only, and only in production builds: Vite's development scripts carry no nonce.
+  headers: ({ ssr }) =>
+    import.meta.env.PROD && ssr?.nonce
+      ? {
+          'Content-Security-Policy': contentSecurityPolicy(
+            ssr.nonce,
+            process.env.POWERSYNC_URL,
+          ),
+        }
+      : undefined,
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
   errorComponent: ErrorPage,
@@ -69,8 +81,8 @@ function RootDocument({ children }: { children: ReactNode }) {
           content="#1c1a17"
           media="(prefers-color-scheme: dark)"
         />
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant from our own code, no user input */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        {/* Carries the page's CSP nonce and removes itself before React hydrates. */}
+        <ScriptOnce>{themeScript}</ScriptOnce>
       </head>
       <body>
         <OfflineBanner />

@@ -5,6 +5,7 @@ import viteReact from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 import { serviceWorker } from './scripts/service-worker-plugin'
+import { securityHeaders } from './src/lib/security-headers'
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
@@ -14,7 +15,10 @@ export default defineConfig({
   plugins: [
     devtools(),
     // Serves gzip and Brotli copies of the built assets (the server does not compress).
-    nitro({ compressPublicAssets: true }),
+    nitro({
+      compressPublicAssets: true,
+      routeRules: { '/**': { headers: securityHeaders } },
+    }),
     tailwindcss(),
     tanstackStart(),
     viteReact(),

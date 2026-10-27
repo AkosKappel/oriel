@@ -14,6 +14,18 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   // Email verification and password reset need an email provider (backlog B-02).
   emailAndPassword: { enabled: true, minPasswordLength: 10 },
+  // Always on: Better Auth's default enables it only when NODE_ENV is `production`, which the
+  // server does not set by itself. Per client IP from `X-Forwarded-For`, which the Tailscale
+  // sidecar sets and overwrites; in memory, so limits reset on restart. Stricter than the default
+  // for guessing passwords (3 per 10 seconds).
+  rateLimit: {
+    enabled: true,
+    customRules: {
+      '/sign-in/email': { window: 60, max: 5 },
+      '/sign-up/email': { window: 3600, max: 10 },
+      '/delete-user': { window: 60, max: 5 },
+    },
+  },
   user: {
     deleteUser: {
       enabled: true,

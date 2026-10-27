@@ -1,6 +1,10 @@
 import { column, Schema, Table } from '@powersync/common'
 import { z } from 'zod'
 
+// The page's Content-Security-Policy forbids eval, so Zod must not probe for it with `Function`
+// (the probe fails safely but is reported as a violation). The server keeps Zod's faster parsers.
+if (typeof window !== 'undefined') z.config({ jitless: true })
+
 // PowerSync adds the text `id` column itself. Timestamps are ISO 8601 strings, and completion is
 // stored as a timestamp so it records when something was done, not only whether.
 

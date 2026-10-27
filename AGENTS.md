@@ -65,6 +65,12 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Moving an item between spaces re-inserts it and its entries (`moveItem`), so the server checks edit rights in both spaces.
 - Shared spaces have no owner column: deleting a user does not delete them. Better Auth's `deleteUser.beforeDelete` calls `releaseSpaces`, which deletes spaces where the user is the only member and refuses while the user is the only owner of a space others use.
 
+## Security
+
+- Production pages get a CSP with a per-request nonce (`getRouter` in `src/router.tsx`, header from the root route's `headers`, policy in `src/lib/security-headers.ts`); Nitro route rules add the other headers to every response. Inline scripts must carry the router's nonce: use `ScriptOnce`, never `dangerouslySetInnerHTML`. New external origins need a `connect-src` entry.
+- Zod runs jitless in the browser, because the CSP forbids eval.
+- Rate limits: Better Auth's (always on, per IP from `X-Forwarded-For`) for auth routes; `createRateLimit` (`src/server/rate-limit.ts`, in memory, per user) for sync endpoints. Both reset on restart.
+
 ## Offline
 
 - `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and emits `sw.js` with the client build. It must be emitted during the build: Nitro only serves files it knows when it bundles.

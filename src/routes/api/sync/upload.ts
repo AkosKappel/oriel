@@ -1,6 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { auth } from '#/server/auth'
+import { createRateLimit, tooManyRequests } from '#/server/rate-limit'
 import { applyUpload, uploadSchema } from '#/server/upload'
+
+// Batches hold up to 200 changes, so this still clears a long offline queue within minutes.
+const uploadLimit = createRateLimit({ windowMs: 60_000, max: 60 })
 
 /**
  * Receives the device's PowerSync upload queue. Answers 200 with the rejected operations (the
@@ -14,6 +18,8 @@ export const Route = createFileRoute('/api/sync/upload')({
         if (!session) {
           return Response.json({ error: 'Not signed in' }, { status: 401 })
         }
+        const limit = uploadLimit(session.user.id)
+        if (!limit.allowed) return tooManyRequests(limit.retryAfter)
         const body = uploadSchema.safeParse(
           await request.json().catch(() => null),
         )
