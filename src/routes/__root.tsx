@@ -67,19 +67,21 @@ function RootDocument({ children }: { children: ReactNode }) {
         <Toaster
           position="bottom-center"
           theme="system"
+          // One message at a time; quick capture would otherwise stack them.
+          visibleToasts={1}
           offset={{ bottom: 136 }}
           mobileOffset={{ bottom: 136 }}
           style={
             {
-              '--normal-bg': 'var(--popover)',
-              '--normal-text': 'var(--popover-foreground)',
-              '--normal-border': 'var(--border)',
+              '--normal-bg': 'var(--background)',
+              '--normal-text': 'var(--foreground)',
+              '--normal-border': 'var(--rule)',
             } as CSSProperties
           }
           toastOptions={{
             classNames: {
               toast: '!font-sans',
-              actionButton: '!bg-primary !text-primary-foreground',
+              actionButton: '!bg-foreground !text-background',
             },
           }}
         />
@@ -101,11 +103,11 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 function NotFound() {
   return (
-    <main className="mx-auto max-w-xl px-4 py-16 text-center">
-      <h1 className="text-xl font-semibold">Page not found</h1>
-      <p className="mt-2 text-muted-foreground">
-        <Link to="/" className="underline underline-offset-4">
-          Back to Oriel
+    <main className="mx-auto max-w-xl px-4 pt-24 pl-14">
+      <h1 className="font-serif text-3xl italic">No such page.</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        <Link to="/" className="text-foreground underline underline-offset-4">
+          Back to everything
         </Link>
       </p>
     </main>
@@ -115,11 +117,11 @@ function NotFound() {
 function ErrorPage({ error }: ErrorComponentProps) {
   console.error(error)
   return (
-    <main className="mx-auto max-w-xl px-4 py-16 text-center">
-      <h1 className="text-xl font-semibold">Something went wrong</h1>
-      <p className="mt-2 text-muted-foreground">
+    <main className="mx-auto max-w-xl px-4 pt-24 pl-14">
+      <h1 className="font-serif text-3xl italic">Something went wrong.</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
         Your notes are safe on this device.{' '}
-        <a href="/" className="underline underline-offset-4">
+        <a href="/" className="text-foreground underline underline-offset-4">
           Reload Oriel
         </a>
       </p>

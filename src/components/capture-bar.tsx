@@ -1,4 +1,3 @@
-import { ArrowUp } from 'lucide-react'
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -7,18 +6,26 @@ import {
   useRef,
   useState,
 } from 'react'
+import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
-import { itemIcons, itemLabels } from '#/components/item-icon'
+import { itemLabels } from '#/components/item-labels'
+import { ChoiceGroup } from '#/components/ui/choice-group'
 import { parseCapture } from '#/data/capture'
 import { type ItemType, itemTypes, newItemSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { requestPersistentStorage } from '#/lib/storage'
+import { cn } from '#/lib/utils'
 
 const placeholders: Record<ItemType, string> = {
-  note: 'Write a note',
+  note: 'Write something',
   list: 'Groceries: milk, eggs, bread',
   task: 'Call the vet',
 }
+
+const captureChoices = itemTypes.map((value) => ({
+  value,
+  label: itemLabels[value],
+}))
 
 const typeStorageKey = 'oriel.capture-type'
 
@@ -61,6 +68,7 @@ export function CaptureBar({
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const fieldRef = useRef<HTMLTextAreaElement>(null)
+  const tapped = useRef(false)
   const hintId = useId()
 
   useEffect(() => {
@@ -85,7 +93,10 @@ export function CaptureBar({
     } catch {
       // Remembering the type is a convenience; private mode may block storage.
     }
-    fieldRef.current?.focus()
+    // Back to the field after a tap, so the phone keyboard stays open; arrow keys stay in the group.
+    // Deferred a frame because React Aria focuses the radio itself after the change.
+    if (tapped.current) requestAnimationFrame(() => fieldRef.current?.focus())
+    tapped.current = false
   }
 
   function save() {
@@ -133,38 +144,28 @@ export function CaptureBar({
     error ??
     (draft?.type === 'list' && draft.entries.length > 0
       ? `${draft.title} · ${draft.entries.length} ${draft.entries.length === 1 ? 'item' : 'items'}`
-      : null)
+      : '')
 
   return (
     <form
       onSubmit={submit}
       aria-label="Capture"
-      className="sticky bottom-0 -mx-4 flex flex-col gap-2 border-t bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur"
+      className="sticky bottom-0 -mx-4 flex flex-col bg-background pt-2 pr-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-14"
     >
-      <fieldset className="flex gap-1">
-        <legend className="sr-only">Type</legend>
-        {itemTypes.map((option) => {
-          const Icon = itemIcons[option]
-          return (
-            <label
-              key={option}
-              className="flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground has-checked:bg-secondary has-checked:text-foreground has-focus-visible:outline-2"
-            >
-              <input
-                type="radio"
-                name="type"
-                value={option}
-                checked={type === option}
-                onChange={() => chooseType(option)}
-                className="sr-only"
-              />
-              <Icon aria-hidden className="size-4" />
-              {itemLabels[option]}
-            </label>
-          )
-        })}
-      </fieldset>
-      <div className="flex items-end gap-2">
+      <div
+        // Capture phase: React Aria stops pointer events from bubbling out of the radios.
+        onPointerDownCapture={() => {
+          tapped.current = true
+        }}
+      >
+        <ChoiceGroup
+          label="Type"
+          choices={captureChoices}
+          value={type}
+          onChange={chooseType}
+        />
+      </div>
+      <div className="flex items-end gap-3 border-b-[1.5px] border-foreground/25 focus-within:border-foreground has-aria-invalid:border-destructive">
         <textarea
           ref={fieldRef}
           value={text}
@@ -175,30 +176,29 @@ export function CaptureBar({
           onKeyDown={handleKeyDown}
           placeholder={placeholders[type]}
           aria-label={`New ${itemLabels[type].toLowerCase()}`}
-          aria-describedby={hint ? hintId : undefined}
+          aria-describedby={hintId}
           aria-invalid={error ? true : undefined}
           enterKeyHint="done"
           rows={1}
-          className="field-sizing-content max-h-40 min-h-11 min-w-0 flex-1 resize-none rounded-lg border bg-card px-3 py-2.5 placeholder:text-muted-foreground aria-invalid:border-destructive"
+          className="field-sizing-content max-h-40 min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 font-serif text-lg outline-none placeholder:text-faint"
         />
-        <button
+        <Button
           type="submit"
-          aria-label="Save"
-          disabled={!draft}
-          className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground disabled:opacity-40"
+          className="h-11 shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground data-focus-visible:rounded-sm data-focus-visible:outline-2 data-pressed:text-foreground motion-reduce:transition-none"
         >
-          <ArrowUp aria-hidden className="size-5" />
-        </button>
+          Add
+        </Button>
       </div>
-      {hint && (
-        <p
-          id={hintId}
-          role={error ? 'alert' : undefined}
-          className={`truncate text-xs ${error ? 'text-destructive' : 'text-muted-foreground'}`}
-        >
-          {hint}
-        </p>
-      )}
+      <p
+        id={hintId}
+        role={error ? 'alert' : undefined}
+        className={cn(
+          'min-h-6 truncate pt-1.5 text-xs',
+          error ? 'text-destructive' : 'text-muted-foreground',
+        )}
+      >
+        {hint}
+      </p>
     </form>
   )
 }

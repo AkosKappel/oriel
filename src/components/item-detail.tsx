@@ -1,11 +1,13 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Pin, PinOff, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pin, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { Button, ToggleButton } from 'react-aria-components'
 import { toast } from 'sonner'
-import { Checkbox } from '#/components/checkbox'
 import { EntryList } from '#/components/entry-list'
-import { itemLabels } from '#/components/item-icon'
+import { itemLabels } from '#/components/item-labels'
+import { Checkbox } from '#/components/ui/checkbox'
+import { ChoiceGroup } from '#/components/ui/choice-group'
 import {
   type Item,
   type Priority,
@@ -13,7 +15,16 @@ import {
   titleSchema,
 } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { formatShortDate } from '#/lib/dates'
 import { cn } from '#/lib/utils'
+
+const iconButton =
+  'grid size-11 place-items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground data-focus-visible:outline-2 motion-reduce:transition-none'
+
+const priorityChoices = priorities.map(({ value, label }) => ({
+  value: String(value),
+  label,
+}))
 
 export function ItemDetail({
   store,
@@ -34,11 +45,14 @@ export function ItemDetail({
 
   if (!item) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <p className="font-medium">This item no longer exists</p>
-        <Link to="/" className="text-sm underline underline-offset-4">
-          Back to all items
-        </Link>
+      <div className="flex flex-1 flex-col justify-center gap-2 pb-16 pl-10">
+        <p className="font-serif text-2xl italic">This page was torn out.</p>
+        <p className="text-sm text-muted-foreground">
+          It was deleted, here or on another device.{' '}
+          <Link to="/" className="text-foreground underline underline-offset-4">
+            Back to everything
+          </Link>
+        </p>
       </div>
     )
   }
@@ -61,61 +75,77 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   }
 
   return (
-    <article className="flex flex-col gap-4 pb-8">
-      <header className="-mx-2 flex items-center justify-between">
+    <article className="flex flex-col pb-10">
+      <header className="-ml-3 flex items-center justify-between pt-2 pb-6">
         <Link
           to="/"
-          className="flex h-11 items-center gap-2 rounded-md px-2 text-muted-foreground hover:text-foreground"
+          className="flex h-11 items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
         >
-          <ArrowLeft aria-hidden className="size-5" />
-          All items
+          <ArrowLeft aria-hidden className="size-4" />
+          Everything
         </Link>
-        <div className="flex">
-          <button
-            type="button"
-            onClick={() => void store.setItemPinned(item.id, !pinned)}
-            aria-pressed={pinned}
-            aria-label={pinned ? 'Unpin' : 'Pin to the top'}
-            className="grid size-11 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground aria-pressed:text-primary"
+        <div className="-mr-3 flex">
+          <ToggleButton
+            isSelected={pinned}
+            onChange={(selected) => void store.setItemPinned(item.id, selected)}
+            aria-label="Pin to the top"
+            className={cn(iconButton, 'data-selected:text-foreground')}
           >
-            {pinned ? (
-              <PinOff aria-hidden className="size-5" />
-            ) : (
-              <Pin aria-hidden className="size-5" />
+            {({ isSelected }) => (
+              <Pin
+                aria-hidden
+                className={cn('size-[1.125rem]', isSelected && 'fill-current')}
+              />
             )}
-          </button>
-          <button
-            type="button"
-            onClick={() => void remove()}
+          </ToggleButton>
+          <Button
+            onPress={() => void remove()}
             aria-label={`Delete ${label.toLowerCase()}`}
-            className="grid size-11 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-destructive"
+            className={cn(iconButton, 'hover:text-destructive')}
           >
-            <Trash2 aria-hidden className="size-5" />
-          </button>
+            <Trash2 aria-hidden className="size-[1.125rem]" />
+          </Button>
         </div>
       </header>
 
-      <div className="flex items-start gap-1">
+      <div className="pl-10">
+        <p className="text-xs text-muted-foreground">
+          {label} · {formatShortDate(item.created_at)}
+          {pinned && ' · Pinned'}
+        </p>
+        <div className="relative">
+          {item.type === 'task' && (
+            <Checkbox
+              className="absolute top-1 -left-[2.375rem]"
+              isSelected={item.completed_at !== null}
+              onChange={(selected) =>
+                void store.setItemCompleted(item.id, selected)
+              }
+              aria-label="Done"
+            />
+          )}
+          <TitleField store={store} item={item} />
+        </div>
+
         {item.type === 'task' && (
-          <Checkbox
-            className="-ml-3"
-            checked={item.completed_at !== null}
-            onChange={(event) =>
-              void store.setItemCompleted(item.id, event.target.checked)
+          <ChoiceGroup
+            label="Priority"
+            showLabel
+            choices={priorityChoices}
+            value={String(item.priority)}
+            onChange={(value) =>
+              void store.setItemPriority(item.id, Number(value) as Priority)
             }
-            aria-label="Done"
+            className="mb-2"
           />
         )}
-        <TitleField store={store} item={item} />
+
+        {item.type === 'list' ? (
+          <EntryList store={store} itemId={item.id} />
+        ) : (
+          <BodyField store={store} item={item} />
+        )}
       </div>
-
-      {item.type === 'task' && <PriorityField store={store} item={item} />}
-
-      {item.type === 'list' ? (
-        <EntryList store={store} itemId={item.id} />
-      ) : (
-        <BodyField store={store} item={item} />
-      )}
     </article>
   )
 }
@@ -148,41 +178,10 @@ function TitleField({ store, item }: { store: Store; item: Item }) {
         }
       }}
       className={cn(
-        '-mr-2 field-sizing-content min-w-0 flex-1 resize-none rounded-md bg-transparent px-2 py-2 text-xl font-semibold focus:bg-card',
-        // Tasks have the checkbox on the left; other titles line up with the page edge.
-        item.type !== 'task' && '-ml-2',
-        item.completed_at && 'text-muted-foreground line-through',
+        'field-sizing-content w-full resize-none bg-transparent py-2 font-serif text-[2rem] leading-tight tracking-tight outline-none',
+        item.completed_at && 'text-muted-foreground line-through decoration-2',
       )}
     />
-  )
-}
-
-function PriorityField({ store, item }: { store: Store; item: Item }) {
-  return (
-    <fieldset className="flex flex-wrap items-center gap-1">
-      <legend className="sr-only">Priority</legend>
-      <span aria-hidden className="mr-1 text-sm text-muted-foreground">
-        Priority
-      </span>
-      {priorities.map(({ value, label }) => (
-        <label
-          key={value}
-          className="cursor-pointer rounded-full px-3 py-1.5 text-sm text-muted-foreground has-checked:bg-secondary has-checked:text-foreground has-focus-visible:outline-2"
-        >
-          <input
-            type="radio"
-            name="priority"
-            value={value}
-            checked={item.priority === value}
-            onChange={() =>
-              void store.setItemPriority(item.id, value as Priority)
-            }
-            className="sr-only"
-          />
-          {label}
-        </label>
-      ))}
-    </fieldset>
   )
 }
 
@@ -224,7 +223,7 @@ function BodyField({ store, item }: { store: Store; item: Item }) {
       placeholder={item.type === 'note' ? 'Write something' : 'Add details'}
       aria-label={item.type === 'note' ? 'Note' : 'Details'}
       maxLength={20_000}
-      className="-mx-2 field-sizing-content min-h-40 resize-none rounded-md bg-transparent px-2 py-2 leading-relaxed placeholder:text-muted-foreground focus:bg-card"
+      className="field-sizing-content min-h-48 w-full resize-none bg-transparent py-2 font-serif text-lg leading-relaxed outline-none placeholder:text-faint"
     />
   )
 }

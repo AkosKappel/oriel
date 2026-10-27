@@ -103,18 +103,26 @@ describe('sortEntries', () => {
 })
 
 describe('countEntries', () => {
-  it('counts all and open entries per item', () => {
+  it('counts all and open entries per item and previews the next open ones', () => {
     const counts = countEntries([
-      entry({ id: '1', item_id: 'groceries' }),
+      entry({ id: '1', item_id: 'groceries', text: 'eggs', position: 2 }),
       entry({
         id: '2',
         item_id: 'groceries',
+        text: 'milk',
         completed_at: '2026-10-02T00:00:00Z',
       }),
-      entry({ id: '3', item_id: 'packing' }),
+      entry({ id: '3', item_id: 'groceries', text: 'bread', position: 1 }),
+      entry({ id: '4', item_id: 'groceries', text: 'tea', position: 3 }),
+      entry({ id: '5', item_id: 'groceries', text: 'jam', position: 4 }),
+      entry({ id: '6', item_id: 'packing' }),
     ])
-    expect(counts.get('groceries')).toEqual({ total: 2, open: 1 })
-    expect(counts.get('packing')).toEqual({ total: 1, open: 1 })
+    expect(counts.get('groceries')).toEqual({
+      total: 5,
+      open: 4,
+      upNext: ['bread', 'eggs', 'tea'],
+    })
+    expect(counts.get('packing')).toMatchObject({ total: 1, open: 1 })
     expect(counts.get('missing')).toBeUndefined()
   })
 })

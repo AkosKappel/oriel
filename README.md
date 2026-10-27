@@ -39,7 +39,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 - [TanStack Start](https://tanstack.com/start) (React 19, file-based routing) on Vite and Nitro
 - TypeScript
-- Tailwind CSS v4 with shadcn/ui primitives and Lucide icons
+- React Aria Components for accessible controls, Tailwind CSS v4, Newsreader and Instrument Sans (self-hosted), Lucide icons
 - [TanStack DB](https://tanstack.com/db) for reactive client collections and optimistic writes
 - [PowerSync](https://www.powersync.com) Web SDK with SQLite (WASM) as the local database
 - Zod for validation

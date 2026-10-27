@@ -5,6 +5,7 @@ import { ItemList } from '#/components/item-list'
 import { TypeFilter } from '#/components/type-filter'
 import { store } from '#/data/client'
 import { itemTypes } from '#/data/schema'
+import { formatDay, greeting } from '#/lib/dates'
 
 const searchSchema = z.object({
   type: z.enum(itemTypes).optional().catch(undefined),
@@ -19,14 +20,17 @@ export const Route = createFileRoute('/')({
 
 function Home() {
   const { type } = Route.useSearch()
+  const now = new Date()
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pt-[max(0.5rem,env(safe-area-inset-top))]">
-      <header className="flex flex-col gap-2 py-4">
-        <h1 className="text-lg font-semibold tracking-tight">Oriel</h1>
+    <div className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))]">
+      {/* The left margin holds task checkboxes, so every title starts on the same line. */}
+      <header className="flex flex-col gap-1 pt-6 pb-4 pl-10">
+        <p className="text-sm text-muted-foreground">{formatDay(now)}</p>
+        <h1 className="font-serif text-4xl tracking-tight">{greeting(now)}</h1>
         <TypeFilter active={type} />
       </header>
-      <main className="flex flex-1 flex-col pb-4">
+      <main className="flex flex-1 flex-col pb-6 pl-10">
         <ItemList store={store} type={type} />
       </main>
       <CaptureBar store={store} preferredType={type} />

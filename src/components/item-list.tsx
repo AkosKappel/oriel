@@ -1,17 +1,17 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { Link } from '@tanstack/react-router'
-import { ChevronRight, Inbox } from 'lucide-react'
-import { Checkbox } from '#/components/checkbox'
-import { itemIcons, itemLabels } from '#/components/item-icon'
+import type { ReactNode } from 'react'
+import { Checkbox } from '#/components/ui/checkbox'
 import { countEntries, organizeItems } from '#/data/organize'
 import { type Item, type ItemType, priorities } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { cn } from '#/lib/utils'
 
 const emptyMessages: Record<ItemType | 'all', string> = {
-  all: 'Notes, lists and tasks you capture will show up here.',
-  note: 'Notes you capture will show up here.',
-  list: 'Lists you capture will show up here.',
-  task: 'Tasks you capture will show up here.',
+  all: 'Notes, lists and tasks you write down will show up here.',
+  note: 'Notes you write down will show up here.',
+  list: 'Lists you start will show up here.',
+  task: 'Tasks you write down will show up here.',
 }
 
 type EntryCounts = ReturnType<typeof countEntries>
@@ -31,9 +31,8 @@ export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
 
   if (pinned.length + open.length + completed.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
-        <Inbox aria-hidden className="size-10 text-muted-foreground" />
-        <p className="font-medium">Nothing here yet</p>
+      <div className="flex flex-1 flex-col justify-center gap-2 pb-16">
+        <p className="font-serif text-2xl italic">A blank page.</p>
         <p className="max-w-xs text-sm text-muted-foreground">
           {emptyMessages[type ?? 'all']}
         </p>
@@ -42,7 +41,7 @@ export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {pinned.length > 0 && (
         <Section title="Pinned">
           <Rows store={store} items={pinned} counts={counts} />
@@ -55,12 +54,11 @@ export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
       )}
       {completed.length > 0 && (
         <details className="group">
-          <summary className="flex h-11 cursor-pointer list-none items-center gap-1 text-sm text-muted-foreground">
-            <ChevronRight
-              aria-hidden
-              className="size-4 transition-transform group-open:rotate-90 motion-reduce:transition-none"
-            />
-            Completed · {completed.length}
+          <summary className="flex h-11 w-fit cursor-pointer list-none items-center text-sm text-muted-foreground hover:text-foreground">
+            <span className="group-open:hidden">
+              Show {completed.length} completed
+            </span>
+            <span className="hidden group-open:inline">Hide completed</span>
           </summary>
           <Rows store={store} items={completed} counts={counts} />
         </details>
@@ -69,20 +67,10 @@ export function ItemList({ store, type }: { store: Store; type?: ItemType }) {
   )
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title?: string
-  children: React.ReactNode
-}) {
+function Section({ title, children }: { title?: string; children: ReactNode }) {
   return (
     <section aria-label={title ?? 'Items'}>
-      {title && (
-        <h2 className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {title}
-        </h2>
-      )}
+      {title && <h2 className="mb-1 text-xs text-muted-foreground">{title}</h2>}
       {children}
     </section>
   )
@@ -98,7 +86,7 @@ function Rows({
   counts: EntryCounts
 }) {
   return (
-    <ul className="divide-y">
+    <ul>
       {items.map((item) => (
         <ItemRow key={item.id} store={store} item={item} counts={counts} />
       ))}
@@ -106,6 +94,10 @@ function Rows({
   )
 }
 
+/**
+ * Titles line up in one column; tasks keep their checkbox in the margin to the left of it, so the
+ * page reads like a notebook rather than a table.
+ */
 function ItemRow({
   store,
   item,
@@ -115,36 +107,31 @@ function ItemRow({
   item: Item
   counts: EntryCounts
 }) {
-  const Icon = itemIcons[item.type]
   const done = item.completed_at !== null
   const detail = describe(item, counts)
 
   return (
-    <li className="flex items-center gap-1">
-      {item.type === 'task' ? (
+    <li className="relative">
+      {item.type === 'task' && (
         <Checkbox
-          className="-ml-3"
-          checked={done}
-          onChange={(event) =>
-            void store.setItemCompleted(item.id, event.target.checked)
+          className="absolute top-0.5 -left-[2.375rem]"
+          isSelected={done}
+          onChange={(selected) =>
+            void store.setItemCompleted(item.id, selected)
           }
           aria-label={`Done: ${item.title}`}
         />
-      ) : (
-        <span className="-ml-3 grid size-11 shrink-0 place-items-center">
-          <Icon
-            aria-label={itemLabels[item.type]}
-            className="size-4 text-muted-foreground"
-          />
-        </span>
       )}
       <Link
         to="/items/$itemId"
         params={{ itemId: item.id }}
-        className="flex min-h-14 min-w-0 flex-1 flex-col justify-center py-2"
+        className="flex min-h-12 flex-col justify-center rounded-sm py-2.5 focus-visible:outline-2 focus-visible:outline-offset-4"
       >
         <span
-          className={`truncate ${done ? 'text-muted-foreground line-through' : ''}`}
+          className={cn(
+            'truncate font-serif text-[1.1875rem] leading-snug',
+            done && 'text-muted-foreground line-through decoration-1',
+          )}
         >
           {item.title}
         </span>
@@ -160,9 +147,10 @@ function ItemRow({
 
 function describe(item: Item, counts: EntryCounts) {
   if (item.type === 'list') {
-    const { total = 0, open = 0 } = counts.get(item.id) ?? {}
-    if (total === 0) return 'Empty'
-    return open === 0 ? `All ${total} done` : `${open} of ${total} left`
+    const { total = 0, open = 0, upNext = [] } = counts.get(item.id) ?? {}
+    if (total === 0) return 'Empty list'
+    if (open === 0) return `All ${total} done`
+    return `${upNext.join(', ')}${open > upNext.length ? '…' : ''} · ${open} left`
   }
   const firstLine = item.body.split('\n', 1)[0]
   if (item.type === 'task' && item.priority > 0 && !item.completed_at) {

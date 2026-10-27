@@ -1,8 +1,9 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Plus, X } from 'lucide-react'
 import { type ClipboardEvent, type FormEvent, useState } from 'react'
+import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
-import { Checkbox } from '#/components/checkbox'
+import { Checkbox } from '#/components/ui/checkbox'
 import { stripBullet } from '#/data/capture'
 import { countEntries, sortEntries } from '#/data/organize'
 import { type Entry, entryTextSchema } from '#/data/schema'
@@ -28,8 +29,8 @@ export function EntryList({ store, itemId }: { store: Store; itemId: string }) {
   }
 
   return (
-    <section aria-label="Items" className="flex flex-col gap-1">
-      <div className="flex min-h-9 items-center justify-between text-sm text-muted-foreground">
+    <section aria-label="Items" className="flex flex-col">
+      <div className="flex min-h-9 items-center justify-between text-xs text-muted-foreground">
         <p aria-live="polite">
           {total === 0
             ? 'No items yet'
@@ -38,13 +39,12 @@ export function EntryList({ store, itemId }: { store: Store; itemId: string }) {
               : `${open} of ${total} left`}
         </p>
         {checked > 0 && (
-          <button
-            type="button"
-            onClick={() => void clearChecked()}
-            className="rounded-md px-2 py-1.5 hover:bg-secondary hover:text-foreground"
+          <Button
+            onPress={() => void clearChecked()}
+            className="-mr-2 rounded-sm px-2 py-2 hover:text-foreground data-focus-visible:outline-2"
           >
             Clear checked
-          </button>
+          </Button>
         )}
       </div>
       <ul>
@@ -85,11 +85,12 @@ function EntryRow({ store, entry }: { store: Store; entry: Entry }) {
   }
 
   return (
-    <li className="group flex items-center gap-1">
+    <li className="group relative flex items-center">
       <Checkbox
-        checked={done}
-        onChange={(event) =>
-          void store.setEntryCompleted(entry.id, event.target.checked)
+        className="absolute -left-[2.375rem]"
+        isSelected={done}
+        onChange={(selected) =>
+          void store.setEntryCompleted(entry.id, selected)
         }
         aria-label={`Check ${entry.text}`}
       />
@@ -107,18 +108,18 @@ function EntryRow({ store, entry }: { store: Store; entry: Entry }) {
           }
         }}
         className={cn(
-          'h-11 min-w-0 flex-1 rounded-md bg-transparent px-1 focus:bg-card',
-          done && 'text-muted-foreground line-through',
+          'h-11 min-w-0 flex-1 bg-transparent font-serif text-lg outline-none',
+          done && 'text-muted-foreground line-through decoration-1',
         )}
       />
-      <button
-        type="button"
-        onClick={() => void remove()}
+      {/* Quiet until hovered on desktop; always there on touch, where hover does not exist. */}
+      <Button
+        onPress={() => void remove()}
         aria-label={`Remove ${entry.text}`}
-        className="grid size-11 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+        className="-mr-3 grid size-11 shrink-0 place-items-center rounded-sm text-faint hover:text-foreground data-focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:data-focus-visible:opacity-100"
       >
         <X aria-hidden className="size-4" />
-      </button>
+      </Button>
     </li>
   )
 }
@@ -150,9 +151,9 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex items-center gap-1">
-      <span className="grid size-11 shrink-0 place-items-center text-muted-foreground">
-        <Plus aria-hidden className="size-5" />
+    <form onSubmit={submit} className="relative flex items-center">
+      <span className="absolute -left-[2.375rem] grid size-11 place-items-center text-faint">
+        <Plus aria-hidden className="size-4" />
       </span>
       <input
         value={text}
@@ -162,7 +163,7 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
         aria-label="Add an item"
         maxLength={500}
         enterKeyHint="enter"
-        className="h-11 min-w-0 flex-1 rounded-md bg-transparent px-1 placeholder:text-muted-foreground focus:bg-card"
+        className="h-11 min-w-0 flex-1 bg-transparent font-serif text-lg outline-none placeholder:text-faint"
       />
     </form>
   )

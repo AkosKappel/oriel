@@ -42,12 +42,21 @@ export function sortEntries(entries: Entry[]) {
   })
 }
 
+const previewLength = 3
+
+/** Per list: how many entries, how many still open, and the first few open ones in list order. */
 export function countEntries(entries: Entry[]) {
-  const counts = new Map<string, { total: number; open: number }>()
-  for (const entry of entries) {
-    const count = counts.get(entry.item_id) ?? { total: 0, open: 0 }
+  const counts = new Map<
+    string,
+    { total: number; open: number; upNext: string[] }
+  >()
+  for (const entry of sortEntries(entries)) {
+    const count = counts.get(entry.item_id) ?? { total: 0, open: 0, upNext: [] }
     count.total += 1
-    if (!entry.completed_at) count.open += 1
+    if (!entry.completed_at) {
+      count.open += 1
+      if (count.upNext.length < previewLength) count.upNext.push(entry.text)
+    }
     counts.set(entry.item_id, count)
   }
   return counts

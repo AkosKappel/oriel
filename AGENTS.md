@@ -46,6 +46,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 
 - Imports from `src` use the `#/` alias (`#/lib/utils`).
 - Routes are files in `src/routes`; `src/routeTree.gen.ts` is generated, never edit it.
-- UI primitives come from shadcn (`npx shadcn@latest add <name>`) into `src/components/ui`.
-- Styling is Tailwind v4 with the tokens in `src/styles.css`. Dark mode follows the system.
+- Interactive primitives are React Aria Components, wrapped in `src/components/ui` (`Checkbox`, `ChoiceGroup`). Use React Aria (`Button`, `ToggleButton`, `RadioGroup`, ...) for new controls; style their states with Tailwind data variants (`data-selected:`, `data-focus-visible:`, `data-pressed:`).
+- Visual direction is "Paper": serif (Newsreader) for content, small sans (Instrument Sans) for controls and metadata, whitespace instead of borders and boxes, the selected option underlined. Titles share one column; checkboxes sit in the left margin (`pl-10` on the content, `-left-[2.375rem]` on the checkbox).
+- Styling is Tailwind v4 with the tokens in `src/styles.css`. Colors are placeholders until the owner picks a palette; keep every color in the tokens. Dark mode follows the system.
 - Check the official docs for the installed version of TanStack Start, TanStack DB and PowerSync before using an API; they change quickly.
