@@ -5,6 +5,7 @@ import {
   organizeItems,
   searchItems,
   sortEntries,
+  suggestEntries,
 } from './organize'
 import type { Entry, Item } from './schema'
 
@@ -193,6 +194,42 @@ describe('itemsInView', () => {
     expect(ids(itemsInView(items, 'trash'))).toEqual([
       'archived-then-trashed',
       'trashed',
+    ])
+  })
+})
+
+describe('suggestEntries', () => {
+  const at = (day: number) =>
+    `2026-10-${String(day).padStart(2, '0')}T00:00:00Z`
+  const entries = [
+    entry({ id: 'a', item_id: 'week1', text: 'oat milk', created_at: at(1) }),
+    entry({ id: 'b', item_id: 'week2', text: 'Oat milk', created_at: at(8) }),
+    entry({ id: 'c', item_id: 'week2', text: 'Eggs', created_at: at(8) }),
+    entry({ id: 'd', item_id: 'week3', text: 'Bread', created_at: at(15) }),
+    entry({ id: 'e', item_id: 'now', text: 'Eggs', created_at: at(20) }),
+    entry({
+      id: 'f',
+      item_id: 'now',
+      text: 'Butter',
+      created_at: at(20),
+      completed_at: at(21),
+    }),
+  ]
+
+  it('offers what was used before, most used first, in its latest spelling', () => {
+    expect(suggestEntries(entries, 'other')).toEqual([
+      'Eggs',
+      'Oat milk',
+      'Butter',
+      'Bread',
+    ])
+  })
+
+  it('leaves out what the list already has open, but not what is checked', () => {
+    expect(suggestEntries(entries, 'now')).toEqual([
+      'Oat milk',
+      'Butter',
+      'Bread',
     ])
   })
 })

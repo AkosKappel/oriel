@@ -115,3 +115,38 @@ export function searchItems(items: Item[], entries: Entry[], query: string) {
     return words.every((word) => text.includes(word))
   })
 }
+
+const suggestionLimit = 50
+
+/**
+ * Entry texts to offer while adding to a list: everything written in any list before, most used
+ * first (then most recent), leaving out what this list already has open. The browser narrows them
+ * down as the user types (`<datalist>`).
+ */
+export function suggestEntries(entries: Entry[], itemId: string) {
+  const open = new Set(
+    entries
+      .filter((entry) => entry.item_id === itemId && !entry.completed_at)
+      .map((entry) => fold(entry.text)),
+  )
+  const used = new Map<string, { text: string; count: number; last: string }>()
+  for (const entry of entries) {
+    const key = fold(entry.text)
+    if (open.has(key)) continue
+    const seen = used.get(key)
+    if (!seen) {
+      used.set(key, { text: entry.text, count: 1, last: entry.created_at })
+    } else {
+      seen.count += 1
+      // The most recent spelling wins ("Oat milk" over an older "oat milk").
+      if (entry.created_at > seen.last) {
+        seen.text = entry.text
+        seen.last = entry.created_at
+      }
+    }
+  }
+  return [...used.values()]
+    .sort((a, b) => b.count - a.count || b.last.localeCompare(a.last))
+    .slice(0, suggestionLimit)
+    .map(({ text }) => text)
+}

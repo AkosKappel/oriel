@@ -33,7 +33,7 @@ describe('EntryList', () => {
   it('adds an entry on Enter, and one entry per line when a list is pasted', async () => {
     const user = userEvent.setup()
     await renderList(['Milk'])
-    const add = screen.getByRole('textbox', { name: 'Add an item' })
+    const add = screen.getByRole('combobox', { name: 'Add an item' })
 
     await user.type(add, 'Eggs{Enter}')
     await user.click(add)
@@ -94,7 +94,7 @@ describe('EntryList', () => {
   it('offers no changes when read-only', async () => {
     await renderList(['Milk'], true)
 
-    expect(screen.queryByRole('textbox', { name: 'Add an item' })).toBeNull()
+    expect(screen.queryByRole('combobox', { name: 'Add an item' })).toBeNull()
     expect(screen.getByRole('checkbox', { name: 'Check Milk' })).toHaveProperty(
       'disabled',
       true,
@@ -103,5 +103,23 @@ describe('EntryList', () => {
       'readOnly',
       true,
     )
+  })
+})
+
+describe('EntryList suggestions', () => {
+  it('suggests entries from other lists that this list does not have open', async () => {
+    await store.createItem({
+      type: 'list',
+      title: 'Last week',
+      entries: ['Oat milk', 'Eggs'],
+    })
+    await renderList(['Eggs'])
+
+    const add = screen.getByRole('combobox', { name: 'Add an item' })
+    const listId = add.getAttribute('list')
+    const options = [
+      ...document.querySelectorAll(`[id="${listId}"] option`),
+    ].map((option) => option.getAttribute('value'))
+    expect(options).toEqual(['Oat milk'])
   })
 })

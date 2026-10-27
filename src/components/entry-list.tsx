@@ -1,11 +1,11 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Plus, X } from 'lucide-react'
-import { type ClipboardEvent, type FormEvent, useState } from 'react'
+import { type ClipboardEvent, type FormEvent, useId, useState } from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
 import { Checkbox } from '#/components/ui/checkbox'
 import { stripBullet } from '#/data/capture'
-import { countEntries, sortEntries } from '#/data/organize'
+import { countEntries, sortEntries, suggestEntries } from '#/data/organize'
 import { type Entry, entryTextSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { cn } from '#/lib/utils'
@@ -176,6 +176,12 @@ function EntryRow({
 
 function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
   const [text, setText] = useState('')
+  const suggestionsId = useId()
+  // Every list's entries: what was bought or packed before is likely to come up again.
+  const { data: allEntries } = useLiveQuery({
+    query: (q) => q.from({ entry: store.entries }),
+  })
+  const suggestions = suggestEntries(allEntries, itemId)
 
   function add(value: string) {
     const lines = value
@@ -211,10 +217,18 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
         onPaste={paste}
         placeholder="Add an item"
         aria-label="Add an item"
+        list={suggestionsId}
+        autoComplete="off"
         maxLength={500}
         enterKeyHint="enter"
         className="h-11 min-w-0 flex-1 bg-transparent font-serif text-lg outline-none placeholder:text-faint"
       />
+      {/* The browser filters these as the user types, with its own keyboard and screen reader support. */}
+      <datalist id={suggestionsId}>
+        {suggestions.map((suggestion) => (
+          <option key={suggestion} value={suggestion} />
+        ))}
+      </datalist>
     </form>
   )
 }
