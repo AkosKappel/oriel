@@ -30,7 +30,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 - **Detail:** edit the title and text (saved as you type), complete tasks, set a priority (none, low, medium, high), pin, archive, or move to the trash with Undo. Escape closes it, and j and k move to the next and previous item.
 - **Archive and trash:** archived items leave home but stay searchable in the archive. Deleted items wait in the trash for 30 days, on every device, and can be restored by anyone who can edit the space; after that a device deletes them for good. In a shared space the trash names who deleted something.
 - **Wide screens:** the list stays on the left and the open item reads beside it; on a phone they are separate screens.
-- **Lists:** check, rename, remove (or empty the text) and add entries; pasting several lines adds one entry per line. Checked entries move to the bottom; "Clear checked" removes them and "Uncheck all" resets a list for reuse, both with Undo.
+- **Lists:** check, rename, remove (or empty the text) and add entries; pasting several lines adds one entry per line, and entries used in earlier lists are suggested while typing. Checked entries move to the bottom; "Clear checked" removes them and "Uncheck all" resets a list for reuse, both with Undo.
 - **Settings:** theme (like the device, light or dark), storage used, export of everything as JSON or Markdown, and import of a JSON export (into your own space, skipping what is already there).
 
 ## Offline and installable
