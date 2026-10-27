@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { PowerSyncDatabase } from '@powersync/node'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { appSchema } from './schema'
 import { createStore, type Store } from './store'
 
@@ -93,6 +93,89 @@ describe('items', () => {
   })
 })
 
+describe('organizing items', () => {
+  it('pins and unpins an item', async () => {
+    const id = await store.createItem({ type: 'note', title: 'Gate code' })
+    expect(store.items.get(id)?.pinned_at).toBeNull()
+
+    await store.setItemPinned(id, true)
+    expect(store.items.get(id)?.pinned_at).not.toBeNull()
+
+    await store.setItemPinned(id, false)
+    expect(store.items.get(id)?.pinned_at).toBeNull()
+  })
+
+  it('sets a priority and rejects values outside the scale', async () => {
+    const id = await store.createItem({ type: 'task', title: 'Pay rent' })
+    expect(store.items.get(id)?.priority).toBe(0)
+
+    await store.setItemPriority(id, 3)
+    expect(await database.get('SELECT priority FROM items')).toEqual({
+      priority: 3,
+    })
+
+    // @ts-expect-error an out-of-range priority is the point of this test
+    await expect(store.setItemPriority(id, 5)).rejects.toThrow()
+  })
+
+  it('reads rows without a priority as no priority', async () => {
+    await database.execute(
+      `INSERT INTO items (id, type, title, body, created_at, updated_at)
+       VALUES ('legacy', 'task', 'Old', '', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z')`,
+    )
+    await vi.waitFor(() => expect(store.items.get('legacy')?.priority).toBe(0))
+  })
+})
+
+describe('undo', () => {
+  it('restores a deleted list with its entries and ids', async () => {
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk', 'Eggs'],
+    })
+    const entryIds = store.entries.toArray.map((entry) => entry.id).sort()
+
+    const snapshot = await store.deleteItem(id)
+    expect(await countRows('items')).toBe(0)
+
+    await store.restore(snapshot)
+    expect(store.items.get(id)?.title).toBe('Groceries')
+    expect(store.entries.toArray.map((entry) => entry.id).sort()).toEqual(
+      entryIds,
+    )
+    expect(await countRows('entries')).toBe(2)
+  })
+
+  it('clears only the checked entries of one list and can bring them back', async () => {
+    const list = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk', 'Eggs'],
+    })
+    const other = await store.createItem({
+      type: 'list',
+      title: 'Hardware',
+      entries: ['Screws'],
+    })
+    const [milk] = store.entries.toArray.filter(
+      (entry) => entry.text === 'Milk',
+    )
+    const [screws] = store.entries.toArray.filter(
+      (entry) => entry.item_id === other,
+    )
+    await store.setEntryCompleted(milk.id, true)
+    await store.setEntryCompleted(screws.id, true)
+
+    const snapshot = await store.clearCompletedEntries(list)
+    expect(snapshot.entries.map((entry) => entry.text)).toEqual(['Milk'])
+    expect(await countRows('entries')).toBe(2)
+
+    await store.restore(snapshot)
+    expect(store.entries.get(milk.id)?.completed_at).not.toBeNull()
+  })
+})
+
 describe('creating a list with entries', () => {
   it('stores the list and its entries together', async () => {
     const id = await store.createItem({
@@ -106,6 +189,28 @@ describe('creating a list with entries', () => {
       [id],
     )
     expect(rows.map((row) => row.text)).toEqual(['Eggs', 'Milk'])
+  })
+
+  it('keeps entries in the order they were written', async () => {
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['milk', 'eggs', 'bread', 'coffee'],
+    })
+    await store.addEntries(id, ['butter', 'jam'])
+
+    const rows = await database.getAll<{ text: string }>(
+      'SELECT text FROM entries WHERE item_id = ? ORDER BY position',
+      [id],
+    )
+    expect(rows.map((row) => row.text)).toEqual([
+      'milk',
+      'eggs',
+      'bread',
+      'coffee',
+      'butter',
+      'jam',
+    ])
   })
 
   it('writes nothing when one entry is invalid', async () => {

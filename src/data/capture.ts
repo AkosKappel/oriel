@@ -8,6 +8,10 @@ export type CaptureDraft = {
 }
 
 const bullet = /^(?:[-*•]|\[ ?\]|\d+[.)])\s*/
+
+/** Removes a leading bullet, number or checkbox from a pasted or typed list line. */
+export const stripBullet = (line: string) => line.replace(bullet, '')
+
 // "Groceries: milk, eggs" but not "10:30": the colon must be followed by a space.
 const inlineList = /^(.+?):\s+(.+)$/
 const longLine = 200
@@ -45,8 +49,8 @@ export function parseCapture(
     return { type, title: first, body: rest.join('\n').trim(), entries: [] }
   }
 
-  const title = first.replace(bullet, '')
-  const entries = rest.map((line) => line.replace(bullet, '')).filter(Boolean)
+  const title = stripBullet(first)
+  const entries = rest.map(stripBullet).filter(Boolean)
   const inline = entries.length === 0 ? inlineList.exec(title) : null
   if (inline) {
     return {

@@ -1,6 +1,7 @@
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
   createRootRoute,
+  type ErrorComponentProps,
   HeadContent,
   Link,
   Scripts,
@@ -43,6 +44,7 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
+  errorComponent: ErrorPage,
 })
 
 function RootDocument({ children }: { children: ReactNode }) {
@@ -74,7 +76,8 @@ function RootDocument({ children }: { children: ReactNode }) {
           }}
         />
         <TanStackDevtools
-          config={{ position: 'top-right' }}
+          // Hidden until hovered, so it never covers the app's own controls.
+          config={{ position: 'bottom-right', hideUntilHover: true }}
           plugins={[
             {
               name: 'TanStack Router',
@@ -96,6 +99,21 @@ function NotFound() {
         <Link to="/" className="underline underline-offset-4">
           Back to Oriel
         </Link>
+      </p>
+    </main>
+  )
+}
+
+function ErrorPage({ error }: ErrorComponentProps) {
+  console.error(error)
+  return (
+    <main className="mx-auto max-w-xl px-4 py-16 text-center">
+      <h1 className="text-xl font-semibold">Something went wrong</h1>
+      <p className="mt-2 text-muted-foreground">
+        Your notes are safe on this device.{' '}
+        <a href="/" className="underline underline-offset-4">
+          Reload Oriel
+        </a>
       </p>
     </main>
   )

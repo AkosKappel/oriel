@@ -10,6 +10,8 @@ const items = new Table(
     title: column.text,
     body: column.text,
     completed_at: column.text,
+    pinned_at: column.text,
+    priority: column.integer,
     created_at: column.text,
     updated_at: column.text,
   },
@@ -21,6 +23,7 @@ const entries = new Table(
     item_id: column.text,
     text: column.text,
     completed_at: column.text,
+    position: column.real,
     created_at: column.text,
     updated_at: column.text,
   },
@@ -33,12 +36,32 @@ export const itemTypes = ['note', 'list', 'task'] as const
 
 export type ItemType = (typeof itemTypes)[number]
 
+/** 0 is no priority, so priorities sort as plain numbers. */
+export const priorities = [
+  { value: 0, label: 'None' },
+  { value: 1, label: 'Low' },
+  { value: 2, label: 'Medium' },
+  { value: 3, label: 'High' },
+] as const
+
+export type Priority = (typeof priorities)[number]['value']
+
+export const prioritySchema = z.union([
+  z.literal(0),
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+])
+
 export const itemSchema = z.object({
   id: z.string(),
   type: z.enum(itemTypes),
   title: z.string(),
   body: z.string(),
   completed_at: z.string().nullable(),
+  pinned_at: z.string().nullable(),
+  // Rows written before the column existed have no value.
+  priority: prioritySchema.nullable().transform((value) => value ?? 0),
   created_at: z.string(),
   updated_at: z.string(),
 })
@@ -50,6 +73,11 @@ export const entrySchema = z.object({
   item_id: z.string(),
   text: z.string(),
   completed_at: z.string().nullable(),
+  // Sort key within a list. Real numbers leave room to move an entry between two others later.
+  position: z
+    .number()
+    .nullable()
+    .transform((value) => value ?? 0),
   created_at: z.string(),
   updated_at: z.string(),
 })

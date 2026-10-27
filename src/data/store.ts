@@ -7,13 +7,19 @@ import { createCollection, createTransaction } from '@tanstack/react-db'
 import {
   appSchema,
   bodySchema,
+  type Entry,
   entrySchema,
   entryTextSchema,
+  type Item,
   itemSchema,
   type NewItem,
   newItemSchema,
+  type Priority,
+  prioritySchema,
   titleSchema,
 } from './schema'
+
+export type Snapshot = { items: Item[]; entries: Entry[] }
 
 /**
  * Collections and write operations over one PowerSync database. Writes apply optimistically and
@@ -44,6 +50,21 @@ export function createStore(database: CommonPowerSyncDatabase) {
   )
 
   const now = () => new Date().toISOString()
+
+  function newEntries(itemId: string, texts: string[], timestamp: string) {
+    // Milliseconds as positions keep entries in the order they were added, also across devices.
+    const base = Date.now()
+    return texts.map((text, index) => ({
+      id: crypto.randomUUID(),
+      item_id: itemId,
+      text,
+      completed_at: null,
+      position: base + index,
+      created_at: timestamp,
+      updated_at: timestamp,
+    }))
+  }
+
   const transactor = new PowerSyncTransactor({ database })
 
   /** Applies mutations across collections in one SQLite transaction: all are stored or none. */
@@ -53,6 +74,16 @@ export function createStore(database: CommonPowerSyncDatabase) {
     })
     transaction.mutate(mutate)
     await transaction.isPersisted.promise
+  }
+
+  /** Adds entries to the end of a list in one transaction, in the given order. */
+  async function addEntries(itemId: string, texts: string[]) {
+    const parsed = texts.map((text) => entryTextSchema.parse(text))
+    const rows = newEntries(itemId, parsed, now())
+    await inTransaction(() => {
+      entries.insert(rows)
+    })
+    return rows.map((row) => row.id)
   }
 
   return {
@@ -71,20 +102,13 @@ export function createStore(database: CommonPowerSyncDatabase) {
           title,
           body,
           completed_at: null,
+          pinned_at: null,
+          priority: 0,
           created_at: timestamp,
           updated_at: timestamp,
         })
         if (texts.length > 0) {
-          entries.insert(
-            texts.map((text) => ({
-              id: crypto.randomUUID(),
-              item_id: id,
-              text,
-              completed_at: null,
-              created_at: timestamp,
-              updated_at: timestamp,
-            })),
-          )
+          entries.insert(newEntries(id, texts, timestamp))
         }
       })
       return id
@@ -112,31 +136,53 @@ export function createStore(database: CommonPowerSyncDatabase) {
       }).isPersisted.promise
     },
 
-    /** Deletes the item and its entries in one SQLite transaction, so no entry is left orphaned. */
-    async deleteItem(id: string) {
-      await entries.preload()
-      const entryIds = entries.toArray
-        .filter((entry) => entry.item_id === id)
-        .map((entry) => entry.id)
+    async setItemPinned(id: string, pinned: boolean) {
+      const timestamp = now()
+      await items.update(id, (draft) => {
+        draft.pinned_at = pinned ? timestamp : null
+        draft.updated_at = timestamp
+      }).isPersisted.promise
+    },
+
+    async setItemPriority(id: string, priority: Priority) {
+      const parsed = prioritySchema.parse(priority)
+      await items.update(id, (draft) => {
+        draft.priority = parsed
+        draft.updated_at = now()
+      }).isPersisted.promise
+    },
+
+    /**
+     * Deletes the item and its entries in one SQLite transaction, so no entry is left orphaned.
+     * Returns what was deleted, for `restore`.
+     */
+    async deleteItem(id: string): Promise<Snapshot> {
+      await Promise.all([items.preload(), entries.preload()])
+      const item = items.get(id)
+      if (!item) return { items: [], entries: [] }
+      const removed = entries.toArray.filter((entry) => entry.item_id === id)
       await inTransaction(() => {
-        if (entryIds.length > 0) entries.delete(entryIds)
+        if (removed.length > 0) entries.delete(removed.map((entry) => entry.id))
         items.delete(id)
+      })
+      return { items: [item], entries: removed }
+    },
+
+    /** Puts deleted rows back with their original ids, for Undo. */
+    async restore(snapshot: Snapshot) {
+      if (snapshot.items.length === 0 && snapshot.entries.length === 0) return
+      await inTransaction(() => {
+        if (snapshot.items.length > 0) items.insert(snapshot.items)
+        if (snapshot.entries.length > 0) entries.insert(snapshot.entries)
       })
     },
 
     async addEntry(itemId: string, text: string) {
-      const id = crypto.randomUUID()
-      const timestamp = now()
-      await entries.insert({
-        id,
-        item_id: itemId,
-        text: entryTextSchema.parse(text),
-        completed_at: null,
-        created_at: timestamp,
-        updated_at: timestamp,
-      }).isPersisted.promise
+      const [id] = await addEntries(itemId, [text])
       return id
     },
+
+    addEntries,
 
     async updateEntryText(id: string, text: string) {
       const parsed = entryTextSchema.parse(text)
@@ -156,6 +202,20 @@ export function createStore(database: CommonPowerSyncDatabase) {
 
     async deleteEntry(id: string) {
       await entries.delete(id).isPersisted.promise
+    },
+
+    /** Removes the checked entries of a list. Returns them, for `restore`. */
+    async clearCompletedEntries(itemId: string): Promise<Snapshot> {
+      await entries.preload()
+      const removed = entries.toArray.filter(
+        (entry) => entry.item_id === itemId && entry.completed_at !== null,
+      )
+      if (removed.length > 0) {
+        await inTransaction(() => {
+          entries.delete(removed.map((entry) => entry.id))
+        })
+      }
+      return { items: [], entries: removed }
     },
   }
 }

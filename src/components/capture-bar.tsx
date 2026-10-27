@@ -42,8 +42,21 @@ function isEditable(target: EventTarget | null) {
  * Always-visible capture field at the bottom of the screen. Enter saves and keeps the focus for
  * the next item; Shift+Enter starts a new line. `/` or `n` focuses it from anywhere on the page.
  */
-export function CaptureBar({ store }: { store: Store }) {
-  const [type, setType] = useState<ItemType>(readStoredType)
+export function CaptureBar({
+  store,
+  preferredType,
+}: {
+  store: Store
+  preferredType?: ItemType
+}) {
+  const [type, setType] = useState<ItemType>(
+    () => preferredType ?? readStoredType(),
+  )
+
+  // Filtering the home page to one type makes that the type to capture.
+  useEffect(() => {
+    if (preferredType) setType(preferredType)
+  }, [preferredType])
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const fieldRef = useRef<HTMLTextAreaElement>(null)
