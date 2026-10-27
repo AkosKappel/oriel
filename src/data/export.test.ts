@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { toJson, toMarkdown } from './export'
+import { itemToText, toJson, toMarkdown } from './export'
 import type { Entry, Item } from './schema'
 
 const timestamp = '2026-10-01T00:00:00.000Z'
@@ -80,5 +80,14 @@ describe('toMarkdown', () => {
     expect(markdown).toContain('## [x] Call the vet')
     expect(markdown).not.toContain('Torn out')
     expect(markdown.endsWith('\n')).toBe(true)
+  })
+})
+
+describe('itemToText', () => {
+  it('writes one list as its title and entries in list order, ready to paste', () => {
+    expect(itemToText(items[0], entries)).toBe(
+      'Groceries\n\n- [ ] Eggs\n- [ ] Bread\n- [x] Milk',
+    )
+    expect(itemToText(items[2], [])).toBe('Idea\n\nPaint the door')
   })
 })

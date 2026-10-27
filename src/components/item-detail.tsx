@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Archive, ArrowLeft, Pin, Trash2 } from 'lucide-react'
+import { Archive, ArrowLeft, Pin, Share, Trash2 } from 'lucide-react'
 import { type RefObject, useEffect, useRef, useState } from 'react'
 import { Button, ToggleButton } from 'react-aria-components'
 import { toast } from 'sonner'
@@ -8,6 +8,7 @@ import { EntryList } from '#/components/entry-list'
 import { itemLabels } from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
 import { ChoiceGroup } from '#/components/ui/choice-group'
+import { itemToText } from '#/data/export'
 import {
   type Item,
   type Priority,
@@ -22,6 +23,9 @@ import { cn } from '#/lib/utils'
 
 const iconButton =
   'grid size-11 place-items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground data-focus-visible:outline-2 motion-reduce:transition-none'
+
+// Phones and Safari open the share sheet; elsewhere the text goes to the clipboard.
+const canShare = () => typeof navigator.share === 'function'
 
 const priorityChoices = priorities.map(({ value, label }) => ({
   value: String(value),
@@ -127,6 +131,25 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     }
   }
 
+  async function share() {
+    await store.entries.preload()
+    const text = itemToText(
+      item,
+      store.entries.toArray.filter((entry) => entry.item_id === item.id),
+    )
+    if (canShare()) {
+      // Cancelling the share sheet rejects; there is nothing to report.
+      await navigator.share({ title: item.title, text }).catch(() => {})
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(text)
+      toast('Copied as text')
+    } catch {
+      toast('Could not copy. The browser did not allow it.')
+    }
+  }
+
   async function deleteForever() {
     await navigate({ to: '/', search: true })
     const snapshot = await store.deleteItem(item.id)
@@ -147,12 +170,23 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           <ArrowLeft aria-hidden className="size-4" />
           Everything
         </Link>
-        <div className={cn('-mr-3 flex', !editable && 'hidden')}>
+        <div className="-mr-3 flex">
+          <Button
+            onPress={() => void share()}
+            aria-label={canShare() ? 'Share' : 'Copy as text'}
+            className={iconButton}
+          >
+            <Share aria-hidden className="size-[1.125rem]" />
+          </Button>
           <ToggleButton
             isSelected={archived}
             onChange={(selected) => void archive(selected)}
             aria-label="Archive"
-            className={cn(iconButton, 'data-selected:text-foreground')}
+            className={cn(
+              iconButton,
+              'data-selected:text-foreground',
+              !editable && 'hidden',
+            )}
           >
             <Archive aria-hidden className="size-[1.125rem]" />
           </ToggleButton>
@@ -160,7 +194,11 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             isSelected={pinned}
             onChange={(selected) => void store.setItemPinned(item.id, selected)}
             aria-label="Pin to the top"
-            className={cn(iconButton, 'data-selected:text-foreground')}
+            className={cn(
+              iconButton,
+              'data-selected:text-foreground',
+              !editable && 'hidden',
+            )}
           >
             {({ isSelected }) => (
               <Pin
@@ -172,7 +210,11 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           <Button
             onPress={() => void trash()}
             aria-label={`Move ${label.toLowerCase()} to the trash`}
-            className={cn(iconButton, 'hover:text-destructive')}
+            className={cn(
+              iconButton,
+              'hover:text-destructive',
+              !editable && 'hidden',
+            )}
           >
             <Trash2 aria-hidden className="size-[1.125rem]" />
           </Button>

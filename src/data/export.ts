@@ -39,18 +39,26 @@ export function toMarkdown(items: Item[], entries: Entry[]) {
     items.filter((item) => !item.deleted_at),
   )
   return `${[...pinned, ...open, ...completed]
-    .map((item) => {
-      const done = item.completed_at ? 'x' : ' '
-      const heading =
-        item.type === 'task' ? `## [${done}] ${item.title}` : `## ${item.title}`
-      const lines = (byItem.get(item.id) ?? []).map(
-        (entry) => `- [${entry.completed_at ? 'x' : ' '}] ${entry.text}`,
-      )
-      return [heading, item.body.trim(), lines.join('\n')]
-        .filter(Boolean)
-        .join('\n\n')
-    })
+    .map((item) => itemToText(item, byItem.get(item.id) ?? [], '## '))
     .join('\n\n')}\n`
+}
+
+/**
+ * One item as text, for sharing into a chat or another app: the title, its text, then list
+ * entries as Markdown checkboxes in list order.
+ */
+export function itemToText(item: Item, entries: Entry[], heading = '') {
+  const done = item.completed_at ? 'x' : ' '
+  const title =
+    item.type === 'task'
+      ? `${heading}[${done}] ${item.title}`
+      : `${heading}${item.title}`
+  const lines = sortEntries(entries).map(
+    (entry) => `- [${entry.completed_at ? 'x' : ' '}] ${entry.text}`,
+  )
+  return [title, item.body.trim(), lines.join('\n')]
+    .filter(Boolean)
+    .join('\n\n')
 }
 
 /** Hands a file to the browser's download, which also works offline. */

@@ -144,6 +144,16 @@ describe('ItemDetail', () => {
     expect(store.entries.size).toBe(0)
   })
 
+  it('copies a list as text where the browser cannot share', async () => {
+    const user = userEvent.setup()
+    await openItem({ type: 'list', title: 'Groceries', entries: ['milk'] })
+
+    await user.click(screen.getByRole('button', { name: 'Copy as text' }))
+
+    await screen.findByText('Copied as text')
+    expect(await navigator.clipboard.readText()).toBe('Groceries\n\n- [ ] milk')
+  })
+
   it('says so when the item was deleted elsewhere', async () => {
     const { id } = await openItem({ type: 'note', title: 'Gone soon' })
 
