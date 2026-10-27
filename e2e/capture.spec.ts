@@ -47,3 +47,32 @@ test('settings have no axe violations in the dark theme', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
   await expectNoAxeViolations(page)
 })
+
+test('moves between items with j and k, and closes with Escape', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Keyboard navigation is for wide screens with a keyboard')
+  await page.goto('/')
+  await capture(page, 'Note', 'First note')
+  await capture(page, 'Note', 'Second note')
+  await page.locator('body').click()
+
+  // Newest first: Second, then First.
+  await page.keyboard.press('j')
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Second note' }),
+  ).toBeAttached()
+  await page.keyboard.press('j')
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'First note' }),
+  ).toBeAttached()
+  await page.keyboard.press('k')
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Second note' }),
+  ).toBeAttached()
+
+  await page.keyboard.press('Escape')
+  await expect(page).toHaveURL(/\/$/)
+  await expect(rows(page).filter({ hasText: 'Second note' })).toBeFocused()
+})

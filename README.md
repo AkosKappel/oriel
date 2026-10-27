@@ -27,7 +27,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 - **Home:** pinned items first, then open items by priority and date, completed tasks folded away. Filter by notes, lists or tasks; the filter is part of the URL.
 - **Search:** finds every word typed in titles, text and list entries, ignoring case and accents. It runs on the device, so it works offline.
-- **Detail:** edit the title and text (saved as you type), complete tasks, set a priority (none, low, medium, high), pin, archive, or move to the trash with Undo. Escape closes it.
+- **Detail:** edit the title and text (saved as you type), complete tasks, set a priority (none, low, medium, high), pin, archive, or move to the trash with Undo. Escape closes it, and j and k move to the next and previous item.
 - **Archive and trash:** archived items leave home but stay searchable in the archive. Deleted items wait in the trash for 30 days, on every device, and can be restored by anyone who can edit the space; after that a device deletes them for good. In a shared space the trash names who deleted something.
 - **Wide screens:** the list stays on the left and the open item reads beside it; on a phone they are separate screens.
 - **Lists:** check, rename, remove (or empty the text) and add entries; pasting several lines adds one entry per line. Checked entries move to the bottom; "Clear checked" removes them and "Uncheck all" resets a list for reuse, both with Undo.

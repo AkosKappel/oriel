@@ -284,6 +284,8 @@ function ItemRow({
         params={{ itemId: item.id }}
         // Keeps the filters, so the list beside an open item stays as it was.
         search={true}
+        // Found by j and k in the notebook layout.
+        data-item-link
         className="group flex min-h-12 flex-col justify-center rounded-sm py-2.5 focus-visible:outline-2 focus-visible:outline-offset-4"
       >
         <span

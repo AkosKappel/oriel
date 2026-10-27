@@ -43,6 +43,7 @@ function Notebook() {
   const openItemId = useParams({ strict: false }).itemId
   const itemOpen = openItemId !== undefined
   useEscapeToClose(openItemId)
+  useNextAndPreviousKeys()
   usePurgeOldTrash()
   const { spaces, byId } = useSpaces()
   const space = spaceId ? byId.get(spaceId) : undefined
@@ -149,6 +150,42 @@ function Notebook() {
       </div>
     </div>
   )
+}
+
+/**
+ * j and k open the next and previous item in the list, like in mail apps, and move the focus
+ * there. Only rows on screen count: not the folded completed tasks, and nothing on a phone
+ * while an item covers the list. Text fields keep the letters.
+ */
+function useNextAndPreviousKeys() {
+  useEffect(() => {
+    function move(event: KeyboardEvent) {
+      if (event.key !== 'j' && event.key !== 'k') return
+      if (event.ctrlKey || event.metaKey || event.altKey) return
+      const target = event.target as HTMLElement
+      if (target.closest('input, textarea, select, [contenteditable="true"]'))
+        return
+      const links = [
+        ...document.querySelectorAll<HTMLAnchorElement>('[data-item-link]'),
+      ].filter((link) => link.checkVisibility())
+      if (links.length === 0) return
+      const focused = links.indexOf(document.activeElement as HTMLAnchorElement)
+      const current =
+        focused !== -1
+          ? focused
+          : links.findIndex((link) => link.dataset.status === 'active')
+      const step = event.key === 'j' ? 1 : -1
+      const next =
+        current === -1
+          ? 0
+          : Math.min(links.length - 1, Math.max(0, current + step))
+      event.preventDefault()
+      links[next].focus()
+      links[next].click()
+    }
+    document.addEventListener('keydown', move)
+    return () => document.removeEventListener('keydown', move)
+  }, [])
 }
 
 /**
