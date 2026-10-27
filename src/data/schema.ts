@@ -4,8 +4,13 @@ import { z } from 'zod'
 // PowerSync adds the text `id` column itself. Timestamps are ISO 8601 strings, and completion is
 // stored as a timestamp so it records when something was done, not only whether.
 
+// `space_id` is null while the user has no account: such rows exist only on this device until
+// they are claimed at sign-up (see `claimLocalData` in store.ts).
+
 const items = new Table(
   {
+    space_id: column.text,
+    created_by: column.text,
     type: column.text,
     title: column.text,
     body: column.text,
@@ -15,12 +20,13 @@ const items = new Table(
     created_at: column.text,
     updated_at: column.text,
   },
-  { indexes: { created: ['created_at'] } },
+  { indexes: { created: ['created_at'], space: ['space_id'] } },
 )
 
 const entries = new Table(
   {
     item_id: column.text,
+    space_id: column.text,
     text: column.text,
     completed_at: column.text,
     position: column.real,
@@ -55,6 +61,8 @@ export const prioritySchema = z.union([
 
 export const itemSchema = z.object({
   id: z.string(),
+  space_id: z.string().nullable(),
+  created_by: z.string().nullable(),
   type: z.enum(itemTypes),
   title: z.string(),
   body: z.string(),
@@ -71,6 +79,7 @@ export type Item = z.infer<typeof itemSchema>
 export const entrySchema = z.object({
   id: z.string(),
   item_id: z.string(),
+  space_id: z.string().nullable(),
   text: z.string(),
   completed_at: z.string().nullable(),
   // Sort key within a list. Real numbers leave room to move an entry between two others later.
@@ -109,3 +118,6 @@ export const newItemSchema = z
   })
 
 export type NewItem = z.input<typeof newItemSchema>
+
+/** Who new items belong to on this device: set after sign-in, null without an account. */
+export type Owner = { userId: string; spaceId: string }

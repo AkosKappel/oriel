@@ -176,6 +176,86 @@ describe('undo', () => {
   })
 })
 
+describe('ownership', () => {
+  const owner = { userId: 'user-1', spaceId: 'space-1' }
+
+  it('keeps items on the device only, with no space, until there is an owner', async () => {
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk'],
+    })
+    expect(store.items.get(id)).toMatchObject({
+      space_id: null,
+      created_by: null,
+    })
+    expect(store.entries.toArray[0].space_id).toBeNull()
+  })
+
+  it("puts new items and their entries in the owner's space", async () => {
+    store.setOwner(owner)
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk'],
+    })
+    await store.addEntry(id, 'Eggs')
+
+    expect(store.items.get(id)).toMatchObject({
+      space_id: 'space-1',
+      created_by: 'user-1',
+    })
+    expect(store.entries.toArray.map((entry) => entry.space_id)).toEqual([
+      'space-1',
+      'space-1',
+    ])
+  })
+
+  it('claims everything made without an account, entries included', async () => {
+    const list = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk', 'Eggs'],
+    })
+    const note = await store.createItem({ type: 'note', title: 'Gate code' })
+
+    expect(await store.claimLocalData(owner)).toBe(2)
+
+    const rows = await database.getAll<{ id: string; space_id: string }>(
+      'SELECT id, space_id, created_by FROM items ORDER BY title',
+    )
+    expect(rows).toEqual([
+      { id: note, space_id: 'space-1', created_by: 'user-1' },
+      { id: list, space_id: 'space-1', created_by: 'user-1' },
+    ])
+    expect(
+      await database.getAll('SELECT DISTINCT space_id FROM entries'),
+    ).toEqual([{ space_id: 'space-1' }])
+  })
+
+  it('leaves rows that already belong to a space alone, so claiming twice is harmless', async () => {
+    store.setOwner({ userId: 'user-2', spaceId: 'shared' })
+    const shared = await store.createItem({ type: 'note', title: 'Shared' })
+    store.setOwner(null)
+    await store.createItem({ type: 'note', title: 'Local' })
+
+    expect(await store.claimLocalData(owner)).toBe(1)
+    expect(await store.claimLocalData(owner)).toBe(0)
+    expect(store.items.get(shared)?.space_id).toBe('shared')
+  })
+
+  it('queues the claim for upload, so the server receives the items with their space', async () => {
+    await store.createItem({ type: 'note', title: 'Idea' })
+    await store.claimLocalData(owner)
+    const batch = await database.getCrudBatch(10)
+    const patch = batch?.crud.find((entry) => entry.op === 'PATCH')
+    expect(patch?.opData).toMatchObject({
+      space_id: 'space-1',
+      created_by: 'user-1',
+    })
+  })
+})
+
 describe('creating a list with entries', () => {
   it('stores the list and its entries together', async () => {
     const id = await store.createItem({

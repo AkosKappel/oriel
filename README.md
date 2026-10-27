@@ -35,6 +35,10 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 - Installable as a PWA, with shortcuts for a new note, list or task, and a share target: sharing a link or text from another app on Android creates a note.
 - The browser is asked to keep the database (persistent storage) after the first save.
 
+## Accounts
+
+No account is needed: everything works on the device. Creating an account (email and password, with Better Auth) gives you a personal space on the server, and everything you made before signing up moves into it, so nothing is lost. Signing out removes the data from the device, so the next person to use it starts clean.
+
 ## Tech stack
 
 - [TanStack Start](https://tanstack.com/start) (React 19, file-based routing) on Vite and Nitro
@@ -43,7 +47,8 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 - [TanStack DB](https://tanstack.com/db) for reactive client collections and optimistic writes
 - [PowerSync](https://www.powersync.com) Web SDK with SQLite (WASM) as the local database
 - Zod for validation
-- Planned: PostgreSQL as the server database, synced through PowerSync
+- PostgreSQL 18 with Drizzle ORM, Better Auth for accounts
+- Planned: syncing the local database with PostgreSQL through PowerSync
 - Biome, Vitest, GitHub Actions
 
 ## How it works
@@ -59,26 +64,31 @@ The UI only talks to local data. PowerSync uploads local changes when the device
 
 ## Getting started
 
-Requires Node.js 24.
+Requires Node.js 24 and Docker (for the PostgreSQL database).
 
 ```bash
 npm install
+cp .env.example .env    # then set DB_PASSWORD, the same password in DATABASE_URL, and BETTER_AUTH_SECRET
+docker compose up -d db
+npm run db:migrate
 npm run dev
 ```
 
-The app runs at http://localhost:3000.
+The app runs at http://localhost:3000. Without the database it still works fully on the device; only accounts need it.
 
 ## Scripts
 
-| Command             | What it does                         |
-| ------------------- | ------------------------------------ |
-| `npm run dev`       | Start the dev server                 |
-| `npm run build`     | Build for production into `.output/` |
-| `npm start`         | Run the production build             |
-| `npm run check`     | Lint and format check (Biome)        |
-| `npm run check:fix` | Fix lint and formatting              |
-| `npm run typecheck` | Type-check the project               |
-| `npm test`          | Run the unit tests                   |
+| Command               | What it does                           |
+| --------------------- | -------------------------------------- |
+| `npm run dev`         | Start the dev server                   |
+| `npm run build`       | Build for production into `.output/`   |
+| `npm start`           | Run the production build               |
+| `npm run check`       | Lint and format check (Biome)          |
+| `npm run check:fix`   | Fix lint and formatting                |
+| `npm run typecheck`   | Type-check the project                 |
+| `npm test`            | Run the unit tests                     |
+| `npm run db:generate` | Create a migration from schema changes |
+| `npm run db:migrate`  | Apply migrations                       |
 
 ## License
 

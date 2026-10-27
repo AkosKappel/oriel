@@ -17,6 +17,25 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: oriel
+          POSTGRES_USER: oriel
+          POSTGRES_PASSWORD: ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U oriel"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgres://oriel:ci-only@localhost:5432/oriel
+      # Test-only values for a throwaway database, not real secrets.
+      BETTER_AUTH_SECRET: ci-only-auth-secret-for-the-test-database
+      BETTER_AUTH_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -26,5 +45,6 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run typecheck
+      - run: npm run db:migrate
       - run: npm test
       - run: npm run build

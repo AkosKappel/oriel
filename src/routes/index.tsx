@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
+import { AccountLink } from '#/components/account-link'
 import { CaptureBar } from '#/components/capture-bar'
 import { ItemList } from '#/components/item-list'
 import { TypeFilter } from '#/components/type-filter'
@@ -26,7 +27,10 @@ function Home() {
     <div className="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))]">
       {/* The left margin holds task checkboxes, so every title starts on the same line. */}
       <header className="flex flex-col gap-1 pt-6 pb-4 pl-10">
-        <p className="text-sm text-muted-foreground">{formatDay(now)}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{formatDay(now)}</p>
+          <AccountLink />
+        </div>
         <h1 className="font-serif text-4xl tracking-tight">{greeting(now)}</h1>
         <TypeFilter active={type} />
       </header>

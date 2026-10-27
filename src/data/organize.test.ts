@@ -4,6 +4,8 @@ import type { Entry, Item } from './schema'
 
 function item(overrides: Partial<Item> & Pick<Item, 'id'>): Item {
   return {
+    space_id: null,
+    created_by: null,
     type: 'task',
     title: overrides.id,
     body: '',
@@ -19,6 +21,7 @@ function item(overrides: Partial<Item> & Pick<Item, 'id'>): Item {
 function entry(overrides: Partial<Entry> & Pick<Entry, 'id'>): Entry {
   return {
     item_id: 'list',
+    space_id: null,
     text: overrides.id,
     completed_at: null,
     position: 0,

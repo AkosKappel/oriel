@@ -6,13 +6,15 @@ A mobile-first, offline-first app for notes, lists and tasks, with live sync and
 
 npm only (`package-lock.json`).
 
-| Command             | What it does                           |
-| ------------------- | -------------------------------------- |
-| `npm run dev`       | Dev server on port 3000                |
-| `npm run check:fix` | Biome format, lint and import sort     |
-| `npm run typecheck` | Regenerates the route tree, then `tsc` |
-| `npm test`          | Vitest, `src/**/*.test.{ts,tsx}`       |
-| `npm run build`     | Production build into `.output/`       |
+| Command               | What it does                                        |
+| --------------------- | --------------------------------------------------- |
+| `npm run dev`         | Dev server on port 3000                             |
+| `npm run check:fix`   | Biome format, lint and import sort                  |
+| `npm run typecheck`   | Regenerates the route tree, then `tsc`              |
+| `npm test`            | Vitest, `src/**/*.test.{ts,tsx}`                    |
+| `npm run build`       | Production build into `.output/`                    |
+| `npm run db:generate` | Migration from changes in `src/server/db/schema.ts` |
+| `npm run db:migrate`  | Apply migrations (`docker compose up -d db` first)  |
 
 Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same.
 
@@ -35,6 +37,14 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Deletes return a `Snapshot`; `restore(snapshot)` is how every Undo works.
 - Tests run the same store against real SQLite through `@powersync/node` (`src/data/store.test.ts`).
 - `@tanstack/react-db` and `@tanstack/powersync-db-collection` are pinned together; both must depend on the same `@tanstack/db` version.
+
+## Server and accounts
+
+- PostgreSQL 18 (`compose.yaml`, port 5437, `wal_level=logical` for PowerSync) with Drizzle; schema in `src/server/db/schema.ts`, migrations in `drizzle/` (generated, committed).
+- `src/env.ts` validates server settings on first use; `.env.example` lists them. Server code lives in `src/server` and is only imported by server routes and server functions.
+- Better Auth (`src/server/auth.ts`, email and password) behind `/api/auth/$`. Every user has one personal space (`ensurePersonalSpace`, idempotent through the unique `personal_owner_id`).
+- Accounts are optional. The client remembers the account in localStorage (`src/lib/account.ts`) so new items get `space_id` and `created_by` offline. At sign-in, `claimLocalData` moves rows without a space into the personal space; signing out clears the device (`disconnectAndClear`).
+- Server tests (`src/server/*.test.ts`) need the database and are skipped without `DATABASE_URL`; they clean up the users they create.
 
 ## Offline
 

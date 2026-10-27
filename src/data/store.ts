@@ -14,6 +14,7 @@ import {
   itemSchema,
   type NewItem,
   newItemSchema,
+  type Owner,
   type Priority,
   prioritySchema,
   titleSchema,
@@ -50,13 +51,20 @@ export function createStore(database: CommonPowerSyncDatabase) {
   )
 
   const now = () => new Date().toISOString()
+  let owner: Owner | null = null
 
-  function newEntries(itemId: string, texts: string[], timestamp: string) {
+  function newEntries(
+    itemId: string,
+    spaceId: string | null,
+    texts: string[],
+    timestamp: string,
+  ) {
     // Milliseconds as positions keep entries in the order they were added, also across devices.
     const base = Date.now()
     return texts.map((text, index) => ({
       id: crypto.randomUUID(),
       item_id: itemId,
+      space_id: spaceId,
       text,
       completed_at: null,
       position: base + index,
@@ -79,7 +87,10 @@ export function createStore(database: CommonPowerSyncDatabase) {
   /** Adds entries to the end of a list in one transaction, in the given order. */
   async function addEntries(itemId: string, texts: string[]) {
     const parsed = texts.map((text) => entryTextSchema.parse(text))
-    const rows = newEntries(itemId, parsed, now())
+    // Entries live in their list's space, which may be shared and differ from the owner's.
+    await items.preload()
+    const spaceId = items.get(itemId)?.space_id ?? owner?.spaceId ?? null
+    const rows = newEntries(itemId, spaceId, parsed, now())
     await inTransaction(() => {
       entries.insert(rows)
     })
@@ -90,6 +101,41 @@ export function createStore(database: CommonPowerSyncDatabase) {
     items,
     entries,
 
+    /** Sets who new items belong to: the signed-in user's personal space, or nobody. */
+    setOwner(next: Owner | null) {
+      owner = next
+    },
+
+    /**
+     * Moves everything created without an account into the owner's space, in one transaction, so
+     * signing up keeps all local data. Rows that already belong to a space are left alone.
+     * Returns how many items were claimed.
+     */
+    async claimLocalData(claimant: Owner) {
+      await Promise.all([items.preload(), entries.preload()])
+      const unclaimedItems = items.toArray.filter((item) => !item.space_id)
+      const unclaimedEntries = entries.toArray.filter(
+        (entry) => !entry.space_id,
+      )
+      if (unclaimedItems.length + unclaimedEntries.length === 0) return 0
+
+      await inTransaction(() => {
+        for (const item of unclaimedItems) {
+          items.update(item.id, (draft) => {
+            draft.space_id = claimant.spaceId
+            draft.created_by = claimant.userId
+          })
+        }
+        for (const entry of unclaimedEntries) {
+          entries.update(entry.id, (draft) => {
+            draft.space_id =
+              items.get(entry.item_id)?.space_id ?? claimant.spaceId
+          })
+        }
+      })
+      return unclaimedItems.length
+    },
+
     /** Creates an item, and for a list its entries, in one transaction. */
     async createItem(input: NewItem) {
       const { type, title, body, entries: texts } = newItemSchema.parse(input)
@@ -98,6 +144,8 @@ export function createStore(database: CommonPowerSyncDatabase) {
       await inTransaction(() => {
         items.insert({
           id,
+          space_id: owner?.spaceId ?? null,
+          created_by: owner?.userId ?? null,
           type,
           title,
           body,
@@ -108,7 +156,9 @@ export function createStore(database: CommonPowerSyncDatabase) {
           updated_at: timestamp,
         })
         if (texts.length > 0) {
-          entries.insert(newEntries(id, texts, timestamp))
+          entries.insert(
+            newEntries(id, owner?.spaceId ?? null, texts, timestamp),
+          )
         }
       })
       return id
