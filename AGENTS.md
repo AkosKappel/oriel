@@ -71,6 +71,10 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Zod runs jitless in the browser, because the CSP forbids eval.
 - Rate limits: Better Auth's (always on, per IP from `X-Forwarded-For`) for auth routes; `createRateLimit` (`src/server/rate-limit.ts`, in memory, per user) for sync endpoints. Both reset on restart.
 
+## Image
+
+- `Dockerfile`: build stage runs `npm ci` and `npm run build`; the runtime stage holds `.output`, `drizzle/`, `scripts/migrate.ts` and its two packages, runs as `node`, and has no npm. Migrations in production: `node scripts/migrate.ts` from the image (drizzle-kit is not in it). CI builds, scans (Trivy) and pushes `main` to GHCR; never build images on the home server except a single check, and never scan there.
+
 ## Offline
 
 - `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and emits `sw.js` with the client build. It must be emitted during the build: Nitro only serves files it knows when it bundles.

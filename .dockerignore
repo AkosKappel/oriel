@@ -1,0 +1,17 @@
+# Secrets and local folders must not end up in image layers.
+.env
+.env.*
+!.env.example
+.git
+.github
+.output
+.tanstack
+.nitro
+.vscode
+.claude
+node_modules
+coverage
+test-results
+playwright-report
+BACKLOG.md
+powersync

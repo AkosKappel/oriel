@@ -100,6 +100,15 @@ npm run dev
 
 The app runs at http://localhost:3000 and the PowerSync Service at http://localhost:8086. Without the database the app still works fully on the device; accounts and sync need both services.
 
+## Docker image
+
+The `Dockerfile` builds the app in one stage and runs only the Nitro output in a second: `node:24-slim` with current security patches, no npm, as the unprivileged `node` user, with a health check on `/api/health` (which also checks the database). CI builds the image on every push, fails on fixable high or critical vulnerabilities (Trivy), and pushes `main` to GHCR. Settings come from the environment at run time (see `.env.example`); none are baked into the image.
+
+```bash
+docker run --rm -e DATABASE_URL=... ghcr.io/akoskappel/oriel node scripts/migrate.ts   # before starting a new version
+docker run -p 3000:3000 --env-file .env ghcr.io/akoskappel/oriel
+```
+
 ## Scripts
 
 | Command               | What it does                           |
