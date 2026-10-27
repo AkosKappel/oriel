@@ -93,6 +93,40 @@ describe('items', () => {
   })
 })
 
+describe('creating a list with entries', () => {
+  it('stores the list and its entries together', async () => {
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Milk', ' Eggs '],
+    })
+
+    const rows = await database.getAll<{ text: string }>(
+      'SELECT text FROM entries WHERE item_id = ? ORDER BY text',
+      [id],
+    )
+    expect(rows.map((row) => row.text)).toEqual(['Eggs', 'Milk'])
+  })
+
+  it('writes nothing when one entry is invalid', async () => {
+    await expect(
+      store.createItem({
+        type: 'list',
+        title: 'Groceries',
+        entries: ['Milk', ''],
+      }),
+    ).rejects.toThrow()
+    expect(await countRows('items')).toBe(0)
+    expect(await countRows('entries')).toBe(0)
+  })
+
+  it('rejects entries on anything but a list', async () => {
+    await expect(
+      store.createItem({ type: 'note', title: 'Idea', entries: ['One'] }),
+    ).rejects.toThrow('Only lists have entries')
+  })
+})
+
 describe('entries', () => {
   it('adds, edits, completes and deletes entries', async () => {
     const list = await store.createItem({ type: 'list', title: 'Groceries' })

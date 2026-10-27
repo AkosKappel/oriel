@@ -44,24 +44,49 @@ export function createStore(database: CommonPowerSyncDatabase) {
   )
 
   const now = () => new Date().toISOString()
+  const transactor = new PowerSyncTransactor({ database })
+
+  /** Applies mutations across collections in one SQLite transaction: all are stored or none. */
+  async function inTransaction(mutate: () => void) {
+    const transaction = createTransaction({
+      mutationFn: ({ transaction }) => transactor.applyTransaction(transaction),
+    })
+    transaction.mutate(mutate)
+    await transaction.isPersisted.promise
+  }
 
   return {
     items,
     entries,
 
+    /** Creates an item, and for a list its entries, in one transaction. */
     async createItem(input: NewItem) {
-      const { type, title, body } = newItemSchema.parse(input)
+      const { type, title, body, entries: texts } = newItemSchema.parse(input)
       const id = crypto.randomUUID()
       const timestamp = now()
-      await items.insert({
-        id,
-        type,
-        title,
-        body,
-        completed_at: null,
-        created_at: timestamp,
-        updated_at: timestamp,
-      }).isPersisted.promise
+      await inTransaction(() => {
+        items.insert({
+          id,
+          type,
+          title,
+          body,
+          completed_at: null,
+          created_at: timestamp,
+          updated_at: timestamp,
+        })
+        if (texts.length > 0) {
+          entries.insert(
+            texts.map((text) => ({
+              id: crypto.randomUUID(),
+              item_id: id,
+              text,
+              completed_at: null,
+              created_at: timestamp,
+              updated_at: timestamp,
+            })),
+          )
+        }
+      })
       return id
     },
 
@@ -93,15 +118,10 @@ export function createStore(database: CommonPowerSyncDatabase) {
       const entryIds = entries.toArray
         .filter((entry) => entry.item_id === id)
         .map((entry) => entry.id)
-      const transaction = createTransaction({
-        mutationFn: ({ transaction }) =>
-          new PowerSyncTransactor({ database }).applyTransaction(transaction),
-      })
-      transaction.mutate(() => {
+      await inTransaction(() => {
         if (entryIds.length > 0) entries.delete(entryIds)
         items.delete(id)
       })
-      await transaction.isPersisted.promise
     },
 
     async addEntry(itemId: string, text: string) {

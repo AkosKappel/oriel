@@ -6,7 +6,7 @@ Author: **Ákos Kappel**
 
 One calm place for the everyday things you don't want to forget: notes, shopping lists, tasks and quick thoughts, alone or shared with the people you live with. Built mobile-first and offline-first, so it opens instantly and keeps working without a connection.
 
-**Status:** early development. Notes, lists and tasks are stored in a local SQLite database in the browser; quick capture and editing come next, then sign-in and sync.
+**Status:** early development. Quick capture works and notes, lists and tasks are stored in a local SQLite database in the browser; editing and organization come next, then sign-in and sync.
 
 ## Principles
 
@@ -14,6 +14,14 @@ One calm place for the everyday things you don't want to forget: notes, shopping
 - **Offline-first:** data lives on the device first and syncs when a connection is available.
 - **Live collaboration:** shared lists update on every member's device.
 - **Private by default:** you see only what you own or what was shared with you.
+
+## Quick capture
+
+The capture field sits at the bottom of the screen. Pick Note, List or Task, type, and press Enter; Shift+Enter starts a new line, and `/` focuses the field on desktop.
+
+- The first line is the title. Further lines become the note body, the task details or the list entries (bullets and `[ ]` are removed).
+- A list fits on one line: `Groceries: milk, eggs, bread`.
+- A long pasted paragraph becomes a note with a short title and the full text kept.
 
 ## Tech stack
 

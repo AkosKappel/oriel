@@ -56,7 +56,11 @@ export const entrySchema = z.object({
 
 export type Entry = z.infer<typeof entrySchema>
 
-export const titleSchema = z.string().trim().min(1, 'Add a title').max(200)
+export const titleSchema = z
+  .string()
+  .trim()
+  .min(1, 'Add a title')
+  .max(200, 'Keep the title under 200 characters')
 export const bodySchema = z.string().trim().max(20_000)
 export const entryTextSchema = z
   .string()
@@ -64,10 +68,16 @@ export const entryTextSchema = z
   .min(1, 'Add some text')
   .max(500)
 
-export const newItemSchema = z.object({
-  type: z.enum(itemTypes),
-  title: titleSchema,
-  body: bodySchema.default(''),
-})
+export const newItemSchema = z
+  .object({
+    type: z.enum(itemTypes),
+    title: titleSchema,
+    body: bodySchema.default(''),
+    entries: z.array(entryTextSchema).max(500).default([]),
+  })
+  .refine((item) => item.type === 'list' || item.entries.length === 0, {
+    message: 'Only lists have entries',
+    path: ['entries'],
+  })
 
 export type NewItem = z.input<typeof newItemSchema>

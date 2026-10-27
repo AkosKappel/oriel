@@ -6,7 +6,8 @@ import {
   Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
+import { Toaster } from 'sonner'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -15,7 +16,9 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       {
         name: 'viewport',
-        content: 'width=device-width, initial-scale=1, viewport-fit=cover',
+        // `resizes-content` keeps the capture bar above the on-screen keyboard on Android.
+        content:
+          'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
       },
       { title: 'Oriel' },
       {
@@ -50,8 +53,28 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        {/* Just above the capture bar, where the thumb already is for Undo. */}
+        <Toaster
+          position="bottom-center"
+          theme="system"
+          offset={{ bottom: 136 }}
+          mobileOffset={{ bottom: 136 }}
+          style={
+            {
+              '--normal-bg': 'var(--popover)',
+              '--normal-text': 'var(--popover-foreground)',
+              '--normal-border': 'var(--border)',
+            } as CSSProperties
+          }
+          toastOptions={{
+            classNames: {
+              toast: '!font-sans',
+              actionButton: '!bg-primary !text-primary-foreground',
+            },
+          }}
+        />
         <TanStackDevtools
-          config={{ position: 'bottom-right' }}
+          config={{ position: 'top-right' }}
           plugins={[
             {
               name: 'TanStack Router',
