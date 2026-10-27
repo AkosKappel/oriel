@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Archive, ArrowLeft, Pin, Trash2 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 import { Button, ToggleButton } from 'react-aria-components'
 import { toast } from 'sonner'
 import { EntryList } from '#/components/entry-list'
@@ -84,6 +84,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const doneBy = item.completed_at ? otherName(item.completed_by) : undefined
   const deletedBy = item.deleted_at ? otherName(item.deleted_by) : undefined
   const moveTargets = spaces.filter((target) => canEdit(target.role))
+  const saveBody = useRef<(() => Promise<void>) | null>(null)
 
   async function move(spaceId: string) {
     await store.moveItem(item.id, spaceId)
@@ -106,6 +107,24 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         onClick: () => void store.setItemArchived(item.id, !next),
       },
     })
+  }
+
+  async function convert() {
+    const to = item.type === 'note' ? 'list' : 'note'
+    // Text typed in the last half second is not saved yet; it must be part of the conversion.
+    await saveBody.current?.()
+    try {
+      const snapshot = await store.convertItem(item.id, to)
+      toast(`${label} turned into a ${to}`, {
+        action: {
+          label: 'Undo',
+          onClick: () => void store.undoConversion(snapshot),
+        },
+      })
+    } catch (error) {
+      console.error('Could not convert the item', error)
+      toast(`This ${label.toLowerCase()} is too long to turn into a ${to}`)
+    }
   }
 
   async function deleteForever() {
@@ -233,7 +252,21 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             checkedBy={otherName}
           />
         ) : (
-          <BodyField store={store} item={item} readOnly={!editable} />
+          <BodyField
+            store={store}
+            item={item}
+            readOnly={!editable}
+            saveRef={saveBody}
+          />
+        )}
+
+        {editable && item.type !== 'task' && (
+          <Button
+            onPress={() => void convert()}
+            className="mt-6 -ml-2 block rounded-sm px-2 py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
+          >
+            {item.type === 'note' ? 'Turn into a list' : 'Turn into a note'}
+          </Button>
         )}
 
         {editable && item.space_id && moveTargets.length > 1 && (
@@ -305,35 +338,44 @@ function BodyField({
   store,
   item,
   readOnly,
+  saveRef,
 }: {
   store: Store
   item: Item
   readOnly: boolean
+  /** Lets the page save pending text before it changes the item (see `convert`). */
+  saveRef: RefObject<(() => Promise<void>) | null>
 }) {
   const [body, setBody] = useState(item.body)
-  const flush = useRef(() => {})
-  flush.current = () => {
-    if (body.trim() === item.body || !store.items.has(item.id)) return
-    store.updateItem(item.id, { body }).catch((error: unknown) => {
+  const flush = useRef(async () => {})
+  flush.current = async () => {
+    // A converted item has no body field any more; its text went into the conversion.
+    if (
+      body.trim() === item.body ||
+      store.items.get(item.id)?.type !== item.type
+    )
+      return
+    await store.updateItem(item.id, { body }).catch((error: unknown) => {
       console.error('Could not save the text', error)
     })
   }
+  saveRef.current = () => flush.current()
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: every edit restarts the debounce
   useEffect(() => {
-    const timer = setTimeout(() => flush.current(), saveDelay)
+    const timer = setTimeout(() => void flush.current(), saveDelay)
     return () => clearTimeout(timer)
   }, [body])
 
   // Leaving the page unmounts the field; closing the tab or switching apps only hides it.
   useEffect(() => {
     const flushWhenHidden = () => {
-      if (document.visibilityState === 'hidden') flush.current()
+      if (document.visibilityState === 'hidden') void flush.current()
     }
     document.addEventListener('visibilitychange', flushWhenHidden)
     return () => {
       document.removeEventListener('visibilitychange', flushWhenHidden)
-      flush.current()
+      void flush.current()
     }
   }, [])
 

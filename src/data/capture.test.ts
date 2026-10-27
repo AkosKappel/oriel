@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseCapture } from './capture'
+import { parseCapture, readEntryLine } from './capture'
 
 describe('parseCapture', () => {
   it('returns null for blank text', () => {
@@ -35,6 +35,12 @@ describe('parseCapture', () => {
       body: '',
       entries: ['milk', 'eggs', 'bread', 'butter', 'jam', 'tea', 'rice'],
     })
+  })
+
+  it('strips a bullet together with a Markdown checkbox, and keeps decimal quantities', () => {
+    expect(
+      parseCapture('Baking\n- [ ] sugar\n* [x] eggs\n2.5 kg flour', 'list'),
+    ).toMatchObject({ entries: ['sugar', 'eggs', '2.5 kg flour'] })
   })
 
   it('reads a one-line list as "title: entry, entry"', () => {
@@ -77,5 +83,17 @@ describe('parseCapture', () => {
       title: 'milk',
       entries: ['eggs'],
     })
+  })
+})
+
+describe('readEntryLine', () => {
+  it('tells checked Markdown lines from open ones', () => {
+    expect(readEntryLine('- [x] milk')).toEqual({ text: 'milk', checked: true })
+    expect(readEntryLine('[X] eggs')).toEqual({ text: 'eggs', checked: true })
+    expect(readEntryLine('- [ ] bread')).toEqual({
+      text: 'bread',
+      checked: false,
+    })
+    expect(readEntryLine('1. tea')).toEqual({ text: 'tea', checked: false })
   })
 })

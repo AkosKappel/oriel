@@ -4,7 +4,9 @@ import {
   powerSyncCollectionOptions,
 } from '@tanstack/powersync-db-collection'
 import { createCollection, createTransaction } from '@tanstack/react-db'
+import { readEntryLine } from './capture'
 import type { ImportedItem } from './export'
+import { sortEntries } from './organize'
 import {
   appSchema,
   bodySchema,
@@ -95,7 +97,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
     spaceId: string | null,
     texts: string[],
     timestamp: string,
-  ) {
+  ): Entry[] {
     // Milliseconds as positions keep entries in the order they were added, also across devices.
     const base = Date.now()
     return texts.map((text, index) => ({
@@ -203,6 +205,85 @@ export function createStore(database: CommonPowerSyncDatabase) {
         for (const entry of itemEntries) {
           await reinsert(tx, 'entries', { ...entry, space_id: spaceId })
         }
+      })
+    },
+
+    /**
+     * Turns a note into a list (each line an entry, "[x]" lines checked) or a list into a note
+     * (entries as Markdown checkbox lines under its text). Returns the item and entries as they
+     * were, for `undoConversion`.
+     */
+    async convertItem(id: string, type: 'note' | 'list'): Promise<Snapshot> {
+      await Promise.all([items.preload(), entries.preload()])
+      const item = items.get(id)
+      if (!item || item.type === type || item.type === 'task') {
+        return { items: [], entries: [] }
+      }
+      const before = entries.toArray.filter((entry) => entry.item_id === id)
+      const timestamp = now()
+
+      if (type === 'list') {
+        const lines = item.body
+          .split(/\r?\n/)
+          .map(readEntryLine)
+          .filter((line) => line.text)
+        const rows = newEntries(
+          id,
+          item.space_id,
+          lines.map((line) => entryTextSchema.parse(line.text.slice(0, 500))),
+          timestamp,
+        ).map((row, index) =>
+          lines[index].checked
+            ? {
+                ...row,
+                completed_at: timestamp,
+                completed_by: owner?.userId ?? null,
+              }
+            : row,
+        )
+        await inTransaction(() => {
+          items.update(id, (draft) => {
+            draft.type = 'list'
+            draft.body = ''
+            draft.updated_at = timestamp
+          })
+          if (rows.length > 0) entries.insert(rows)
+        })
+      } else {
+        const lines = sortEntries(before).map(
+          (entry) => `- [${entry.completed_at ? 'x' : ' '}] ${entry.text}`,
+        )
+        const body = bodySchema.parse(
+          [item.body, lines.join('\n')].filter(Boolean).join('\n\n'),
+        )
+        await inTransaction(() => {
+          items.update(id, (draft) => {
+            draft.type = 'note'
+            draft.body = body
+            draft.updated_at = timestamp
+          })
+          if (before.length > 0) entries.delete(before.map((entry) => entry.id))
+        })
+      }
+      return { items: [item], entries: before }
+    },
+
+    /** Puts an item back the way `convertItem` found it, with its original entries. */
+    async undoConversion(snapshot: Snapshot) {
+      const [previous] = snapshot.items
+      if (!previous || !items.has(previous.id)) return
+      await entries.preload()
+      const current = entries.toArray.filter(
+        (entry) => entry.item_id === previous.id,
+      )
+      await inTransaction(() => {
+        items.update(previous.id, (draft) => {
+          draft.type = previous.type
+          draft.body = previous.body
+          draft.updated_at = now()
+        })
+        if (current.length > 0) entries.delete(current.map((entry) => entry.id))
+        if (snapshot.entries.length > 0) entries.insert(snapshot.entries)
       })
     },
 

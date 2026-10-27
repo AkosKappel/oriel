@@ -7,10 +7,18 @@ export type CaptureDraft = {
   entries: string[]
 }
 
-const bullet = /^(?:[-*•]|\[ ?\]|\d+[.)])\s*/
+// A bullet or number, then a Markdown checkbox, each optional: "- [x] milk", "2) rice", "[ ] jam".
+// Numbers need a space after them, so "2.5 kg flour" keeps its quantity.
+const bullet = /^(?:[-*•]\s*|\d+[.)]\s+)?(?:\[([ xX]?)\]\s*)?/
 
 /** Removes a leading bullet, number or checkbox from a pasted or typed list line. */
 export const stripBullet = (line: string) => line.replace(bullet, '')
+
+/** A list line as an entry, checked when it was written as "[x]". */
+export function readEntryLine(line: string) {
+  const checked = /^[xX]$/.test(bullet.exec(line)?.[1] ?? '')
+  return { text: stripBullet(line).trim(), checked }
+}
 
 // "Groceries: milk, eggs" but not "10:30": the colon must be followed by a space.
 const inlineList = /^(.+?):\s+(.+)$/

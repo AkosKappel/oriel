@@ -120,6 +120,30 @@ describe('ItemDetail', () => {
     )
   })
 
+  it('turns a note into a list with the text just typed, and back with Undo', async () => {
+    const user = userEvent.setup()
+    const { item } = await openItem({ type: 'note', title: 'Packing' })
+
+    // Typed and converted before the debounced save runs.
+    await user.type(
+      screen.getByRole('textbox', { name: 'Note' }),
+      'tent{Enter}stove',
+    )
+    await user.click(screen.getByRole('button', { name: 'Turn into a list' }))
+
+    await waitFor(() => expect(item()?.type).toBe('list'))
+    expect(store.entries.toArray.map((entry) => entry.text).sort()).toEqual([
+      'stove',
+      'tent',
+    ])
+    expect(item()?.body).toBe('')
+
+    await user.click(await findUndo('Note turned into a list'))
+    await waitFor(() => expect(item()?.type).toBe('note'))
+    expect(item()?.body).toBe('tent\nstove')
+    expect(store.entries.size).toBe(0)
+  })
+
   it('says so when the item was deleted elsewhere', async () => {
     const { id } = await openItem({ type: 'note', title: 'Gone soon' })
 

@@ -336,6 +336,65 @@ describe('spaces', () => {
   })
 })
 
+describe('converting between notes and lists', () => {
+  it('turns note lines into entries, checked where marked, and back', async () => {
+    const id = await store.createItem({
+      type: 'note',
+      title: 'Packing',
+      body: '- [x] tent\n\n- [ ] stove\n* torch',
+    })
+
+    const asNote = await store.convertItem(id, 'list')
+    expect(store.items.get(id)).toMatchObject({ type: 'list', body: '' })
+    const rows = await database.getAll<{ text: string; done: number }>(
+      'SELECT text, completed_at IS NOT NULL AS done FROM entries ORDER BY position',
+    )
+    expect(rows).toEqual([
+      { text: 'tent', done: 1 },
+      { text: 'stove', done: 0 },
+      { text: 'torch', done: 0 },
+    ])
+
+    await store.undoConversion(asNote)
+    expect(store.items.get(id)).toMatchObject({
+      type: 'note',
+      body: '- [x] tent\n\n- [ ] stove\n* torch',
+    })
+    expect(await countRows('entries')).toBe(0)
+  })
+
+  it('writes a list into a note as checkbox lines, and Undo brings the entries back', async () => {
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['milk', 'eggs'],
+    })
+    const [milk] = store.entries.toArray.filter((e) => e.text === 'milk')
+    await store.setEntryCompleted(milk.id, true)
+    const ids = store.entries.toArray.map((entry) => entry.id).sort()
+
+    const asList = await store.convertItem(id, 'note')
+    expect(store.items.get(id)).toMatchObject({
+      type: 'note',
+      body: '- [ ] eggs\n- [x] milk',
+    })
+    expect(await countRows('entries')).toBe(0)
+
+    await store.undoConversion(asList)
+    expect(store.items.get(id)).toMatchObject({ type: 'list', body: '' })
+    expect(store.entries.toArray.map((entry) => entry.id).sort()).toEqual(ids)
+    expect(store.entries.get(milk.id)?.completed_at).not.toBeNull()
+  })
+
+  it('leaves tasks and items of the same type alone', async () => {
+    const task = await store.createItem({ type: 'task', title: 'Call' })
+    const note = await store.createItem({ type: 'note', title: 'Idea' })
+    expect((await store.convertItem(task, 'list')).items).toEqual([])
+    expect((await store.convertItem(note, 'note')).items).toEqual([])
+    expect(store.items.get(task)?.type).toBe('task')
+  })
+})
+
 describe('creating a list with entries', () => {
   it('stores the list and its entries together', async () => {
     const id = await store.createItem({
