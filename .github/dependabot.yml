@@ -10,6 +10,10 @@ updates:
       tanstack:
         patterns:
           - "@tanstack/*"
+      powersync:
+        patterns:
+          - "@powersync/*"
+          - better-sqlite3
       react:
         patterns:
           - react

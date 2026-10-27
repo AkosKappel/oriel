@@ -6,7 +6,7 @@ Author: **Ákos Kappel**
 
 One calm place for the everyday things you don't want to forget: notes, shopping lists, tasks and quick thoughts, alone or shared with the people you live with. Built mobile-first and offline-first, so it opens instantly and keeps working without a connection.
 
-**Status:** early development. The foundation is in place; local data and quick capture come next.
+**Status:** early development. Notes, lists and tasks are stored in a local SQLite database in the browser; quick capture and editing come next, then sign-in and sync.
 
 ## Principles
 
@@ -20,7 +20,10 @@ One calm place for the everyday things you don't want to forget: notes, shopping
 - [TanStack Start](https://tanstack.com/start) (React 19, file-based routing) on Vite and Nitro
 - TypeScript
 - Tailwind CSS v4 with shadcn/ui primitives and Lucide icons
-- Planned: [TanStack DB](https://tanstack.com/db) for reactive client collections, [PowerSync](https://www.powersync.com) with SQLite for offline sync, PostgreSQL as the server database, Zod for validation
+- [TanStack DB](https://tanstack.com/db) for reactive client collections and optimistic writes
+- [PowerSync](https://www.powersync.com) Web SDK with SQLite (WASM) as the local database
+- Zod for validation
+- Planned: PostgreSQL as the server database, synced through PowerSync
 - Biome, Vitest, GitHub Actions
 
 ## How it works

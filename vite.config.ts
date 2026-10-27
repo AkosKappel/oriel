@@ -7,6 +7,9 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   resolve: { tsconfigPaths: true },
+  // PowerSync ships web workers and WASM that the dependency optimizer would break.
+  optimizeDeps: { exclude: ['@powersync/web'] },
+  worker: { format: 'es' },
   plugins: [
     devtools(),
     // Serves gzip and Brotli copies of the built assets (the server does not compress).

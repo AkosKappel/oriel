@@ -26,6 +26,14 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - **Layers:** route components compose UI; domain logic and persistence live outside components so they can be tested without React.
 - **Build in order:** foundation, local data, quick capture, core organization, offline, backend and auth, sync, sharing, polish. Do not add sync or auth code before the phase that needs it.
 
+## Data layer
+
+- `src/data/schema.ts`: the PowerSync table schema plus Zod schemas for rows and inputs. PowerSync views are schemaless, so adding a column needs no client migration.
+- `src/data/store.ts`: `createStore(database)` builds the TanStack DB collections and every write operation. Writes validate input, apply optimistically and resolve once stored in SQLite. Writes that span tables use one `createTransaction` with `PowerSyncTransactor`.
+- `src/data/client.ts`: the browser database and store. Routes that read it set `ssr: false`; during server rendering PowerSync only opens a placeholder.
+- Tests run the same store against real SQLite through `@powersync/node` (`src/data/store.test.ts`).
+- `@tanstack/react-db` and `@tanstack/powersync-db-collection` are pinned together; both must depend on the same `@tanstack/db` version.
+
 ## Conventions
 
 - Imports from `src` use the `#/` alias (`#/lib/utils`).
