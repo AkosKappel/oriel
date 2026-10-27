@@ -121,7 +121,16 @@ function Notebook() {
             </nav>
           )}
         </div>
-        {view ? null : space && !canEdit(space.role) ? (
+        {view ? null : spaceId && !space ? (
+          // A space created or joined a moment ago reaches the device through sync. Capturing
+          // before then would file the item in the personal space instead.
+          <p
+            role="status"
+            className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground"
+          >
+            This space is not on this device yet. It appears once it syncs.
+          </p>
+        ) : space && !canEdit(space.role) ? (
           <p className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground">
             You can view {space.name}; only its editors can add to it.
           </p>
