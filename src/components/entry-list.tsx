@@ -150,7 +150,7 @@ function EntryRow({
         <Button
           onPress={() => void remove()}
           aria-label={`Remove ${entry.text}`}
-          className="-mr-3 grid size-11 shrink-0 place-items-center rounded-sm text-faint hover:text-foreground data-focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:data-focus-visible:opacity-100"
+          className="-mr-3 grid size-11 shrink-0 place-items-center rounded-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:data-focus-visible:opacity-100"
         >
           <X aria-hidden className="size-4" />
         </Button>

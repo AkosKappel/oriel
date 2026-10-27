@@ -87,7 +87,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   }
 
   async function remove() {
-    await navigate({ to: '/' })
+    await navigate({ to: '/', search: true })
     const snapshot = await store.deleteItem(item.id)
     toast(`${label} deleted`, {
       action: { label: 'Undo', onClick: () => void store.restore(snapshot) },
@@ -99,7 +99,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       <header className="-ml-3 flex items-center justify-between pt-2 pb-6">
         <Link
           to="/"
-          className="flex h-11 items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
+          search={true}
+          // On a wide screen the list is already beside the item.
+          className="flex h-11 items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 lg:invisible"
         >
           <ArrowLeft aria-hidden className="size-4" />
           Everything
@@ -129,6 +131,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       </header>
 
       <div className="pl-10">
+        {/* The title is edited in place; the heading keeps the page outline for screen readers. */}
+        <h1 className="sr-only">{item.title}</h1>
         <p className="text-xs text-muted-foreground">
           {label} · {formatShortDate(item.created_at)}
           {space && !space.personal && ` · ${space.name}`}

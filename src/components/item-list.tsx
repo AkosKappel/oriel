@@ -102,7 +102,7 @@ export function ItemList({
 
 function Section({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <section aria-label={title ?? 'Items'}>
+    <section aria-label={title ?? 'Notes, lists and tasks'}>
       {title && <h2 className="mb-1 text-xs text-muted-foreground">{title}</h2>}
       {children}
     </section>
@@ -163,11 +163,13 @@ function ItemRow({
       <Link
         to="/items/$itemId"
         params={{ itemId: item.id }}
-        className="flex min-h-12 flex-col justify-center rounded-sm py-2.5 focus-visible:outline-2 focus-visible:outline-offset-4"
+        // Keeps the filters, so the list beside an open item stays as it was.
+        search={true}
+        className="group flex min-h-12 flex-col justify-center rounded-sm py-2.5 focus-visible:outline-2 focus-visible:outline-offset-4"
       >
         <span
           className={cn(
-            'truncate font-serif text-[1.1875rem] leading-snug',
+            'truncate font-serif text-[1.1875rem] leading-snug decoration-1 underline-offset-4 group-data-[status=active]:underline',
             done && 'text-muted-foreground line-through decoration-1',
           )}
         >

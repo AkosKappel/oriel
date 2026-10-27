@@ -27,6 +27,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 - **Home:** pinned items first, then open items by priority and date, completed tasks folded away. Filter by notes, lists or tasks; the filter is part of the URL.
 - **Detail:** edit the title and text (saved as you type), complete tasks, set a priority (none, low, medium, high), pin, or delete with Undo.
+- **Wide screens:** the list stays on the left and the open item reads beside it; on a phone they are separate screens.
 - **Lists:** check, rename, remove (or empty the text) and add entries; pasting several lines adds one entry per line. Checked entries move to the bottom, and "Clear checked" removes them with Undo.
 
 ## Offline and installable

@@ -30,7 +30,7 @@ export function AccountLink() {
   const sync = describeSync(status, online)
   return (
     <Link to="/account" className={linkClass}>
-      {sync && <span className="text-faint">{sync} · </span>}
+      {sync && <span className="text-muted-foreground">{sync} · </span>}
       {account.name.split(' ')[0]}
     </Link>
   )

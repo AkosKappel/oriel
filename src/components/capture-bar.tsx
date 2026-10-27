@@ -72,7 +72,26 @@ export function CaptureBar({
   const [error, setError] = useState<string | null>(null)
   const fieldRef = useRef<HTMLTextAreaElement>(null)
   const tapped = useRef(false)
+  const formRef = useRef<HTMLFormElement>(null)
   const hintId = useId()
+
+  // Toasts sit just above the bar while it is on screen (it is hidden beside an open item on a
+  // phone); a hidden element measures 0.
+  useEffect(() => {
+    const form = formRef.current
+    if (!form) return
+    const root = document.documentElement.style
+    const observer = new ResizeObserver(([entry]) => {
+      const height = entry.borderBoxSize[0]?.blockSize ?? 0
+      if (height > 0) root.setProperty('--capture-height', `${height}px`)
+      else root.removeProperty('--capture-height')
+    })
+    observer.observe(form)
+    return () => {
+      observer.disconnect()
+      root.removeProperty('--capture-height')
+    }
+  }, [])
 
   useEffect(() => {
     function focusOnShortcut(event: globalThis.KeyboardEvent) {
@@ -151,6 +170,7 @@ export function CaptureBar({
 
   return (
     <form
+      ref={formRef}
       onSubmit={submit}
       aria-label="Capture"
       className="sticky bottom-0 -mx-4 flex flex-col bg-background pt-2 pr-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-14"

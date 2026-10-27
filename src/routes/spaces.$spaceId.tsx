@@ -101,25 +101,29 @@ function SpaceName({ space }: { space: SpaceView }) {
     return <h1 className="font-serif text-4xl tracking-tight">{space.name}</h1>
   }
   return (
-    <input
-      // Remounts when the name changes elsewhere, so it never shows stale text.
-      key={space.name}
-      defaultValue={space.name}
-      aria-label="Space name"
-      maxLength={60}
-      onBlur={(event) => {
-        const name = event.currentTarget.value.trim()
-        if (!name || name === space.name) {
-          event.currentTarget.value = space.name
-          return
-        }
-        void attempt(() => renameSpace({ data: { spaceId: space.id, name } }))
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') event.currentTarget.blur()
-      }}
-      className="w-full bg-transparent font-serif text-4xl tracking-tight outline-none"
-    />
+    <>
+      {/* The name is edited in place; the heading keeps the page outline for screen readers. */}
+      <h1 className="sr-only">{space.name}</h1>
+      <input
+        // Remounts when the name changes elsewhere, so it never shows stale text.
+        key={space.name}
+        defaultValue={space.name}
+        aria-label="Space name"
+        maxLength={60}
+        onBlur={(event) => {
+          const name = event.currentTarget.value.trim()
+          if (!name || name === space.name) {
+            event.currentTarget.value = space.name
+            return
+          }
+          void attempt(() => renameSpace({ data: { spaceId: space.id, name } }))
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur()
+        }}
+        className="w-full bg-transparent font-serif text-4xl tracking-tight outline-none"
+      />
+    </>
   )
 }
 

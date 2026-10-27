@@ -52,6 +52,10 @@ export const Route = createRootRoute({
   errorComponent: ErrorPage,
 })
 
+// The capture bar's height already includes the safe area.
+const toastLift =
+  'max(calc(var(--capture-height, 0px) + 0.75rem), 1rem, env(safe-area-inset-bottom))'
+
 function RootDocument({ children }: { children: ReactNode }) {
   useEffect(registerServiceWorker, [])
 
@@ -63,14 +67,14 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body>
         <OfflineBanner />
         {children}
-        {/* Just above the capture bar, where the thumb already is for Undo. */}
+        {/* Just above the capture bar when it is shown, where the thumb already is for Undo. */}
         <Toaster
           position="bottom-center"
           theme="system"
           // One message at a time; quick capture would otherwise stack them.
           visibleToasts={1}
-          offset={{ bottom: 136 }}
-          mobileOffset={{ bottom: 136 }}
+          offset={{ bottom: toastLift }}
+          mobileOffset={{ bottom: toastLift }}
           style={
             {
               '--normal-bg': 'var(--background)',

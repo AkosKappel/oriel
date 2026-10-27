@@ -9,22 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as NotebookRouteImport } from './routes/_notebook'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as NotebookIndexRouteImport } from './routes/_notebook/index'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
-import { Route as ItemsItemIdRouteImport } from './routes/items.$itemId'
 import { Route as SpacesIndexRouteImport } from './routes/spaces.index'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
+import { Route as NotebookItemsItemIdRouteImport } from './routes/_notebook/items.$itemId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiSyncTokenRouteImport } from './routes/api/sync/token'
 import { Route as ApiSyncUploadRouteImport } from './routes/api/sync/upload'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const NotebookRoute = NotebookRouteImport.update({
+  id: '/_notebook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -42,6 +42,11 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotebookIndexRoute = NotebookIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => NotebookRoute,
+} as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
@@ -50,11 +55,6 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ItemsItemIdRoute = ItemsItemIdRouteImport.update({
-  id: '/items/$itemId',
-  path: '/items/$itemId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SpacesIndexRoute = SpacesIndexRouteImport.update({
@@ -66,6 +66,11 @@ const SpacesSpaceIdRoute = SpacesSpaceIdRouteImport.update({
   id: '/spaces/$spaceId',
   path: '/spaces/$spaceId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const NotebookItemsItemIdRoute = NotebookItemsItemIdRouteImport.update({
+  id: '/items/$itemId',
+  path: '/items/$itemId',
+  getParentRoute: () => NotebookRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -84,44 +89,45 @@ const ApiSyncUploadRoute = ApiSyncUploadRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof NotebookIndexRoute
   '/account': typeof AccountRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/items/$itemId': typeof ItemsItemIdRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/spaces/': typeof SpacesIndexRoute
+  '/items/$itemId': typeof NotebookItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/token': typeof ApiSyncTokenRoute
   '/api/sync/upload': typeof ApiSyncUploadRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/items/$itemId': typeof ItemsItemIdRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/': typeof NotebookIndexRoute
   '/spaces': typeof SpacesIndexRoute
+  '/items/$itemId': typeof NotebookItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/token': typeof ApiSyncTokenRoute
   '/api/sync/upload': typeof ApiSyncUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_notebook': typeof NotebookRouteWithChildren
   '/account': typeof AccountRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
-  '/items/$itemId': typeof ItemsItemIdRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
+  '/_notebook/': typeof NotebookIndexRoute
   '/spaces/': typeof SpacesIndexRoute
+  '/_notebook/items/$itemId': typeof NotebookItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/sync/token': typeof ApiSyncTokenRoute
   '/api/sync/upload': typeof ApiSyncUploadRoute
@@ -135,50 +141,50 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/api/health'
     | '/invite/$token'
-    | '/items/$itemId'
     | '/spaces/$spaceId'
     | '/spaces/'
+    | '/items/$itemId'
     | '/api/auth/$'
     | '/api/sync/token'
     | '/api/sync/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/account'
     | '/share'
     | '/sign-in'
     | '/api/health'
     | '/invite/$token'
-    | '/items/$itemId'
     | '/spaces/$spaceId'
+    | '/'
     | '/spaces'
+    | '/items/$itemId'
     | '/api/auth/$'
     | '/api/sync/token'
     | '/api/sync/upload'
   id:
     | '__root__'
-    | '/'
+    | '/_notebook'
     | '/account'
     | '/share'
     | '/sign-in'
     | '/api/health'
     | '/invite/$token'
-    | '/items/$itemId'
     | '/spaces/$spaceId'
+    | '/_notebook/'
     | '/spaces/'
+    | '/_notebook/items/$itemId'
     | '/api/auth/$'
     | '/api/sync/token'
     | '/api/sync/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  NotebookRoute: typeof NotebookRouteWithChildren
   AccountRoute: typeof AccountRoute
   ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
   ApiHealthRoute: typeof ApiHealthRoute
   InviteTokenRoute: typeof InviteTokenRoute
-  ItemsItemIdRoute: typeof ItemsItemIdRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
   SpacesIndexRoute: typeof SpacesIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -188,11 +194,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_notebook': {
+      id: '/_notebook'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof NotebookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -216,6 +222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_notebook/': {
+      id: '/_notebook/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof NotebookIndexRouteImport
+      parentRoute: typeof NotebookRoute
+    }
     '/api/health': {
       id: '/api/health'
       path: '/api/health'
@@ -228,13 +241,6 @@ declare module '@tanstack/react-router' {
       path: '/invite/$token'
       fullPath: '/invite/$token'
       preLoaderRoute: typeof InviteTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/items/$itemId': {
-      id: '/items/$itemId'
-      path: '/items/$itemId'
-      fullPath: '/items/$itemId'
-      preLoaderRoute: typeof ItemsItemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/spaces/': {
@@ -250,6 +256,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/spaces/$spaceId'
       preLoaderRoute: typeof SpacesSpaceIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_notebook/items/$itemId': {
+      id: '/_notebook/items/$itemId'
+      path: '/items/$itemId'
+      fullPath: '/items/$itemId'
+      preLoaderRoute: typeof NotebookItemsItemIdRouteImport
+      parentRoute: typeof NotebookRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -275,14 +288,27 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface NotebookRouteChildren {
+  NotebookIndexRoute: typeof NotebookIndexRoute
+  NotebookItemsItemIdRoute: typeof NotebookItemsItemIdRoute
+}
+
+const NotebookRouteChildren: NotebookRouteChildren = {
+  NotebookIndexRoute: NotebookIndexRoute,
+  NotebookItemsItemIdRoute: NotebookItemsItemIdRoute,
+}
+
+const NotebookRouteWithChildren = NotebookRoute._addFileChildren(
+  NotebookRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  NotebookRoute: NotebookRouteWithChildren,
   AccountRoute: AccountRoute,
   ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,
   ApiHealthRoute: ApiHealthRoute,
   InviteTokenRoute: InviteTokenRoute,
-  ItemsItemIdRoute: ItemsItemIdRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
   SpacesIndexRoute: SpacesIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
