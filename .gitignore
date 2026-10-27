@@ -11,3 +11,11 @@ dist-ssr
 .vinxi
 __unconfig*
 todos.json
+
+# Vitest and Playwright
+coverage
+test-results
+playwright-report
+
+# Local planning file
+BACKLOG.md

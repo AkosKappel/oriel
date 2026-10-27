@@ -8,25 +8,10 @@
   "tailwind": true,
   "projectPreset": "default",
   "routerOnly": false,
-  "addOnOptions": {
-    "prisma": {
-      "database": "postgres"
-    }
-  },
   "git": true,
   "install": true,
   "intent": true,
   "version": 1,
   "framework": "react",
-  "chosenAddOns": [
-    "biome",
-    "nitro",
-    "db",
-    "prisma",
-    "form",
-    "shadcn",
-    "t3env",
-    "store",
-    "tanstack-query"
-  ]
+  "chosenAddOns": ["biome", "nitro", "shadcn"]
 }
