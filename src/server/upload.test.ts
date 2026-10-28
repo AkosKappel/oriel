@@ -177,6 +177,17 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     })
   })
 
+  it('stores a due day as a date and clears it with a patch', async () => {
+    const task = put('items', itemRow(aliceSpace, { due_on: '2026-11-01' }))
+    await applyUpload(alice, [task])
+    expect(await findItem(task.id)).toMatchObject({ dueOn: '2026-11-01' })
+
+    await applyUpload(alice, [
+      { op: 'PATCH', table: 'items', id: task.id, data: { due_on: null } },
+    ])
+    expect(await findItem(task.id)).toMatchObject({ dueOn: null })
+  })
+
   it('does not let a viewer move a shared item to the trash', async () => {
     const note = put('items', itemRow(bobSpace, { type: 'note' }))
     await applyUpload(bob, [note])
@@ -270,6 +281,7 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
       put('items', itemRow(aliceSpace, { type: 'event' })),
       put('items', itemRow(aliceSpace, { priority: 9 })),
       put('items', itemRow(aliceSpace, { status: 'done' })),
+      put('items', itemRow(aliceSpace, { due_on: '2026-13-01' })),
       list,
       // An entry must be in its list's space.
       put('entries', entryRow(list.id, bobSpace)),
@@ -279,6 +291,7 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
 
     expect(result.applied).toBe(2)
     expect(result.rejected.map((rejection) => rejection.reason)).toEqual([
+      'invalid',
       'invalid',
       'invalid',
       'invalid',

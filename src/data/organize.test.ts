@@ -8,6 +8,7 @@ import {
   searchItems,
   sortEntries,
   suggestEntries,
+  withDue,
   withStatus,
 } from './organize'
 import type { Entry, Item } from './schema'
@@ -24,6 +25,7 @@ function item(overrides: Partial<Item> & Pick<Item, 'id'>): Item {
     pinned_at: null,
     priority: 0,
     status: null,
+    due_on: null,
     archived_at: null,
     deleted_at: null,
     deleted_by: null,
@@ -291,5 +293,37 @@ describe('suggestEntries', () => {
       'Butter',
       'Bread',
     ])
+  })
+})
+
+describe('due dates', () => {
+  const today = '2026-10-28'
+  const items = [
+    item({ id: 'no-date', priority: 3 }),
+    item({ id: 'next-week', due_on: '2026-11-04' }),
+    item({ id: 'overdue', due_on: '2026-10-20' }),
+    item({ id: 'today', due_on: today }),
+    item({ id: 'done', due_on: today, completed_at: '2026-10-28T09:00:00Z' }),
+  ]
+
+  it('sorts open items by the soonest day first, before priority', () => {
+    expect(ids(organizeItems(items).open)).toEqual([
+      'overdue',
+      'today',
+      'next-week',
+      'no-date',
+    ])
+  })
+
+  it('filters open tasks due by today, overdue ones included', () => {
+    expect(ids(withDue(items, 'today', today))).toEqual(['overdue', 'today'])
+  })
+
+  it('filters open tasks due after today', () => {
+    expect(ids(withDue(items, 'upcoming', today))).toEqual(['next-week'])
+  })
+
+  it('keeps everything without a filter', () => {
+    expect(withDue(items, undefined, today)).toBe(items)
   })
 })

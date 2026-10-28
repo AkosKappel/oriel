@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   bodySchema,
+  dueSchema,
   entryTextSchema,
   itemTypes,
   prioritySchema,
@@ -50,6 +51,7 @@ const itemFields = z.object({
   pinned_at: nullableDate,
   priority: prioritySchema,
   status: statusSchema,
+  due_on: dueSchema,
   archived_at: nullableDate,
   deleted_at: nullableDate,
   created_at: date,
@@ -63,6 +65,7 @@ const itemPut = itemFields.extend({
   pinned_at: nullableDate.default(null),
   priority: prioritySchema.default(0),
   status: statusSchema.default(null),
+  due_on: dueSchema.default(null),
   archived_at: nullableDate.default(null),
   deleted_at: nullableDate.default(null),
 })
@@ -203,6 +206,7 @@ async function applyOperation(
         pinnedAt: row.pinned_at,
         priority: row.priority,
         status: row.status,
+        dueOn: row.due_on,
         archivedAt: row.archived_at,
         deletedAt: row.deleted_at,
         deletedBy: markedBy(row.deleted_at, userId),
@@ -234,6 +238,7 @@ async function applyOperation(
       pinnedAt: patch.pinned_at,
       priority: patch.priority,
       status: patch.status,
+      dueOn: patch.due_on,
       archivedAt: patch.archived_at,
       deletedAt: patch.deleted_at,
       deletedBy: markedBy(patch.deleted_at, userId),

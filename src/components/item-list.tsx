@@ -6,12 +6,14 @@ import { itemLabels } from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
 import {
   countEntries,
+  type DueFilter,
   itemsInView,
   organizeItems,
   previewLine,
   searchItems,
   trashDays,
   type View,
+  withDue,
   withStatus,
 } from '#/data/organize'
 import {
@@ -22,7 +24,7 @@ import {
   type TaskStatus,
 } from '#/data/schema'
 import type { Store } from '#/data/store'
-import { formatShortDate } from '#/lib/dates'
+import { describeDue, formatShortDate, localDay } from '#/lib/dates'
 import { tick } from '#/lib/haptics'
 import { canEdit, type SpaceView } from '#/lib/spaces'
 import { useRows } from '#/lib/use-rows'
@@ -41,6 +43,7 @@ export function ItemList({
   store,
   type,
   status,
+  due,
   spaceId,
   query = '',
   view,
@@ -50,6 +53,8 @@ export function ItemList({
   type?: ItemType
   /** With tasks: only open tasks in this state. */
   status?: TaskStatus
+  /** With tasks: only open tasks due by today or after it. */
+  due?: DueFilter
   /** Show one space only. */
   spaceId?: string
   /** Show only items that contain these words. */
@@ -63,16 +68,21 @@ export function ItemList({
 
   if (isLoading) return null
 
-  const shown = withStatus(
-    searchItems(
-      itemsInView(
-        spaceId ? items.filter((item) => item.space_id === spaceId) : items,
-        view,
+  const today = localDay(new Date())
+  const shown = withDue(
+    withStatus(
+      searchItems(
+        itemsInView(
+          spaceId ? items.filter((item) => item.space_id === spaceId) : items,
+          view,
+        ),
+        entries,
+        query,
       ),
-      entries,
-      query,
+      type === 'task' ? status : undefined,
     ),
-    type === 'task' ? status : undefined,
+    type === 'task' ? due : undefined,
+    today,
   )
   const counts = countEntries(entries)
 
@@ -93,6 +103,13 @@ export function ItemList({
   const { pinned, open, completed } = organizeItems(shown, type)
 
   if (pinned.length + open.length + completed.length === 0) {
+    if (due && type === 'task' && !query.trim()) {
+      return (
+        <p className="pt-6 text-sm text-muted-foreground" role="status">
+          {due === 'today' ? 'Nothing due today.' : 'Nothing due later.'}
+        </p>
+      )
+    }
     if (query.trim()) {
       return (
         <p className="pt-6 text-sm text-muted-foreground" role="status">
@@ -465,6 +482,7 @@ function describeItem(item: Item, counts: EntryCounts) {
   const firstLine = previewLine(item.body)
   if (item.type === 'task' && !item.completed_at) {
     return [
+      item.due_on && describeDue(item.due_on, localDay(new Date())),
       item.status && statusLabel(item.status),
       item.priority > 0 && `${priorities[item.priority].label} priority`,
       firstLine,

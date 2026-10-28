@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm'
 import {
   boolean,
   check,
+  date,
   doublePrecision,
   index,
   pgEnum,
@@ -163,6 +164,8 @@ export const items = pgTable(
     priority: smallint().default(0).notNull(),
     // Null is to do; done is completedAt.
     status: text(),
+    // A calendar day, for tasks.
+    dueOn: date({ mode: 'string' }),
     archivedAt: timestamp({ withTimezone: true }),
     // In the trash since then; devices delete it for good after 30 days.
     deletedAt: timestamp({ withTimezone: true }),

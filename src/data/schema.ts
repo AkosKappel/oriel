@@ -23,6 +23,7 @@ const items = new Table(
     pinned_at: column.text,
     priority: column.integer,
     status: column.text,
+    due_on: column.text,
     archived_at: column.text,
     deleted_at: column.text,
     deleted_by: column.text,
@@ -99,6 +100,9 @@ export type TaskStatus = (typeof taskStatuses)[number]['value']
 
 export const statusSchema = z.enum(['in_progress', 'waiting']).nullable()
 
+/** A calendar day (`2026-10-30`), not a moment: due "on Friday" stays Friday in every time zone. */
+export const dueSchema = z.iso.date().nullable()
+
 export const statusLabel = (status: TaskStatus) =>
   taskStatuses.find(({ value }) => value === status)?.label
 
@@ -116,6 +120,7 @@ export const itemSchema = z.object({
   // Rows written before the column existed have no value.
   priority: prioritySchema.nullable().transform((value) => value ?? 0),
   status: statusSchema,
+  due_on: dueSchema,
   archived_at: z.string().nullable(),
   // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
   deleted_at: z.string().nullable(),

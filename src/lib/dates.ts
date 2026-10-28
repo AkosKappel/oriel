@@ -16,6 +16,24 @@ export const formatDay = (date: Date) => dayFormat.format(date)
 export const formatShortDate = (iso: string) =>
   shortFormat.format(new Date(iso))
 
+/** The device's calendar day as `YYYY-MM-DD`, the form due dates are stored in. */
+export function localDay(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/** "Due today", "Due tomorrow", "Due 3 November", or "Overdue since 27 October". */
+export function describeDue(due: string, today: string) {
+  if (due === today) return 'Due today'
+  // Noon, so a daylight saving change cannot move the day.
+  const day = new Date(`${due}T12:00:00`)
+  const tomorrow = new Date(`${today}T12:00:00`)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  if (due === localDay(tomorrow)) return 'Due tomorrow'
+  const date = shortFormat.format(day)
+  return due < today ? `Overdue since ${date}` : `Due ${date}`
+}
+
 export function greeting(date: Date) {
   const hour = date.getHours()
   if (hour >= 5 && hour < 12) return 'Good morning'

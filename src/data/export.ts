@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { organizeItems, sortEntries } from './organize'
 import {
+  dueSchema,
   type Entry,
   entrySchema,
   type Item,
@@ -78,9 +79,10 @@ export function download(filename: string, content: string, type: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-// Exports written before archive, trash and task status existed have no such fields.
+// Exports written before archive, trash, task status and due dates existed have no such fields.
 const importedItemSchema = itemSchema.extend({
   status: statusSchema.optional().default(null),
+  due_on: dueSchema.optional().default(null),
   archived_at: z.string().nullish().default(null),
   deleted_at: z.string().nullish().default(null),
   deleted_by: z.string().nullish().default(null),

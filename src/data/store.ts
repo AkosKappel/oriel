@@ -10,6 +10,7 @@ import { sortEntries } from './organize'
 import {
   appSchema,
   bodySchema,
+  dueSchema,
   type Entry,
   entrySchema,
   entryTextSchema,
@@ -309,6 +310,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           pinned_at: null,
           priority: 0,
           status: null,
+          due_on: null,
           archived_at: null,
           deleted_at: null,
           deleted_by: null,
@@ -365,6 +367,14 @@ export function createStore(database: CommonPowerSyncDatabase) {
       const parsed = statusSchema.parse(status)
       await items.update(id, (draft) => {
         draft.status = parsed
+        draft.updated_at = now()
+      }).isPersisted.promise
+    },
+
+    async setItemDue(id: string, due: string | null) {
+      const parsed = dueSchema.parse(due)
+      await items.update(id, (draft) => {
+        draft.due_on = parsed
         draft.updated_at = now()
       }).isPersisted.promise
     },

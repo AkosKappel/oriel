@@ -97,6 +97,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const deletedBy = item.deleted_at ? otherName(item.deleted_by) : undefined
   const moveTargets = spaces.filter((target) => canEdit(target.role))
   const saveBody = useRef<(() => Promise<void>) | null>(null)
+  const dueId = useId()
 
   async function move(spaceId: string) {
     await store.moveItem(item.id, spaceId)
@@ -309,6 +310,33 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             }
             className="mb-2"
           />
+        )}
+
+        {item.type === 'task' && !item.completed_at && (
+          <div className="mb-2 flex min-h-11 items-center gap-4 text-sm">
+            <label htmlFor={dueId} className="text-muted-foreground">
+              Due
+            </label>
+            {/* The browser's own date picker: a calendar on phones, typed on desktop. */}
+            <input
+              id={dueId}
+              type="date"
+              value={item.due_on ?? ''}
+              disabled={!editable}
+              onChange={(event) =>
+                void store.setItemDue(item.id, event.target.value || null)
+              }
+              className="min-h-11 bg-transparent text-foreground outline-none focus-visible:rounded-sm focus-visible:outline-2 disabled:opacity-50"
+            />
+            {item.due_on && editable && (
+              <Button
+                onPress={() => void store.setItemDue(item.id, null)}
+                className="rounded-sm py-2 text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
+              >
+                No date
+              </Button>
+            )}
+          </div>
         )}
 
         {item.type === 'list' ? (

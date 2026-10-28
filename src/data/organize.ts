@@ -24,11 +24,43 @@ export function organizeItems(items: Item[], type?: ItemType): OrganizedItems {
   pinned.sort((a, b) => newestFirst(a.pinned_at, b.pinned_at))
   open.sort(
     (a, b) =>
-      b.priority - a.priority || newestFirst(a.created_at, b.created_at),
+      soonestDue(a.due_on, b.due_on) ||
+      b.priority - a.priority ||
+      newestFirst(a.created_at, b.created_at),
   )
   completed.sort((a, b) => newestFirst(a.completed_at, b.completed_at))
 
   return { pinned, open, completed }
+}
+
+/** Earlier days first; anything without a day after everything with one. */
+function soonestDue(a: string | null, b: string | null) {
+  if (a === b) return 0
+  if (a === null) return 1
+  if (b === null) return -1
+  return a < b ? -1 : 1
+}
+
+export const dueFilters = ['today', 'upcoming'] as const
+export type DueFilter = (typeof dueFilters)[number]
+
+/**
+ * Open tasks due by `today` (overdue ones included) or after it. Days compare as text, which
+ * works because they are written `YYYY-MM-DD`. Without a filter, everything.
+ */
+export function withDue(
+  items: Item[],
+  due: DueFilter | undefined,
+  today: string,
+) {
+  if (!due) return items
+  return items.filter(
+    (item) =>
+      item.type === 'task' &&
+      !item.completed_at &&
+      item.due_on !== null &&
+      (due === 'today' ? item.due_on <= today : item.due_on > today),
+  )
 }
 
 /** Open tasks in one state; done tasks have left every state. Without a status, everything. */

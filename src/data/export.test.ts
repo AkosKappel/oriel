@@ -14,6 +14,7 @@ const item = (overrides: Partial<Item> & Pick<Item, 'id' | 'type'>): Item => ({
   pinned_at: null,
   priority: 0,
   status: null,
+  due_on: null,
   archived_at: null,
   deleted_at: null,
   deleted_by: null,
@@ -94,9 +95,10 @@ describe('itemToText', () => {
 })
 
 describe('parseExport', () => {
-  it('reads exports from before archive, trash and task status', () => {
+  it('reads exports from before archive, trash, task status and due dates', () => {
     const {
       status: _status,
+      due_on: _due,
       archived_at: _archived,
       deleted_at: _deleted,
       deleted_by: _deletedBy,
@@ -108,6 +110,7 @@ describe('parseExport', () => {
     expect(invalid).toBe(0)
     expect(parsed[0]).toMatchObject({
       status: null,
+      due_on: null,
       archived_at: null,
       deleted_at: null,
     })

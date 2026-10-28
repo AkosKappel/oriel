@@ -11,9 +11,9 @@ import { AccountLink } from '#/components/account-link'
 import { CaptureBar } from '#/components/capture-bar'
 import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
-import { SpaceFilter, StatusFilter, TypeFilter } from '#/components/type-filter'
+import { SpaceFilter, TaskFilter, TypeFilter } from '#/components/type-filter'
 import { database, store } from '#/data/client'
-import { itemsInView, trashDays, views } from '#/data/organize'
+import { dueFilters, itemsInView, trashDays, views } from '#/data/organize'
 import { itemTypes, statusSchema } from '#/data/schema'
 import { formatDay, greeting } from '#/lib/dates'
 import { canEdit, useSpaces } from '#/lib/spaces'
@@ -23,6 +23,7 @@ import { cn } from '#/lib/utils'
 const searchSchema = z.object({
   type: z.enum(itemTypes).optional().catch(undefined),
   status: statusSchema.unwrap().optional().catch(undefined),
+  due: z.enum(dueFilters).optional().catch(undefined),
   space: z.uuid().optional().catch(undefined),
   q: z.string().max(200).optional().catch(undefined),
   view: z.enum(views).optional().catch(undefined),
@@ -41,7 +42,7 @@ export const Route = createFileRoute('/_notebook')({
  */
 function Notebook() {
   const storageFailed = useStorageFailed()
-  const { type, status, space: spaceId, q, view } = Route.useSearch()
+  const { type, status, due, space: spaceId, q, view } = Route.useSearch()
   const openItemId = useParams({ strict: false }).itemId
   const itemOpen = openItemId !== undefined
   useEscapeToClose(openItemId)
@@ -87,7 +88,7 @@ function Notebook() {
             <SpaceFilter spaces={spaces} active={spaceId} />
           )}
           <TypeFilter active={type} />
-          {type === 'task' && <StatusFilter active={status} />}
+          {type === 'task' && <TaskFilter status={status} due={due} />}
           <SearchField query={q} />
         </header>
         {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is always region or main, both take a label */}
@@ -100,6 +101,7 @@ function Notebook() {
             store={store}
             type={type}
             status={status}
+            due={due}
             spaceId={spaceId}
             query={q}
             view={view}

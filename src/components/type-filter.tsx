@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import type { DueFilter } from '#/data/organize'
 import {
   type ItemType,
   itemTypes,
@@ -33,8 +34,13 @@ export function TypeFilter({ active }: { active?: ItemType }) {
         <Link
           key={label}
           to="/"
-          // A task status means nothing for notes or lists.
-          search={(previous) => ({ ...previous, type, status: undefined })}
+          // Task filters mean nothing for notes or lists.
+          search={(previous) => ({
+            ...previous,
+            type,
+            status: undefined,
+            due: undefined,
+          })}
           aria-current={active === type ? 'page' : undefined}
           activeOptions={activeOptions}
           className={linkClass}
@@ -46,24 +52,45 @@ export function TypeFilter({ active }: { active?: ItemType }) {
   )
 }
 
-/** Shown with tasks: all of them, or the open ones in one state. */
-export function StatusFilter({ active }: { active?: TaskStatus }) {
+const taskOptions: { status?: TaskStatus; due?: DueFilter; label: string }[] = [
+  { label: 'All tasks' },
+  { due: 'today', label: 'Today' },
+  { due: 'upcoming', label: 'Upcoming' },
+  ...taskStatuses.map(({ value, label }) => ({ status: value, label })),
+]
+
+/** Shown with tasks: all of them, the open ones due by today or later, or the ones in one state. */
+export function TaskFilter({
+  status,
+  due,
+}: {
+  status?: TaskStatus
+  due?: DueFilter
+}) {
   return (
-    <nav aria-label="Task status" className="flex gap-x-4 text-sm">
-      {[{ value: undefined, label: 'All tasks' }, ...taskStatuses].map(
-        ({ value, label }) => (
-          <Link
-            key={label}
-            to="/"
-            search={(previous) => ({ ...previous, status: value })}
-            aria-current={active === value ? 'page' : undefined}
-            activeOptions={activeOptions}
-            className={linkClass}
-          >
-            {label}
-          </Link>
-        ),
-      )}
+    <nav
+      aria-label="Tasks"
+      className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
+    >
+      {taskOptions.map((option) => (
+        <Link
+          key={option.label}
+          to="/"
+          // One task filter at a time: picking one clears the other.
+          search={(previous) => ({
+            ...previous,
+            status: option.status,
+            due: option.due,
+          })}
+          aria-current={
+            status === option.status && due === option.due ? 'page' : undefined
+          }
+          activeOptions={activeOptions}
+          className={linkClass}
+        >
+          {option.label}
+        </Link>
+      ))}
     </nav>
   )
 }

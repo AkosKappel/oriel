@@ -118,6 +118,20 @@ describe('organizing items', () => {
     await expect(store.setItemPriority(id, 5)).rejects.toThrow()
   })
 
+  it('sets and clears a due day, rejecting anything but a calendar day', async () => {
+    const id = await store.createItem({ type: 'task', title: 'Pay rent' })
+    expect(store.items.get(id)?.due_on).toBeNull()
+
+    await store.setItemDue(id, '2026-11-01')
+    expect(await database.get('SELECT due_on FROM items')).toEqual({
+      due_on: '2026-11-01',
+    })
+    await store.setItemDue(id, null)
+    expect(store.items.get(id)?.due_on).toBeNull()
+
+    await expect(store.setItemDue(id, '2026-11-01T10:00:00Z')).rejects.toThrow()
+  })
+
   it('sets a task status and back to to do, rejecting unknown states', async () => {
     const id = await store.createItem({ type: 'task', title: 'Renew passport' })
     expect(store.items.get(id)?.status).toBeNull()
