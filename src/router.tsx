@@ -19,9 +19,14 @@ export function getRouter() {
     defaultPreload: 'intent',
     defaultPendingComponent: Pending,
     // A quick crossfade when the page changes (opening an item, going back). Filters and search
-    // only change the query string, and typing must not wait for a transition.
+    // only change the query string, and typing must not wait for a transition. While one runs,
+    // the browser hit-tests its snapshot, so a tap in those 160 ms is lost; with reduced motion
+    // there is none at all.
     defaultViewTransition: {
-      types: ({ pathChanged }) => (pathChanged ? ['page'] : false),
+      types: ({ pathChanged }) =>
+        pathChanged && !matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? ['page']
+          : false,
     },
   })
 }
