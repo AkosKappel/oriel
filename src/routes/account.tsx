@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router'
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -9,9 +9,12 @@ import {
   Modal,
   ModalOverlay,
 } from 'react-aria-components'
+import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { TextField } from '#/components/ui/text-field'
 import {
+  changeName,
+  changePassword,
   deleteAccount,
   pendingChanges,
   signOut,
@@ -101,10 +104,177 @@ function AccountPage() {
       </Link>
 
       <div className="flex flex-col">
+        <ChangeName name={account.name} />
+        <ChangePassword />
         <SignOut pending={pending ?? 0} />
         <DeleteAccount />
       </div>
     </SubPage>
+  )
+}
+
+/**
+ * A quiet button that opens a small form in a dialog. `submit` returns a message to show, or null
+ * when done; the dialog then closes.
+ */
+function FormDialog({
+  label,
+  title,
+  submitLabel,
+  submit,
+  children,
+}: {
+  label: string
+  title: string
+  submitLabel: string
+  submit: (form: FormData) => Promise<string | null>
+  children: ReactNode
+}) {
+  const online = useOnline()
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function onSubmit(
+    event: FormEvent<HTMLFormElement>,
+    close: () => void,
+  ) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    setError(null)
+    setBusy(true)
+    try {
+      const message = await submit(form)
+      if (message) setError(message)
+      else close()
+    } catch (caught) {
+      console.error(`${title} failed`, caught)
+      setError('That did not work. Check the connection and try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <DialogTrigger onOpenChange={() => setError(null)}>
+      <Button
+        className={`${quietButton} -ml-4 w-fit text-muted-foreground hover:text-foreground`}
+      >
+        {label}
+      </Button>
+      <ModalOverlay
+        isDismissable
+        className="fixed inset-0 z-50 grid place-items-end bg-foreground/20 p-4 sm:place-items-center"
+      >
+        <Modal className="w-full max-w-sm rounded-md bg-background p-6 shadow-lg">
+          <Dialog className="flex flex-col gap-3 outline-none">
+            {({ close }) => (
+              <Form
+                onSubmit={(event) => void onSubmit(event, close)}
+                validationBehavior="native"
+                className="flex flex-col gap-4"
+              >
+                <Heading slot="title" className="font-serif text-2xl">
+                  {title}
+                </Heading>
+                {children}
+                {error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {error}
+                  </p>
+                )}
+                {!online && (
+                  <p className="text-sm text-muted-foreground">
+                    This needs a connection.
+                  </p>
+                )}
+                <div className="mt-2 flex justify-end gap-2">
+                  <Button
+                    onPress={close}
+                    className={`${quietButton} text-muted-foreground hover:text-foreground`}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    isPending={busy}
+                    isDisabled={!online}
+                    className={`${quietButton} bg-foreground text-background data-disabled:opacity-60 data-pending:opacity-60`}
+                  >
+                    {submitLabel}
+                  </Button>
+                </div>
+              </Form>
+            )}
+          </Dialog>
+        </Modal>
+      </ModalOverlay>
+    </DialogTrigger>
+  )
+}
+
+function ChangeName({ name }: { name: string }) {
+  return (
+    <FormDialog
+      label="Change name"
+      title="Change your name"
+      submitLabel="Save"
+      submit={async (form) => {
+        const message = await changeName(String(form.get('name')).trim())
+        if (!message) toast('Name changed. Shared spaces show it once synced.')
+        return message
+      }}
+    >
+      <p className="text-sm text-muted-foreground">
+        Members of your shared spaces see this name.
+      </p>
+      <TextField
+        label="Name"
+        name="name"
+        defaultValue={name}
+        autoComplete="name"
+        maxLength={100}
+        isRequired
+        autoFocus
+      />
+    </FormDialog>
+  )
+}
+
+function ChangePassword() {
+  return (
+    <FormDialog
+      label="Change password"
+      title="Change your password"
+      submitLabel="Change password"
+      submit={async (form) => {
+        const message = await changePassword(
+          String(form.get('current')),
+          String(form.get('new')),
+        )
+        if (!message) toast('Password changed. Other devices are signed out.')
+        return message
+      }}
+    >
+      <p className="text-sm text-muted-foreground">
+        Your other devices are signed out; this one stays signed in.
+      </p>
+      <TextField
+        label="Current password"
+        name="current"
+        type="password"
+        autoComplete="current-password"
+        isRequired
+        autoFocus
+      />
+      <TextField
+        label="New password"
+        name="new"
+        type="password"
+        autoComplete="new-password"
+        minLength={10}
+        isRequired
+      />
+    </FormDialog>
   )
 }
 

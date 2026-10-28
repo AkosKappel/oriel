@@ -2,9 +2,11 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { APIError } from 'better-auth/api'
 import { tanstackStartCookies } from 'better-auth/tanstack-start'
+import { eq } from 'drizzle-orm'
 import { env } from '#/env'
 import { db } from '#/server/db'
 import * as schema from '#/server/db/schema'
+import { spaceMember } from '#/server/db/schema'
 import { sendPasswordResetEmail } from '#/server/email'
 import { releaseSpaces, SharingError } from '#/server/sharing'
 import { ensurePersonalSpace } from '#/server/spaces'
@@ -58,6 +60,16 @@ export const auth = betterAuth({
         // A failure here does not block sign-up: `getAccount` creates the space as well.
         after: async (user) => {
           await ensurePersonalSpace(user.id)
+        },
+      },
+      update: {
+        // Memberships carry a copy of the name (the user table never syncs), so a new name has
+        // to reach every space the user is in.
+        after: async (user) => {
+          await db
+            .update(spaceMember)
+            .set({ memberName: user.name })
+            .where(eq(spaceMember.userId, user.id))
         },
       },
     },

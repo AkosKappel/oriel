@@ -97,6 +97,33 @@ export async function completeSignIn() {
   return claimed
 }
 
+/** Renames the account; spaces show the new name once it syncs. Returns an error message or null. */
+export async function changeName(name: string) {
+  const { error } = await authClient.updateUser({ name })
+  if (error) return error.message ?? 'Could not change the name. Try again.'
+  if (current) write({ ...current, name })
+  return null
+}
+
+/**
+ * Changes the password and signs out every other device (this one gets a new session). Returns
+ * an error message (such as a wrong current password) or null.
+ */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+) {
+  const { error } = await authClient.changePassword({
+    currentPassword,
+    newPassword,
+    revokeOtherSessions: true,
+  })
+  if (!error) return null
+  return error.code === 'INVALID_PASSWORD'
+    ? 'The current password is not right.'
+    : (error.message ?? 'Could not change the password. Try again.')
+}
+
 /** Changes made on this device that the server has not received yet. */
 export async function pendingChanges() {
   const { database } = await loadClient()
