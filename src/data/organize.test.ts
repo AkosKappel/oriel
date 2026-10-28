@@ -3,6 +3,7 @@ import {
   countEntries,
   itemsInView,
   organizeItems,
+  positionForMove,
   searchItems,
   sortEntries,
   suggestEntries,
@@ -116,6 +117,30 @@ describe('organizeItems', () => {
     expect(ids(pinned)).toEqual(['pinned-early'])
     expect(open).toEqual([])
     expect(completed).toEqual([])
+  })
+})
+
+describe('positionForMove', () => {
+  const list = [10, 20, 30].map((position) =>
+    entry({ id: String(position), position }),
+  )
+  const place = (from: number, to: number) => {
+    const moved = { ...list[from], position: positionForMove(list, from, to) }
+    return sortEntries(list.map((e) => (e.id === moved.id ? moved : e))).map(
+      ({ id }) => id,
+    )
+  }
+
+  it('moves an entry up, down, to the top and to the end', () => {
+    expect(place(2, 1)).toEqual(['10', '30', '20'])
+    expect(place(0, 1)).toEqual(['20', '10', '30'])
+    expect(place(2, 0)).toEqual(['30', '10', '20'])
+    expect(place(0, 2)).toEqual(['20', '30', '10'])
+  })
+
+  it('keeps the position when the entry stays where it is', () => {
+    expect(positionForMove(list, 1, 1)).toBe(20)
+    expect(positionForMove(list.slice(0, 1), 0, 0)).toBe(10)
   })
 })
 

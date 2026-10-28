@@ -45,6 +45,20 @@ describe('EntryList', () => {
     expect(add).toHaveProperty('value', '')
   })
 
+  it('moves an entry with the arrow keys on its handle, and announces where it went', async () => {
+    const user = userEvent.setup()
+    await renderList(['Milk', 'Eggs', 'Bread'])
+
+    screen.getByRole('button', { name: 'Move Bread' }).focus()
+    await user.keyboard('{ArrowUp}')
+    await waitFor(() => expect(texts()).toEqual(['Milk', 'Bread', 'Eggs']))
+    expect(await screen.findByText('Bread, 2 of 3')).toBeDefined()
+
+    screen.getByRole('button', { name: 'Move Milk' }).focus()
+    await user.keyboard('{End}')
+    await waitFor(() => expect(texts()).toEqual(['Bread', 'Eggs', 'Milk']))
+  })
+
   it('renames an entry when it loses focus, and Escape puts the old text back', async () => {
     const user = userEvent.setup()
     await renderList(['Milk', 'Eggs'])

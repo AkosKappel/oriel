@@ -1,11 +1,23 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { Plus, X } from 'lucide-react'
-import { type ClipboardEvent, type FormEvent, useId, useState } from 'react'
+import { GripVertical, Plus, X } from 'lucide-react'
+import {
+  type ClipboardEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type PointerEvent,
+  useId,
+  useState,
+} from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
 import { Checkbox } from '#/components/ui/checkbox'
 import { stripBullet } from '#/data/capture'
-import { countEntries, sortEntries, suggestEntries } from '#/data/organize'
+import {
+  countEntries,
+  positionForMove,
+  sortEntries,
+  suggestEntries,
+} from '#/data/organize'
 import { type Entry, entryTextSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { useRows } from '#/lib/use-rows'
@@ -35,6 +47,25 @@ export function EntryList({
   const entries = sortEntries(data)
   const { total = 0, open = 0 } = countEntries(entries).get(itemId) ?? {}
   const checked = total - open
+  // Only open entries can be moved; checked ones keep the order they were checked in.
+  const openEntries = entries.filter((entry) => !entry.completed_at)
+  const [announcement, setAnnouncement] = useState('')
+
+  async function move(from: number, to: number) {
+    const entry = openEntries[from]
+    if (!entry || to < 0 || to >= openEntries.length || to === from) return
+    await store.setEntryPosition(
+      entry.id,
+      positionForMove(openEntries, from, to),
+    )
+    setAnnouncement(`${entry.text}, ${to + 1} of ${openEntries.length}`)
+    // Moving the row in the DOM can drop focus; keep it on the handle for the next key press.
+    requestAnimationFrame(() =>
+      document
+        .querySelector<HTMLElement>(`[data-move-handle="${entry.id}"]`)
+        ?.focus(),
+    )
+  }
 
   async function clearChecked() {
     const snapshot = await store.clearCompletedEntries(itemId)
@@ -74,6 +105,9 @@ export function EntryList({
           </div>
         )}
       </div>
+      <p aria-live="assertive" className="sr-only">
+        {announcement}
+      </p>
       <ul>
         {entries.map((entry) => (
           <EntryRow
@@ -81,6 +115,8 @@ export function EntryList({
             store={store}
             entry={entry}
             readOnly={readOnly}
+            movable={!readOnly && !entry.completed_at && openEntries.length > 1}
+            onMove={(to) => void move(openEntries.indexOf(entry), to)}
             checker={
               entry.completed_at ? checkedBy(entry.completed_by) : undefined
             }
@@ -96,11 +132,16 @@ function EntryRow({
   store,
   entry,
   readOnly,
+  movable,
+  onMove,
   checker,
 }: {
   store: Store
   entry: Entry
   readOnly: boolean
+  movable: boolean
+  /** Moves this entry to an index among the open entries. */
+  onMove: (to: number) => void
   checker?: string
 }) {
   const done = entry.completed_at !== null
@@ -126,7 +167,7 @@ function EntryRow({
   }
 
   return (
-    <li className="group relative flex items-center">
+    <li className="group relative flex items-center bg-background data-dragging:z-10 data-dragging:shadow-sm">
       <Checkbox
         className="absolute -left-[2.375rem]"
         isSelected={done}
@@ -161,6 +202,7 @@ function EntryRow({
           {checker}
         </span>
       )}
+      {movable && <MoveHandle entry={entry} onMove={onMove} />}
       {/* Quiet until hovered on desktop; always there on touch, where hover does not exist. */}
       {!readOnly && (
         <Button
@@ -174,6 +216,84 @@ function EntryRow({
     </li>
   )
 }
+
+const rowAction =
+  'grid size-11 shrink-0 place-items-center rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100'
+
+/**
+ * Drag to move an entry; with the keyboard, focus the handle and use the arrow keys. A plain
+ * button, since dragging needs the raw pointer events that React Aria's press handling takes.
+ */
+function MoveHandle({
+  entry,
+  onMove,
+}: {
+  entry: Entry
+  onMove: (to: number) => void
+}) {
+  function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    const rows = openRows(event.currentTarget)
+    const index = rows.indexOf(rowOf(event.currentTarget))
+    const to = {
+      ArrowUp: index - 1,
+      ArrowDown: index + 1,
+      Home: 0,
+      End: rows.length - 1,
+    }[event.key]
+    if (to === undefined) return
+    event.preventDefault()
+    onMove(to)
+  }
+
+  function onPointerDown(event: PointerEvent<HTMLButtonElement>) {
+    if (event.button !== 0) return
+    const handle = event.currentTarget
+    const row = rowOf(handle)
+    const rows = openRows(handle)
+    const from = rows.indexOf(row)
+    const startY = event.clientY
+    handle.setPointerCapture(event.pointerId)
+    row.dataset.dragging = ''
+
+    const follow = (moveEvent: globalThis.PointerEvent) => {
+      row.style.translate = `0 ${moveEvent.clientY - startY}px`
+    }
+    const drop = (upEvent: globalThis.PointerEvent) => {
+      handle.removeEventListener('pointermove', follow)
+      row.style.translate = ''
+      delete row.dataset.dragging
+      // The new index is the number of other rows whose middle is above the pointer.
+      const to = rows.filter((other) => {
+        if (other === row) return false
+        const { top, height } = other.getBoundingClientRect()
+        return top + height / 2 < upEvent.clientY
+      }).length
+      if (to !== from) onMove(to)
+    }
+    handle.addEventListener('pointermove', follow)
+    handle.addEventListener('lostpointercapture', drop, { once: true })
+  }
+
+  return (
+    <button
+      type="button"
+      data-move-handle={entry.id}
+      aria-label={`Move ${entry.text}`}
+      aria-description="Drag, or use the arrow keys"
+      onKeyDown={onKeyDown}
+      onPointerDown={onPointerDown}
+      className={cn(rowAction, 'cursor-grab touch-none active:cursor-grabbing')}
+    >
+      <GripVertical aria-hidden className="size-4" />
+    </button>
+  )
+}
+
+const rowOf = (element: HTMLElement) => element.closest('li') as HTMLElement
+const openRows = (element: HTMLElement) =>
+  [
+    ...(element.closest('ul')?.querySelectorAll<HTMLElement>('li') ?? []),
+  ].filter((row) => row.querySelector('[data-move-handle]'))
 
 function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
   const [text, setText] = useState('')

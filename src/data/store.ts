@@ -532,6 +532,13 @@ export function createStore(database: CommonPowerSyncDatabase) {
       }).isPersisted.promise
     },
 
+    async setEntryPosition(id: string, position: number) {
+      await entries.update(id, (draft) => {
+        draft.position = position
+        draft.updated_at = now()
+      }).isPersisted.promise
+    },
+
     async setEntryCompleted(id: string, completed: boolean) {
       const timestamp = now()
       await entries.update(id, (draft) => {

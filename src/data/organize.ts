@@ -75,6 +75,20 @@ export function sortEntries(entries: Entry[]) {
   })
 }
 
+/**
+ * The position that puts `entries[from]` at index `to` among the others: halfway between its new
+ * neighbours, or one past the end. Only the moved entry changes, so a move syncs as one row.
+ */
+export function positionForMove(entries: Entry[], from: number, to: number) {
+  const others = entries.filter((_, index) => index !== from)
+  const before = others[to - 1]?.position
+  const after = others[to]?.position
+  if (before === undefined && after === undefined) return entries[from].position
+  if (before === undefined) return (after as number) - 1
+  if (after === undefined) return before + 1
+  return (before + after) / 2
+}
+
 const previewLength = 3
 
 /** Per list: how many entries, how many still open, and the first few open ones in list order. */
