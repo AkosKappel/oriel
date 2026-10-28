@@ -47,6 +47,31 @@ describe('ItemDetail', () => {
     await waitFor(() => expect(item()?.body).toBe('Paint the door'))
   })
 
+  it('shows written text as formatted Markdown, and its source to edit', async () => {
+    const user = userEvent.setup()
+    const { item } = await openItem({
+      type: 'note',
+      title: 'Trip',
+      body: '## Pack\n- **tent**\n<b>raw</b>',
+    })
+
+    const note = screen.getByRole('region', { name: 'Note' })
+    expect(note.querySelector('h2')?.textContent).toBe('Pack')
+    expect(note.querySelector('strong')?.textContent).toBe('tent')
+    expect(note.querySelector('b')).toBeNull()
+
+    await user.click(screen.getByRole('button', { name: 'Edit note' }))
+    const source = screen.getByRole('textbox', { name: 'Note' })
+    expect(document.activeElement).toBe(source)
+    await user.type(source, '\nstove')
+    await user.tab()
+
+    expect(screen.getByRole('region', { name: 'Note' }).textContent).toContain(
+      'stove',
+    )
+    await waitFor(() => expect(item()?.body).toContain('stove'))
+  })
+
   it('saves unsaved text when the page is left or the app is hidden', async () => {
     const user = userEvent.setup()
     const { item, view } = await openItem({ type: 'note', title: 'Idea' })

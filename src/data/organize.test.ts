@@ -4,6 +4,7 @@ import {
   itemsInView,
   organizeItems,
   positionForMove,
+  previewLine,
   searchItems,
   sortEntries,
   suggestEntries,
@@ -117,6 +118,21 @@ describe('organizeItems', () => {
     expect(ids(pinned)).toEqual(['pinned-early'])
     expect(open).toEqual([])
     expect(completed).toEqual([])
+  })
+})
+
+describe('previewLine', () => {
+  it('shows the first line with text, without Markdown', () => {
+    expect(previewLine('\n# Trip to *Rome*\nmore')).toBe('Trip to Rome')
+    expect(previewLine('- [ ] **Book** the [hotel](https://example.com)')).toBe(
+      'Book the hotel',
+    )
+    expect(previewLine('> `npm` and __more__ ~~less~~')).toBe(
+      'npm and more less',
+    )
+    expect(previewLine('2.5 kg flour, 3 * 4 eggs')).toBe(
+      '2.5 kg flour, 3 * 4 eggs',
+    )
   })
 })
 

@@ -89,6 +89,20 @@ export function positionForMove(entries: Entry[], from: number, to: number) {
   return (before + after) / 2
 }
 
+/**
+ * The first line with text, as plain words: notes are Markdown, but a row on home has no room
+ * for headings, emphasis or link targets.
+ */
+export function previewLine(body: string) {
+  const line = body.split('\n').find((text) => text.trim()) ?? ''
+  return line
+    .trim()
+    .replace(/^(#{1,6}\s+|>\s*|[-*+]\s+(\[[ xX]\]\s+)?|\d+[.)]\s+)/, '')
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/(\*\*|__|~~|`)(.+?)\1/g, '$2')
+    .replace(/([*_])(\S.*?)\1/g, '$2')
+}
+
 const previewLength = 3
 
 /** Per list: how many entries, how many still open, and the first few open ones in list order. */

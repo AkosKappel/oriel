@@ -7,6 +7,7 @@ import {
   countEntries,
   itemsInView,
   organizeItems,
+  previewLine,
   searchItems,
   trashDays,
   type View,
@@ -322,7 +323,7 @@ function describeItem(item: Item, counts: EntryCounts) {
     if (open === 0) return `All ${total} done`
     return `${upNext.join(', ')}${open > upNext.length ? '…' : ''} · ${open} left`
   }
-  const firstLine = item.body.split('\n', 1)[0]
+  const firstLine = previewLine(item.body)
   if (item.type === 'task' && !item.completed_at) {
     return [
       item.status && statusLabel(item.status),

@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Archive, ArrowLeft, Pin, Share, Trash2 } from 'lucide-react'
-import { type RefObject, useEffect, useRef, useState } from 'react'
+import { type RefObject, useEffect, useId, useRef, useState } from 'react'
 import { Button, ToggleButton } from 'react-aria-components'
 import { toast } from 'sonner'
 import { EntryList } from '#/components/entry-list'
@@ -20,6 +20,7 @@ import {
 import type { Store } from '#/data/store'
 import { useAccount } from '#/lib/account'
 import { formatShortDate } from '#/lib/dates'
+import { renderMarkdown } from '#/lib/markdown'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
 
@@ -413,6 +414,7 @@ function BodyField({
   saveRef: RefObject<(() => Promise<void>) | null>
 }) {
   const [body, setBody] = useState(item.body)
+  const hintId = useId()
   const flush = useRef(async () => {})
   flush.current = async () => {
     // A converted item has no body field any more; its text went into the conversion.
@@ -445,15 +447,62 @@ function BodyField({
     }
   }, [])
 
+  const [editing, setEditing] = useState(false)
+  const textarea = useRef<HTMLTextAreaElement>(null)
+  // After Edit or a tap on the text, typing goes straight into the source.
+  useEffect(() => {
+    if (editing) textarea.current?.focus()
+  }, [editing])
+  const label = item.type === 'note' ? 'Note' : 'Details'
+
+  // Written text reads as formatted Markdown; tapping it (or Edit) shows the source to change.
+  if (!editing && body.trim()) {
+    return (
+      <div className="flex flex-col items-start gap-2">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: a pointer shortcut; the Edit button below is the keyboard way in */}
+        <section
+          aria-label={label}
+          onClick={(event) => {
+            if (readOnly || (event.target as HTMLElement).closest('a')) return
+            setEditing(true)
+          }}
+          className={cn('markdown w-full py-2', !readOnly && 'cursor-text')}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: renderMarkdown escapes HTML and drops script links
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(body) }}
+        />
+        {!readOnly && (
+          <Button
+            onPress={() => setEditing(true)}
+            className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
+          >
+            Edit {label.toLowerCase()}
+          </Button>
+        )}
+      </div>
+    )
+  }
+
   return (
-    <textarea
-      value={body}
-      readOnly={readOnly}
-      onChange={(event) => setBody(event.target.value)}
-      placeholder={item.type === 'note' ? 'Write something' : 'Add details'}
-      aria-label={item.type === 'note' ? 'Note' : 'Details'}
-      maxLength={20_000}
-      className="field-sizing-content min-h-48 w-full resize-none bg-transparent py-2 font-serif text-lg leading-relaxed outline-none placeholder:text-faint"
-    />
+    <div className="flex flex-col gap-1">
+      <textarea
+        value={body}
+        readOnly={readOnly}
+        ref={textarea}
+        onChange={(event) => setBody(event.target.value)}
+        // Typing into an empty note must not switch it to the formatted view after one letter.
+        onFocus={() => setEditing(true)}
+        onBlur={() => setEditing(false)}
+        placeholder={item.type === 'note' ? 'Write something' : 'Add details'}
+        aria-label={label}
+        aria-describedby={readOnly ? undefined : hintId}
+        maxLength={20_000}
+        className="field-sizing-content min-h-48 w-full resize-none bg-transparent py-2 font-serif text-lg leading-relaxed outline-none placeholder:text-faint"
+      />
+      {!readOnly && (
+        <p id={hintId} className="text-xs text-muted-foreground">
+          Markdown works: **bold**, *italic*, # heading, - list, [link](url).
+        </p>
+      )}
+    </div>
   )
 }
