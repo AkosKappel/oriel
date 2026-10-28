@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="robots" content="noindex" />
+    <title>Back soon | Oriel</title>
+    <!-- Served by nginx while the app is down: nothing here may load from the app. -->
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: light-dark(#faf6ef, #141820);
+        --fg: light-dark(#1b2435, #ebe7df);
+        --muted: light-dark(#5c6472, #9ea5b0);
+        --accent: light-dark(#2454a5, #81b4f6);
+      }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: Georgia, "Times New Roman", serif;
+      }
+      main {
+        max-width: 24rem;
+        padding: 1.5rem;
+      }
+      svg {
+        width: 2.5rem;
+        height: 2.5rem;
+        color: var(--accent);
+      }
+      h1 {
+        font-weight: 400;
+        font-style: italic;
+        font-size: 2rem;
+        margin: 1rem 0 0.5rem;
+      }
+      p {
+        color: var(--muted);
+        font-family: system-ui, sans-serif;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      button {
+        font: 0.9rem system-ui, sans-serif;
+        padding: 0.65rem 1.1rem;
+        border-radius: 0.25rem;
+        border: 0;
+        background: var(--fg);
+        color: var(--bg);
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <svg viewBox="5 6 23 22" aria-hidden="true">
+        <mask id="cut">
+          <rect width="32" height="32" fill="#fff" />
+          <path d="M11.9 17.3 14.6 20 25.4 8.2" fill="none" stroke="#000" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round" />
+        </mask>
+        <g mask="url(#cut)">
+          <path fill="currentColor" fill-rule="evenodd" transform="rotate(-28 15 17)" d="M15 7.2a9.8 9.8 0 1 1 0 19.6a9.8 9.8 0 1 1 0-19.6Z M15 9.1c-3.6 0-6.4 3.5-6.4 7.9s2.8 7.9 6.4 7.9 6.4-3.5 6.4-7.9-2.8-7.9-6.4-7.9Z" />
+        </g>
+        <path d="M11.9 17.3 14.6 20 25.4 8.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <h1>Back in a few minutes</h1>
+      <p>
+        Oriel is being updated. If it is already open on your device, keep
+        writing: your notes are saved there and sync once Oriel is back.
+      </p>
+      <button type="button" onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

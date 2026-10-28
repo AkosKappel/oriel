@@ -1,0 +1,225 @@
+# Production stack. Copied to a deploy folder outside the repository (see README.md), so
+# nothing here reads files from the development checkout.
+name: oriel-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:18
+    container_name: oriel-prod-db
+    restart: unless-stopped
+    # Logical replication is what the PowerSync Service reads changes from.
+    command: ["postgres", "-c", "wal_level=logical"]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging: *logging
+    environment:
+      POSTGRES_DB: oriel
+      POSTGRES_USER: oriel
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+    volumes:
+      - dbdata:/var/lib/postgresql
+    # No host port: only the app, PowerSync and the backup reach it. `docker compose exec db psql`.
+    healthcheck:
+      # Over TCP: on the first start the image runs a temporary socket-only server, which
+      # would pass a socket check before the real one is up.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U oriel -d oriel"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - app-network
+
+  # Applies pending migrations, then exits; everything that uses the tables waits for it.
+  migrate:
+    image: ghcr.io/akoskappel/oriel:${IMAGE_TAG:?set IMAGE_TAG in .env}
+    command: ["node", "scripts/migrate.ts"]
+    restart: "no"
+    logging: *logging
+    environment:
+      DATABASE_URL: postgres://oriel:${DB_PASSWORD}@db:5432/oriel
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # Creates PowerSync's roles and storage database once the tables exist (safe to repeat).
+  powersync-setup:
+    image: postgres:18
+    restart: "no"
+    logging: *logging
+    environment:
+      PGHOST: db
+      PGUSER: oriel
+      PGDATABASE: oriel
+      PGPASSWORD: ${DB_PASSWORD}
+      PS_ROLE_PASSWORD: ${PS_ROLE_PASSWORD:?set PS_ROLE_PASSWORD in .env}
+      PS_STORAGE_PASSWORD: ${PS_STORAGE_PASSWORD:?set PS_STORAGE_PASSWORD in .env}
+    volumes:
+      - ./powersync/roles.sql:/setup/roles.sql:ro
+    command:
+      - sh
+      - -c
+      - >-
+        psql -v ON_ERROR_STOP=1 -v role_password="$$PS_ROLE_PASSWORD"
+        -v storage_password="$$PS_STORAGE_PASSWORD" -f /setup/roles.sql
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  app:
+    image: ghcr.io/akoskappel/oriel:${IMAGE_TAG}
+    container_name: oriel-prod-app
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    logging: *logging
+    environment:
+      DATABASE_URL: postgres://oriel:${DB_PASSWORD}@db:5432/oriel
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?set BETTER_AUTH_URL in .env}
+      SYNC_JWT_PRIVATE_KEY: ${SYNC_JWT_PRIVATE_KEY:?set SYNC_JWT_PRIVATE_KEY in .env}
+      PS_JWT_KID: ${PS_JWT_KID:?set PS_JWT_KID in .env}
+      # The address browsers use: the app's own origin, path /powersync (nginx/default.conf).
+      POWERSYNC_URL: ${BETTER_AUTH_URL}/powersync
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-Oriel <onboarding@resend.dev>}
+    # No host port: nginx in front of it is the only way in.
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  # Streams each user's spaces to their devices. Reached by browsers through nginx only.
+  powersync:
+    image: journeyapps/powersync-service:1.27.2
+    container_name: oriel-prod-powersync
+    restart: unless-stopped
+    command: ["start", "-r", "unified"]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    logging: *logging
+    environment:
+      POWERSYNC_CONFIG_PATH: /config/service.yaml
+      PS_SOURCE_URL: postgresql://powersync_role:${PS_ROLE_PASSWORD}@db:5432/oriel
+      PS_STORAGE_URL: postgresql://powersync_storage:${PS_STORAGE_PASSWORD}@db:5432/powersync_storage
+      PS_JWT_KID: ${PS_JWT_KID}
+      PS_JWT_PUBLIC_X: ${PS_JWT_PUBLIC_X:?set PS_JWT_PUBLIC_X in .env}
+    volumes:
+      - ./powersync:/config:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:8080/probes/liveness').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 15
+    depends_on:
+      powersync-setup:
+        condition: service_completed_successfully
+    networks:
+      - app-network
+
+  # In front of the app and the sync service: one origin for both, the access log for the
+  # traffic dashboard and CrowdSec, and the maintenance page (flag file maintenance/on).
+  nginx:
+    image: nginx:1.30-alpine
+    container_name: oriel-prod-nginx
+    restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    ports:
+      - "127.0.0.1:${APP_PORT:-8087}:80"
+    volumes:
+      # Folders, not single files, so an updated config is seen after a reload.
+      - ./nginx:/etc/nginx/conf.d:ro
+      - ./maintenance:/usr/share/nginx/maintenance:ro
+      - ${ACCESS_LOG_DIR:?set ACCESS_LOG_DIR in .env}:/var/log/nginx/shared
+    # What the master process needs to bind :80, switch workers to the nginx user and
+    # create log files in the host folder (owned by the host user, hence DAC_OVERRIDE).
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE, DAC_OVERRIDE]
+    security_opt: [no-new-privileges:true]
+    networks:
+      - app-network
+    depends_on:
+      app:
+        condition: service_healthy
+      powersync:
+        condition: service_healthy
+
+  # Nightly compressed dump of the app database into BACKUP_DIR on the host, kept for 14 days.
+  # PowerSync's storage database is not backed up: the service rebuilds it from the app data.
+  backup:
+    image: postgres:18
+    container_name: oriel-prod-backup
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    logging: *logging
+    environment:
+      PGHOST: db
+      PGUSER: oriel
+      PGDATABASE: oriel
+      PGPASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ${BACKUP_DIR:?set BACKUP_DIR in .env}:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          # Written to a temporary file first, so a failed dump never leaves an empty file
+          # that looks like a backup; a failure is retried after 5 minutes.
+          if pg_dump --format=custom --file=/backups/.in-progress.dump; then
+            mv /backups/.in-progress.dump "/backups/oriel-$$(date +%F).dump"
+            find /backups -name 'oriel-*.dump' -mtime +14 -delete
+            echo "backup written $$(date +%F)"
+            sleep 86400
+          else
+            rm -f /backups/.in-progress.dump
+            echo "backup failed, retrying in 5 minutes"
+            sleep 300
+          fi
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  dbdata:
+
+networks:
+  app-network:

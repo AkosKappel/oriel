@@ -1,5 +1,5 @@
-# Local development stack: the database and the sync service. Production hosting is decided
-# later (backlog D-05).
+# Local development stack: the database and the sync service. Production runs from its own
+# folder with deploy/compose.yaml (see deploy/README.md).
 services:
   db:
     image: postgres:18

@@ -21,3 +21,6 @@ playwright-report
 BACKLOG.md
 lighthouse-report
 .lighthouseci
+
+# Production sidecar auth key (deploy/README.md)
+deploy/tailscale/ts.env
