@@ -13,10 +13,11 @@ import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
 import { SpaceFilter, StatusFilter, TypeFilter } from '#/components/type-filter'
 import { database, store } from '#/data/client'
-import { trashDays, views } from '#/data/organize'
+import { itemsInView, trashDays, views } from '#/data/organize'
 import { itemTypes, statusSchema } from '#/data/schema'
 import { formatDay, greeting } from '#/lib/dates'
 import { canEdit, useSpaces } from '#/lib/spaces'
+import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 
 const searchSchema = z.object({
@@ -58,6 +59,7 @@ function Notebook() {
 
   return (
     <div className="mx-auto max-w-xl px-4 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,26rem)_minmax(0,36rem)] lg:justify-between lg:gap-16 lg:px-8">
+      <AppBadge />
       <div
         className={cn(
           'min-h-dvh flex-col pt-[max(1rem,env(safe-area-inset-top))]',
@@ -216,6 +218,23 @@ function useEscapeToClose(itemId: string | undefined) {
 }
 
 /** Deletes what has been in the trash for longer than it promises to keep it, once per visit. */
+/** Open tasks as a number on the installed app's icon (Badging API, where supported). */
+function AppBadge() {
+  const { data: items } = useRows(store.items)
+  const open = itemsInView(items).filter(
+    (item) => item.type === 'task' && !item.completed_at,
+  ).length
+  useEffect(() => {
+    if (!('setAppBadge' in navigator)) return
+    const update =
+      open > 0 ? navigator.setAppBadge(open) : navigator.clearAppBadge()
+    update.catch(() => {
+      // Not an installed app, or the user turned badges off: nothing to show.
+    })
+  }, [open])
+  return null
+}
+
 function usePurgeOldTrash() {
   useEffect(() => {
     const cutoff = new Date(Date.now() - trashDays * 86_400_000).toISOString()
