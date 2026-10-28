@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
@@ -17,14 +17,49 @@ function InvitePage() {
   const { token } = Route.useParams()
   const account = useAccount()
   const navigate = useNavigate()
-  const [invite, setInvite] = useState<Invite | undefined>(undefined)
+  // undefined while asking the server; 'failed' when it could not be asked (offline, server down).
+  const [invite, setInvite] = useState<Invite | 'failed' | undefined>(undefined)
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => {
-    describeInvite({ data: { token } }).then(setInvite, () => setInvite(null))
+  const check = useCallback(() => {
+    setInvite(undefined)
+    describeInvite({ data: { token } }).then(setInvite, (error: unknown) => {
+      console.error('Could not check the invite', error)
+      setInvite('failed')
+    })
   }, [token])
+  useEffect(check, [check])
 
-  if (invite === undefined) return null
+  if (invite === undefined) {
+    return (
+      <SubPage>
+        <p role="status" className="text-sm text-muted-foreground">
+          Checking the invite…
+        </p>
+      </SubPage>
+    )
+  }
+
+  if (invite === 'failed') {
+    return (
+      <SubPage>
+        <h1 className="font-serif text-3xl italic">
+          This invite could not be checked.
+        </h1>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          {navigator.onLine
+            ? 'Oriel could not reach its server. '
+            : 'Opening an invite needs a connection, and you are offline. '}
+          <Button
+            onPress={check}
+            className="rounded-sm text-foreground underline underline-offset-4 data-focus-visible:outline-2"
+          >
+            Try again
+          </Button>
+        </p>
+      </SubPage>
+    )
+  }
 
   if (invite?.state !== 'open') {
     return (
@@ -43,13 +78,13 @@ function InvitePage() {
     )
   }
 
+  const { spaceName } = invite
+
   async function join() {
     setBusy(true)
     try {
       await acceptInvite({ data: { token } })
-      toast(
-        `You joined ${invite?.spaceName}. Its notes and lists arrive in a moment.`,
-      )
+      toast(`You joined ${spaceName}. Its notes and lists arrive in a moment.`)
       await navigate({ to: '/' })
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Could not join.')
