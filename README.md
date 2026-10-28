@@ -26,9 +26,9 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 ## Organizing
 
-- **Home:** pinned items first, then open items by priority and date, completed tasks folded away. Filter by notes, lists or tasks, and tasks by status; the filters are part of the URL.
+- **Home:** pinned items first, then open items by priority and date, completed tasks folded away. Filter by notes, lists or tasks, and tasks by due day (today, overdue included, or upcoming) or status; the filters are part of the URL.
 - **Search:** finds every word typed in titles, text and list entries, ignoring case and accents. It runs on the device, so it works offline.
-- **Detail:** edit the title and text (saved as you type; notes are Markdown, shown formatted and edited as text), complete tasks, set a priority (none, low, medium, high) and a status (to do, in progress, waiting), pin, archive, or move to the trash with Undo. Escape closes it, and j and k move to the next and previous item.
+- **Detail:** edit the title and text (saved as you type; notes are Markdown, shown formatted and edited as text), complete tasks, set a priority (none, low, medium, high), a status (to do, in progress, waiting) and a due day (open tasks with one come first, labelled "Due today" or "Overdue since"), pin, archive, or move to the trash with Undo. Escape closes it, and j and k move to the next and previous item.
 - **Archive and trash:** archived items leave home but stay searchable in the archive. Deleted items wait in the trash for 30 days, on every device, and can be restored by anyone who can edit the space; after that a device deletes them for good. In a shared space the trash names who deleted something.
 - **Swipes:** on a phone, swipe a row right to finish a task (or archive a note or list) and left to move it to the trash, with Undo. Checking something gives a short vibration on Android.
 - **Wide screens:** the list stays on the left and the open item reads beside it; on a phone they are separate screens.
@@ -86,6 +86,9 @@ flowchart LR
 - **Conflicts** resolve per field, and the change that reaches the server last wins. An edit uploads only the fields it changed, so two people who change different things at the same time both keep their change: one checks off "Milk" while the other renames it, and the entry ends up checked and renamed. When both change the same field (two people rewriting one note's text), the later upload replaces the earlier one. An entry removed or an item deleted for good stays gone: later edits to it are dropped. Who checked something off is always the uploader, set by the server.
 - **Tokens** for the PowerSync Service are short-lived Ed25519 JWTs signed by the app; the service holds only the public key.
 - **Security headers:** pages carry a Content-Security-Policy with a fresh nonce per request (scripts only with the nonce, `wasm-unsafe-eval` for SQLite, connections only to the app and the sync service); every response carries HSTS, `nosniff`, a same-origin referrer policy and no framing. Sign-in, sign-up and account deletion are rate-limited per visitor, sync uploads and tokens per user.
+- **Errors** that crash a screen or stop the local database from opening are sent to the server's log (`/api/client-error`, rate-limited, no third-party tracking).
+
+Why it is built this way (PowerSync, the upload checks, the conflict rules, the hosting): [decision records](docs/decisions/).
 
 ## Getting started
 
