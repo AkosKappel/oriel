@@ -12,7 +12,7 @@ export const securityHeaders = {
   'X-Frame-Options': 'DENY',
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Permissions-Policy':
-    'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()',
+    'camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()',
 }
 
 /**

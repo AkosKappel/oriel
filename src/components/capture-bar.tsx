@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
+import { DictateButton } from '#/components/dictate-button'
 import { itemLabels } from '#/components/item-labels'
 import { ChoiceGroup } from '#/components/ui/choice-group'
 import { parseAppend, parseCapture } from '#/data/capture'
@@ -262,6 +263,16 @@ export function CaptureBar({
           enterKeyHint="done"
           rows={1}
           className="field-sizing-content max-h-40 min-h-11 min-w-0 flex-1 resize-none bg-transparent py-2.5 font-serif text-lg outline-none placeholder:text-faint"
+        />
+        <DictateButton
+          onText={(phrase) => {
+            setText((current) =>
+              current.trim() ? `${current.trimEnd()} ${phrase}` : phrase,
+            )
+            setError(null)
+            fieldRef.current?.focus()
+          }}
+          onError={setError}
         />
         <Button
           type="submit"
