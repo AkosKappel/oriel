@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { type PointerEvent, type ReactNode, useRef } from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
+import { itemLabels } from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
 import {
   countEntries,
@@ -22,6 +23,7 @@ import {
 } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { formatShortDate } from '#/lib/dates'
+import { tick } from '#/lib/haptics'
 import { canEdit, type SpaceView } from '#/lib/spaces'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
@@ -274,15 +276,51 @@ function ItemRow({
     .filter(Boolean)
     .join(' · ')
 
+  const editable = item.deleted_at === null && (!space || canEdit(space.role))
+  const label = itemLabels[item.type]
+
+  // Tasks are finished (or reopened) with a swipe right; notes and lists are archived.
+  async function swipeRight() {
+    if (item.type === 'task') {
+      await store.setItemCompleted(item.id, !done)
+      toast(done ? `${item.title} reopened` : `${item.title} done`, {
+        action: {
+          label: 'Undo',
+          onClick: () => void store.setItemCompleted(item.id, done),
+        },
+      })
+      return
+    }
+    await store.setItemArchived(item.id, true)
+    toast(`${label} archived`, {
+      action: {
+        label: 'Undo',
+        onClick: () => void store.setItemArchived(item.id, false),
+      },
+    })
+  }
+
+  async function swipeLeft() {
+    await store.trashItem(item.id)
+    toast(`${label} moved to the trash`, {
+      action: { label: 'Undo', onClick: () => void store.restoreItem(item.id) },
+    })
+  }
+
   return (
-    <li className="relative">
+    <SwipeRow
+      enabled={editable && item.archived_at === null}
+      right={{
+        label: item.type !== 'task' ? 'Archive' : done ? 'Reopen' : 'Done',
+        run: swipeRight,
+      }}
+      left={{ label: 'Delete', run: swipeLeft }}
+    >
       {item.type === 'task' && (
         <Checkbox
           className="absolute top-0.5 -left-[2.375rem]"
           isSelected={done}
-          isDisabled={
-            item.deleted_at !== null || (space && !canEdit(space.role))
-          }
+          isDisabled={!editable}
           onChange={(selected) =>
             void store.setItemCompleted(item.id, selected)
           }
@@ -312,6 +350,107 @@ function ItemRow({
           </span>
         )}
       </Link>
+    </SwipeRow>
+  )
+}
+
+type SwipeAction = { label: string; run: () => Promise<void> }
+
+/** How far a row must travel, in pixels, before letting go runs the action. */
+const swipeThreshold = 96
+
+/**
+ * Touch only: swipe a row right or left to run an action, with Undo in the toast. A shortcut,
+ * never the only way: the checkbox and the item page do the same with a mouse or keyboard.
+ * Vertical scrolling stays with the browser (`touch-pan-y`), which cancels the gesture. Touch
+ * pointers stay with the element they started on, so no pointer capture is needed.
+ */
+function SwipeRow({
+  enabled,
+  right,
+  left,
+  children,
+}: {
+  enabled: boolean
+  right: SwipeAction
+  left: SwipeAction
+  children: ReactNode
+}) {
+  const swiped = useRef(false)
+
+  function onPointerDown(event: PointerEvent<HTMLDivElement>) {
+    // Browsers may send no click after a long swipe, so the flag is cleared at the next touch.
+    swiped.current = false
+    if (!enabled || event.pointerType !== 'touch') return
+    const content = event.currentTarget
+    const row = content.parentElement as HTMLElement
+    const startX = event.clientX
+    const startY = event.clientY
+    let dx = 0
+    let swiping = false
+
+    const move = (moveEvent: globalThis.PointerEvent) => {
+      dx = moveEvent.clientX - startX
+      if (!swiping) {
+        if (Math.abs(moveEvent.clientY - startY) > 10) return end()
+        if (Math.abs(dx) < 10) return
+        swiping = true
+      }
+      const past = Math.abs(dx) >= swipeThreshold
+      if (past && row.dataset.armed === undefined) tick()
+      row.dataset.swipe = dx > 0 ? 'right' : 'left'
+      if (past) row.dataset.armed = ''
+      else delete row.dataset.armed
+      content.style.translate = `${dx}px 0`
+    }
+    const up = () => {
+      if (swiping) {
+        // The click that follows lifting the finger must not open the item.
+        swiped.current = true
+        if (Math.abs(dx) >= swipeThreshold) void (dx > 0 ? right : left).run()
+      }
+      end()
+    }
+    const end = () => {
+      content.removeEventListener('pointermove', move)
+      content.removeEventListener('pointerup', up)
+      content.removeEventListener('pointercancel', end)
+      content.style.translate = ''
+      delete row.dataset.swipe
+      delete row.dataset.armed
+    }
+    content.addEventListener('pointermove', move)
+    content.addEventListener('pointerup', up)
+    content.addEventListener('pointercancel', end)
+  }
+
+  return (
+    <li className="group/swipe relative">
+      {enabled && (
+        <div
+          aria-hidden
+          className="absolute inset-y-0 right-0 -left-10 hidden items-center justify-between px-3 text-sm text-muted-foreground group-data-armed/swipe:text-foreground group-data-swipe/swipe:flex"
+        >
+          <span className="invisible group-data-[swipe=right]/swipe:visible">
+            {right.label}
+          </span>
+          <span className="invisible group-data-armed/swipe:text-destructive group-data-[swipe=left]/swipe:visible">
+            {left.label}
+          </span>
+        </div>
+      )}
+      <div
+        onPointerDown={onPointerDown}
+        onClickCapture={(event) => {
+          if (!swiped.current) return
+          swiped.current = false
+          event.preventDefault()
+          event.stopPropagation()
+        }}
+        className="relative touch-pan-y bg-background transition-[translate] duration-200 group-data-swipe/swipe:transition-none motion-reduce:transition-none"
+      >
+        {children}
+      </div>
     </li>
   )
 }

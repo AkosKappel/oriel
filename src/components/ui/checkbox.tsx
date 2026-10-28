@@ -3,6 +3,7 @@ import {
   Checkbox as AriaCheckbox,
   type CheckboxProps,
 } from 'react-aria-components'
+import { tick } from '#/lib/haptics'
 import { cn } from '#/lib/utils'
 
 /**
@@ -11,11 +12,16 @@ import { cn } from '#/lib/utils'
  */
 export function Checkbox({
   className,
+  onChange,
   ...props
 }: Omit<CheckboxProps, 'className' | 'children'> & { className?: string }) {
   return (
     <AriaCheckbox
       {...props}
+      onChange={(selected) => {
+        if (selected) tick()
+        onChange?.(selected)
+      }}
       className={cn(
         'group grid size-11 shrink-0 cursor-pointer place-items-center data-disabled:cursor-default',
         className,
