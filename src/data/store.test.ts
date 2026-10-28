@@ -118,6 +118,21 @@ describe('organizing items', () => {
     await expect(store.setItemPriority(id, 5)).rejects.toThrow()
   })
 
+  it('sets a task status and back to to do, rejecting unknown states', async () => {
+    const id = await store.createItem({ type: 'task', title: 'Renew passport' })
+    expect(store.items.get(id)?.status).toBeNull()
+
+    await store.setItemStatus(id, 'waiting')
+    expect(await database.get('SELECT status FROM items')).toEqual({
+      status: 'waiting',
+    })
+    await store.setItemStatus(id, null)
+    expect(store.items.get(id)?.status).toBeNull()
+
+    // @ts-expect-error an unknown status is the point of this test
+    await expect(store.setItemStatus(id, 'done')).rejects.toThrow()
+  })
+
   it('reads rows without a priority as no priority', async () => {
     await database.execute(
       `INSERT INTO items (id, type, title, body, created_at, updated_at)

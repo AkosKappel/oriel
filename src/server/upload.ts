@@ -5,6 +5,7 @@ import {
   entryTextSchema,
   itemTypes,
   prioritySchema,
+  statusSchema,
   titleSchema,
 } from '#/data/schema'
 import { db } from '#/server/db'
@@ -48,6 +49,7 @@ const itemFields = z.object({
   completed_at: nullableDate,
   pinned_at: nullableDate,
   priority: prioritySchema,
+  status: statusSchema,
   archived_at: nullableDate,
   deleted_at: nullableDate,
   created_at: date,
@@ -60,6 +62,7 @@ const itemPut = itemFields.extend({
   completed_at: nullableDate.default(null),
   pinned_at: nullableDate.default(null),
   priority: prioritySchema.default(0),
+  status: statusSchema.default(null),
   archived_at: nullableDate.default(null),
   deleted_at: nullableDate.default(null),
 })
@@ -199,6 +202,7 @@ async function applyOperation(
         completedBy: markedBy(row.completed_at, userId),
         pinnedAt: row.pinned_at,
         priority: row.priority,
+        status: row.status,
         archivedAt: row.archived_at,
         deletedAt: row.deleted_at,
         deletedBy: markedBy(row.deleted_at, userId),
@@ -229,6 +233,7 @@ async function applyOperation(
       completedBy: markedBy(patch.completed_at, userId),
       pinnedAt: patch.pinned_at,
       priority: patch.priority,
+      status: patch.status,
       archivedAt: patch.archived_at,
       deletedAt: patch.deleted_at,
       deletedBy: markedBy(patch.deleted_at, userId),

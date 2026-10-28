@@ -6,6 +6,7 @@ import {
   searchItems,
   sortEntries,
   suggestEntries,
+  withStatus,
 } from './organize'
 import type { Entry, Item } from './schema'
 
@@ -20,6 +21,7 @@ function item(overrides: Partial<Item> & Pick<Item, 'id'>): Item {
     completed_by: null,
     pinned_at: null,
     priority: 0,
+    status: null,
     archived_at: null,
     deleted_at: null,
     deleted_by: null,
@@ -90,6 +92,23 @@ describe('organizeItems', () => {
       'done-late',
       'done-early',
     ])
+  })
+
+  it('keeps open tasks in one status, or everything without one', () => {
+    const tasks = [
+      item({ id: 'doing', status: 'in_progress' }),
+      item({ id: 'waiting', status: 'waiting' }),
+      item({ id: 'to-do' }),
+      item({
+        id: 'done',
+        status: 'in_progress',
+        completed_at: '2026-10-02T00:00:00Z',
+      }),
+      item({ id: 'note', type: 'note', status: 'in_progress' }),
+    ]
+    expect(ids(withStatus(tasks, 'in_progress'))).toEqual(['doing'])
+    expect(ids(withStatus(tasks, 'waiting'))).toEqual(['waiting'])
+    expect(withStatus(tasks)).toBe(tasks)
   })
 
   it('filters by type', () => {

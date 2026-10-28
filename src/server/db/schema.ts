@@ -161,6 +161,8 @@ export const items = pgTable(
     completedBy: text().references(() => user.id, { onDelete: 'set null' }),
     pinnedAt: timestamp({ withTimezone: true }),
     priority: smallint().default(0).notNull(),
+    // Null is to do; done is completedAt.
+    status: text(),
     archivedAt: timestamp({ withTimezone: true }),
     // In the trash since then; devices delete it for good after 30 days.
     deletedAt: timestamp({ withTimezone: true }),
@@ -171,6 +173,7 @@ export const items = pgTable(
     index().on(t.spaceId),
     check('items_type', sql`${t.type} in ('note', 'list', 'task')`),
     check('items_priority', sql`${t.priority} between 0 and 3`),
+    check('items_status', sql`${t.status} in ('in_progress', 'waiting')`),
     check('items_title_length', sql`char_length(${t.title}) between 1 and 200`),
   ],
 )

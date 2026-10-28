@@ -22,6 +22,8 @@ import {
   type Priority,
   prioritySchema,
   spaceSchema,
+  statusSchema,
+  type TaskStatus,
   titleSchema,
 } from './schema'
 
@@ -306,6 +308,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           completed_by: null,
           pinned_at: null,
           priority: 0,
+          status: null,
           archived_at: null,
           deleted_at: null,
           deleted_by: null,
@@ -354,6 +357,14 @@ export function createStore(database: CommonPowerSyncDatabase) {
       const parsed = prioritySchema.parse(priority)
       await items.update(id, (draft) => {
         draft.priority = parsed
+        draft.updated_at = now()
+      }).isPersisted.promise
+    },
+
+    async setItemStatus(id: string, status: TaskStatus | null) {
+      const parsed = statusSchema.parse(status)
+      await items.update(id, (draft) => {
+        draft.status = parsed
         draft.updated_at = now()
       }).isPersisted.promise
     },

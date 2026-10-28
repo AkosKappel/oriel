@@ -1,5 +1,10 @@
 import { Link } from '@tanstack/react-router'
-import { type ItemType, itemTypes } from '#/data/schema'
+import {
+  type ItemType,
+  itemTypes,
+  type TaskStatus,
+  taskStatuses,
+} from '#/data/schema'
 import type { SpaceView } from '#/lib/spaces'
 
 const labels: Record<ItemType, string> = {
@@ -28,7 +33,8 @@ export function TypeFilter({ active }: { active?: ItemType }) {
         <Link
           key={label}
           to="/"
-          search={(previous) => ({ ...previous, type })}
+          // A task status means nothing for notes or lists.
+          search={(previous) => ({ ...previous, type, status: undefined })}
           aria-current={active === type ? 'page' : undefined}
           activeOptions={activeOptions}
           className={linkClass}
@@ -36,6 +42,28 @@ export function TypeFilter({ active }: { active?: ItemType }) {
           {label}
         </Link>
       ))}
+    </nav>
+  )
+}
+
+/** Shown with tasks: all of them, or the open ones in one state. */
+export function StatusFilter({ active }: { active?: TaskStatus }) {
+  return (
+    <nav aria-label="Task status" className="flex gap-x-4 text-sm">
+      {[{ value: undefined, label: 'All tasks' }, ...taskStatuses].map(
+        ({ value, label }) => (
+          <Link
+            key={label}
+            to="/"
+            search={(previous) => ({ ...previous, status: value })}
+            aria-current={active === value ? 'page' : undefined}
+            activeOptions={activeOptions}
+            className={linkClass}
+          >
+            {label}
+          </Link>
+        ),
+      )}
     </nav>
   )
 }

@@ -269,6 +269,7 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
       put('items', itemRow(aliceSpace, { title: '' })),
       put('items', itemRow(aliceSpace, { type: 'event' })),
       put('items', itemRow(aliceSpace, { priority: 9 })),
+      put('items', itemRow(aliceSpace, { status: 'done' })),
       list,
       // An entry must be in its list's space.
       put('entries', entryRow(list.id, bobSpace)),
@@ -278,6 +279,7 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
 
     expect(result.applied).toBe(2)
     expect(result.rejected.map((rejection) => rejection.reason)).toEqual([
+      'invalid',
       'invalid',
       'invalid',
       'invalid',

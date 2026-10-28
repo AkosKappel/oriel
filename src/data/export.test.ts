@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { itemToText, toJson, toMarkdown } from './export'
+import { itemToText, parseExport, toJson, toMarkdown } from './export'
 import type { Entry, Item } from './schema'
 
 const timestamp = '2026-10-01T00:00:00.000Z'
@@ -13,6 +13,7 @@ const item = (overrides: Partial<Item> & Pick<Item, 'id' | 'type'>): Item => ({
   completed_by: null,
   pinned_at: null,
   priority: 0,
+  status: null,
   archived_at: null,
   deleted_at: null,
   deleted_by: null,
@@ -89,5 +90,26 @@ describe('itemToText', () => {
       'Groceries\n\n- [ ] Eggs\n- [ ] Bread\n- [x] Milk',
     )
     expect(itemToText(items[2], [])).toBe('Idea\n\nPaint the door')
+  })
+})
+
+describe('parseExport', () => {
+  it('reads exports from before archive, trash and task status', () => {
+    const {
+      status: _status,
+      archived_at: _archived,
+      deleted_at: _deleted,
+      deleted_by: _deletedBy,
+      ...older
+    } = item({ id: 'vet', type: 'task', title: 'Call the vet' })
+    const { items: parsed, invalid } = parseExport(
+      JSON.stringify({ app: 'oriel', version: 1, items: [older] }),
+    )
+    expect(invalid).toBe(0)
+    expect(parsed[0]).toMatchObject({
+      status: null,
+      archived_at: null,
+      deleted_at: null,
+    })
   })
 })

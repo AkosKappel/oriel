@@ -10,8 +10,15 @@ import {
   searchItems,
   trashDays,
   type View,
+  withStatus,
 } from '#/data/organize'
-import { type Item, type ItemType, priorities } from '#/data/schema'
+import {
+  type Item,
+  type ItemType,
+  priorities,
+  statusLabel,
+  type TaskStatus,
+} from '#/data/schema'
 import type { Store } from '#/data/store'
 import { formatShortDate } from '#/lib/dates'
 import { canEdit, type SpaceView } from '#/lib/spaces'
@@ -30,6 +37,7 @@ type EntryCounts = ReturnType<typeof countEntries>
 export function ItemList({
   store,
   type,
+  status,
   spaceId,
   query = '',
   view,
@@ -37,6 +45,8 @@ export function ItemList({
 }: {
   store: Store
   type?: ItemType
+  /** With tasks: only open tasks in this state. */
+  status?: TaskStatus
   /** Show one space only. */
   spaceId?: string
   /** Show only items that contain these words. */
@@ -50,13 +60,16 @@ export function ItemList({
 
   if (isLoading) return null
 
-  const shown = searchItems(
-    itemsInView(
-      spaceId ? items.filter((item) => item.space_id === spaceId) : items,
-      view,
+  const shown = withStatus(
+    searchItems(
+      itemsInView(
+        spaceId ? items.filter((item) => item.space_id === spaceId) : items,
+        view,
+      ),
+      entries,
+      query,
     ),
-    entries,
-    query,
+    type === 'task' ? status : undefined,
   )
   const counts = countEntries(entries)
 
@@ -310,9 +323,14 @@ function describeItem(item: Item, counts: EntryCounts) {
     return `${upNext.join(', ')}${open > upNext.length ? '…' : ''} · ${open} left`
   }
   const firstLine = item.body.split('\n', 1)[0]
-  if (item.type === 'task' && item.priority > 0 && !item.completed_at) {
-    const priority = `${priorities[item.priority].label} priority`
-    return firstLine ? `${priority} · ${firstLine}` : priority
+  if (item.type === 'task' && !item.completed_at) {
+    return [
+      item.status && statusLabel(item.status),
+      item.priority > 0 && `${priorities[item.priority].label} priority`,
+      firstLine,
+    ]
+      .filter(Boolean)
+      .join(' · ')
   }
   return firstLine
 }

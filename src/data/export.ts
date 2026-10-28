@@ -1,6 +1,12 @@
 import { z } from 'zod'
 import { organizeItems, sortEntries } from './organize'
-import { type Entry, entrySchema, type Item, itemSchema } from './schema'
+import {
+  type Entry,
+  entrySchema,
+  type Item,
+  itemSchema,
+  statusSchema,
+} from './schema'
 
 function entriesByItem(entries: Entry[]) {
   const byItem = new Map<string, Entry[]>()
@@ -72,8 +78,9 @@ export function download(filename: string, content: string, type: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-// Exports written before archive and trash existed have no such fields.
+// Exports written before archive, trash and task status existed have no such fields.
 const importedItemSchema = itemSchema.extend({
+  status: statusSchema.optional().default(null),
   archived_at: z.string().nullish().default(null),
   deleted_at: z.string().nullish().default(null),
   deleted_by: z.string().nullish().default(null),

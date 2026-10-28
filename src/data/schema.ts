@@ -22,6 +22,7 @@ const items = new Table(
     completed_by: column.text,
     pinned_at: column.text,
     priority: column.integer,
+    status: column.text,
     archived_at: column.text,
     deleted_at: column.text,
     deleted_by: column.text,
@@ -88,6 +89,19 @@ export const prioritySchema = z.union([
   z.literal(3),
 ])
 
+/** Where a task that takes a while stands. Null is "to do"; done is `completed_at`, not a status. */
+export const taskStatuses = [
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'waiting', label: 'Waiting' },
+] as const
+
+export type TaskStatus = (typeof taskStatuses)[number]['value']
+
+export const statusSchema = z.enum(['in_progress', 'waiting']).nullable()
+
+export const statusLabel = (status: TaskStatus) =>
+  taskStatuses.find(({ value }) => value === status)?.label
+
 export const itemSchema = z.object({
   id: z.string(),
   space_id: z.string().nullable(),
@@ -101,6 +115,7 @@ export const itemSchema = z.object({
   pinned_at: z.string().nullable(),
   // Rows written before the column existed have no value.
   priority: prioritySchema.nullable().transform((value) => value ?? 0),
+  status: statusSchema,
   archived_at: z.string().nullable(),
   // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
   deleted_at: z.string().nullable(),

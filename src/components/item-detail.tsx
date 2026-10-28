@@ -13,6 +13,8 @@ import {
   type Item,
   type Priority,
   priorities,
+  type TaskStatus,
+  taskStatuses,
   titleSchema,
 } from '#/data/schema'
 import type { Store } from '#/data/store'
@@ -33,6 +35,9 @@ const priorityChoices = priorities.map(({ value, label }) => ({
   value: String(value),
   label,
 }))
+
+// "To do" is no status at all, so a task that never needed one reads the same.
+const statusChoices = [{ value: 'to_do', label: 'To do' }, ...taskStatuses]
 
 export function ItemDetail({
   store,
@@ -283,6 +288,23 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             isDisabled={!editable}
             onChange={(value) =>
               void store.setItemPriority(item.id, Number(value) as Priority)
+            }
+            className="mb-2"
+          />
+        )}
+
+        {item.type === 'task' && !item.completed_at && (
+          <ChoiceGroup
+            label="Status"
+            showLabel
+            choices={statusChoices}
+            value={item.status ?? 'to_do'}
+            isDisabled={!editable}
+            onChange={(value) =>
+              void store.setItemStatus(
+                item.id,
+                value === 'to_do' ? null : (value as TaskStatus),
+              )
             }
             className="mb-2"
           />

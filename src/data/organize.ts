@@ -1,4 +1,4 @@
-import type { Entry, Item, ItemType } from './schema'
+import type { Entry, Item, ItemType, TaskStatus } from './schema'
 
 export type OrganizedItems = { pinned: Item[]; open: Item[]; completed: Item[] }
 
@@ -29,6 +29,15 @@ export function organizeItems(items: Item[], type?: ItemType): OrganizedItems {
   completed.sort((a, b) => newestFirst(a.completed_at, b.completed_at))
 
   return { pinned, open, completed }
+}
+
+/** Open tasks in one state; done tasks have left every state. Without a status, everything. */
+export function withStatus(items: Item[], status?: TaskStatus) {
+  if (!status) return items
+  return items.filter(
+    (item) =>
+      item.type === 'task' && item.status === status && !item.completed_at,
+  )
 }
 
 export const views = ['archive', 'trash'] as const
