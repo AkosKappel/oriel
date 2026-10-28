@@ -22,6 +22,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 - The first line is the title. Further lines become the note body, the task details or the list entries (bullets and `[ ]` are removed).
 - A list fits on one line: `Groceries: milk, eggs, bread`.
 - A long pasted paragraph becomes a note with a short title and the full text kept.
+- Where the browser supports speech recognition (Chrome, Safari), the microphone button dictates into the field. The browser's speech service needs a connection, so it is off while offline.
 
 ## Organizing
 
@@ -29,6 +30,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 - **Search:** finds every word typed in titles, text and list entries, ignoring case and accents. It runs on the device, so it works offline.
 - **Detail:** edit the title and text (saved as you type; notes are Markdown, shown formatted and edited as text), complete tasks, set a priority (none, low, medium, high) and a status (to do, in progress, waiting), pin, archive, or move to the trash with Undo. Escape closes it, and j and k move to the next and previous item.
 - **Archive and trash:** archived items leave home but stay searchable in the archive. Deleted items wait in the trash for 30 days, on every device, and can be restored by anyone who can edit the space; after that a device deletes them for good. In a shared space the trash names who deleted something.
+- **Swipes:** on a phone, swipe a row right to finish a task (or archive a note or list) and left to move it to the trash, with Undo. Checking something gives a short vibration on Android.
 - **Wide screens:** the list stays on the left and the open item reads beside it; on a phone they are separate screens.
 - **Lists:** check, rename, remove (or empty the text) and add entries; drag an entry by its handle, or use the arrow keys on it, to change the order; pasting several lines adds one entry per line, and entries used in earlier lists are suggested while typing. Checked entries move to the bottom; "Clear checked" removes them and "Uncheck all" resets a list for reuse, both with Undo.
 - **Settings:** theme (like the device, light or dark), storage used, export of everything as JSON or Markdown, and import of a JSON export (into your own space, skipping what is already there).
@@ -38,6 +40,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 - A service worker (`scripts/service-worker.js`, emitted as `sw.js` with the build) precaches the app, so it opens and works with no connection after the first visit. New versions are offered with a Reload button, never forced mid-edit.
 - Installable as a PWA, with shortcuts for a new note, list or task, and a share target: sharing a link or text from another app on Android creates a note.
 - The browser is asked to keep the database (persistent storage) after the first save.
+- The installed app shows the number of open tasks on its icon (Badging API, where supported).
 
 ## Accounts
 
