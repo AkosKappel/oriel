@@ -37,6 +37,9 @@ Element.prototype.hasPointerCapture ??= () => false
 // Writes go through a SQLite worker; with the whole suite running in parallel, the default
 // second for `findBy` and `waitFor` is not always enough.
 configure({ asyncUtilTimeout: 5000 })
+// A test waits for several such writes in a row, so it gets more time than any single wait; on a
+// busy CI runner the whole test took over 5 seconds while each step still finished in time.
+vi.setConfig({ testTimeout: 30_000 })
 
 afterEach(async () => {
   cleanup()
