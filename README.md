@@ -25,12 +25,12 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 ## Organizing
 
-- **Home:** pinned items first, then open items by priority and date, completed tasks folded away. Filter by notes, lists or tasks; the filter is part of the URL.
+- **Home:** pinned items first, then open items by priority and date, completed tasks folded away. Filter by notes, lists or tasks, and tasks by status; the filters are part of the URL.
 - **Search:** finds every word typed in titles, text and list entries, ignoring case and accents. It runs on the device, so it works offline.
-- **Detail:** edit the title and text (saved as you type), complete tasks, set a priority (none, low, medium, high), pin, archive, or move to the trash with Undo. Escape closes it, and j and k move to the next and previous item.
+- **Detail:** edit the title and text (saved as you type), complete tasks, set a priority (none, low, medium, high) and a status (to do, in progress, waiting), pin, archive, or move to the trash with Undo. Escape closes it, and j and k move to the next and previous item.
 - **Archive and trash:** archived items leave home but stay searchable in the archive. Deleted items wait in the trash for 30 days, on every device, and can be restored by anyone who can edit the space; after that a device deletes them for good. In a shared space the trash names who deleted something.
 - **Wide screens:** the list stays on the left and the open item reads beside it; on a phone they are separate screens.
-- **Lists:** check, rename, remove (or empty the text) and add entries; pasting several lines adds one entry per line, and entries used in earlier lists are suggested while typing. Checked entries move to the bottom; "Clear checked" removes them and "Uncheck all" resets a list for reuse, both with Undo.
+- **Lists:** check, rename, remove (or empty the text) and add entries; drag an entry by its handle, or use the arrow keys on it, to change the order; pasting several lines adds one entry per line, and entries used in earlier lists are suggested while typing. Checked entries move to the bottom; "Clear checked" removes them and "Uncheck all" resets a list for reuse, both with Undo.
 - **Settings:** theme (like the device, light or dark), storage used, export of everything as JSON or Markdown, and import of a JSON export (into your own space, skipping what is already there).
 
 ## Offline and installable
@@ -41,7 +41,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 ## Accounts
 
-No account is needed: everything works on the device. Creating an account (email and password, with Better Auth) gives you a personal space on the server, and everything you made before signing up moves into it, so nothing is lost. Signing out removes the data from the device, so the next person to use it starts clean.
+No account is needed: everything works on the device. Creating an account (email and password, with Better Auth) gives you a personal space on the server, and everything you made before signing up moves into it, so nothing is lost. Signing out removes the data from the device, so the next person to use it starts clean. A forgotten password is reset with a single-use link sent by email, which signs out every device.
 
 Deleting the account (with the password) removes it, the personal space and every shared space nobody else uses, on the server and on the device. A shared space others still use must get another owner first, so it is never left without one.
 
