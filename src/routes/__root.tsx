@@ -3,14 +3,15 @@ import {
   createRootRoute,
   type ErrorComponentProps,
   HeadContent,
-  Link,
   ScriptOnce,
   Scripts,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { type CSSProperties, type ReactNode, useEffect } from 'react'
 import { Toaster } from 'sonner'
+import { ErrorNotice } from '#/components/error-notice'
 import { OfflineBanner } from '#/components/offline-banner'
+import { SubPage } from '#/components/sub-page'
 import { useFocusAfterNavigation } from '#/lib/route-focus'
 import { contentSecurityPolicy } from '#/lib/security-headers'
 import { registerServiceWorker } from '#/lib/service-worker'
@@ -127,28 +128,22 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 function NotFound() {
   return (
-    <main className="mx-auto max-w-xl px-4 pt-24 pl-14">
-      <h1 className="font-serif text-3xl italic">No such page.</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        <Link to="/" className="text-foreground underline underline-offset-4">
-          Back to everything
-        </Link>
-      </p>
-    </main>
+    <SubPage>
+      <div className="flex flex-col gap-3">
+        <h1 className="font-serif text-3xl italic">No such page.</h1>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          The link may be mistyped, or the page was moved.
+        </p>
+      </div>
+    </SubPage>
   )
 }
 
-function ErrorPage({ error }: ErrorComponentProps) {
+function ErrorPage({ error, reset }: ErrorComponentProps) {
   console.error(error)
   return (
-    <main className="mx-auto max-w-xl px-4 pt-24 pl-14">
-      <h1 className="font-serif text-3xl italic">Something went wrong.</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Your notes are safe on this device.{' '}
-        <a href="/" className="text-foreground underline underline-offset-4">
-          Reload Oriel
-        </a>
-      </p>
-    </main>
+    <SubPage>
+      <ErrorNotice error={error} reset={reset} />
+    </SubPage>
   )
 }

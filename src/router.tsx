@@ -1,5 +1,6 @@
 import { createRouter } from '@tanstack/react-router'
 import { createIsomorphicFn } from '@tanstack/react-start'
+import { Pending } from '#/components/error-notice'
 import { routeTree } from './routeTree.gen'
 
 // A fresh nonce per server render (getRouter runs once per request); the Content-Security-Policy
@@ -16,6 +17,7 @@ export function getRouter() {
     ssr: ssrOptions(),
     scrollRestoration: true,
     defaultPreload: 'intent',
+    defaultPendingComponent: Pending,
     // A quick crossfade when the page changes (opening an item, going back). Filters and search
     // only change the query string, and typing must not wait for a transition.
     defaultViewTransition: {

@@ -87,6 +87,12 @@
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* Page changes crossfade (see `defaultViewTransition` in src/router.tsx); no motion when reduced. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
