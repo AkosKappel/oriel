@@ -86,6 +86,12 @@ function SettingsPage() {
           </>
         )}
       </Section>
+
+      <Section title="Oriel">
+        <Link to="/about" className={textButton}>
+          About Oriel and your data
+        </Link>
+      </Section>
     </SubPage>
   )
 }

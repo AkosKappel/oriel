@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NotebookRouteImport } from './routes/_notebook'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -27,6 +28,11 @@ import { Route as ApiSyncUploadRouteImport } from './routes/api/sync/upload'
 
 const NotebookRoute = NotebookRouteImport.update({
   id: '/_notebook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -102,6 +108,7 @@ const ApiSyncUploadRoute = ApiSyncUploadRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof NotebookIndexRoute
+  '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/api/sync/upload': typeof ApiSyncUploadRoute
 }
 export interface FileRoutesByTo {
+  '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -135,6 +143,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_notebook': typeof NotebookRouteWithChildren
+  '/about': typeof AboutRoute
   '/account': typeof AccountRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/account'
     | '/reset-password'
     | '/settings'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/api/sync/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/about'
     | '/account'
     | '/reset-password'
     | '/settings'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_notebook'
+    | '/about'
     | '/account'
     | '/reset-password'
     | '/settings'
@@ -204,6 +216,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   NotebookRoute: typeof NotebookRouteWithChildren
+  AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof NotebookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -344,6 +364,7 @@ const NotebookRouteWithChildren = NotebookRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   NotebookRoute: NotebookRouteWithChildren,
+  AboutRoute: AboutRoute,
   AccountRoute: AccountRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
