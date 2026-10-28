@@ -13,7 +13,7 @@ const listeners = new Set<() => void>()
  */
 function applyTheme(theme: string | null) {
   const root = document.documentElement
-  const colors = { light: '#f8f6f1', dark: '#1c1a17' }
+  const colors = { light: '#faf6ef', dark: '#141820' }
   const forced = theme === 'light' || theme === 'dark' ? theme : null
   if (forced) root.dataset.theme = forced
   else delete root.dataset.theme

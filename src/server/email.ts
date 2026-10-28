@@ -66,10 +66,10 @@ export function sendInviteEmail(invite: {
     replyTo: invite.inviterEmail,
     subject: `${invite.inviterName} invites you to ${invite.spaceName}`,
     text: `${intro}\n\nJoin ${invite.spaceName}: ${invite.url}\n\n${outro}`,
-    html: `<div style="font-family:Georgia,serif;max-width:32rem;color:#1f1d1a">
+    html: `<div style="font-family:Georgia,serif;max-width:32rem;color:#1b2435">
 <p style="font-size:18px">${escapeHtml(intro)}</p>
-<p><a href="${escapeHtml(invite.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#1f1d1a;color:#faf8f3;text-decoration:none;font-family:system-ui,sans-serif">Join ${escapeHtml(invite.spaceName)}</a></p>
-<p style="color:#6b665d;font-size:14px;font-family:system-ui,sans-serif">${escapeHtml(outro)}</p>
+<p><a href="${escapeHtml(invite.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#2454a5;color:#faf6ef;text-decoration:none;font-family:system-ui,sans-serif">Join ${escapeHtml(invite.spaceName)}</a></p>
+<p style="color:#5c6472;font-size:14px;font-family:system-ui,sans-serif">${escapeHtml(outro)}</p>
 </div>`,
   })
 }
@@ -83,10 +83,10 @@ export function sendPasswordResetEmail(reset: { to: string; url: string }) {
     to: reset.to,
     subject: 'Reset your Oriel password',
     text: `${intro}\n\nChoose a new password: ${reset.url}\n\n${outro}`,
-    html: `<div style="font-family:Georgia,serif;max-width:32rem;color:#1f1d1a">
+    html: `<div style="font-family:Georgia,serif;max-width:32rem;color:#1b2435">
 <p style="font-size:18px">${escapeHtml(intro)}</p>
-<p><a href="${escapeHtml(reset.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#1f1d1a;color:#faf8f3;text-decoration:none;font-family:system-ui,sans-serif">Choose a new password</a></p>
-<p style="color:#6b665d;font-size:14px;font-family:system-ui,sans-serif">${escapeHtml(outro)}</p>
+<p><a href="${escapeHtml(reset.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#2454a5;color:#faf6ef;text-decoration:none;font-family:system-ui,sans-serif">Choose a new password</a></p>
+<p style="color:#5c6472;font-size:14px;font-family:system-ui,sans-serif">${escapeHtml(outro)}</p>
 </div>`,
   })
 }

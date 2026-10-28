@@ -74,12 +74,12 @@ function RootDocument({ children }: { children: ReactNode }) {
         {/* Here rather than in `head`, which keeps only one meta per name. */}
         <meta
           name="theme-color"
-          content="#f8f6f1"
+          content="#faf6ef"
           media="(prefers-color-scheme: light)"
         />
         <meta
           name="theme-color"
-          content="#1c1a17"
+          content="#141820"
           media="(prefers-color-scheme: dark)"
         />
         {/* Carries the page's CSP nonce and removes itself before React hydrates. */}

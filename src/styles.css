@@ -19,23 +19,28 @@
 
 /*
  * Paper: content reads like a notebook (serif, whitespace instead of rules and boxes), controls
- * stay small and sans-serif. Colors are placeholders until the final palette is chosen; every
- * color lives in these tokens as a light and a dark value, so a new palette is a change to this
- * block only. `color-scheme` decides which value applies.
+ * stay small and sans-serif. The palette is paper and ink: warm ivory paper, blue-black ink for
+ * text, and one fountain-pen blue for the mark, checked boxes and focus. Dark mode is the same ink
+ * as night paper. Every color lives in these tokens as a light and a dark value; `color-scheme`
+ * decides which applies. Text tokens meet WCAG AA on the background (muted at least 5.5:1), and
+ * `faint`, which draws empty checkboxes, at least 3:1.
  */
 :root {
   color-scheme: light dark;
 
-  --background: light-dark(oklch(0.98 0.006 85), oklch(0.19 0.006 70));
-  --foreground: light-dark(oklch(0.23 0.012 60), oklch(0.92 0.01 85));
-  --muted-foreground: light-dark(oklch(0.52 0.012 60), oklch(0.68 0.01 80));
-  --faint: light-dark(oklch(0.68 0.01 70), oklch(0.52 0.01 75));
-  --rule: light-dark(oklch(0.88 0.01 80), oklch(0.32 0.008 70));
-  --wash: light-dark(oklch(0.94 0.01 85), oklch(0.24 0.007 70));
-  --primary: light-dark(oklch(0.45 0.05 165), oklch(0.74 0.06 165));
-  --primary-foreground: light-dark(oklch(0.98 0.006 85), oklch(0.19 0.006 70));
-  --destructive: light-dark(oklch(0.52 0.17 27), oklch(0.68 0.16 25));
-  --ring: light-dark(oklch(0.45 0.05 165), oklch(0.74 0.06 165));
+  --background: light-dark(oklch(0.975 0.011 85), oklch(0.21 0.016 262));
+  --foreground: light-dark(oklch(0.26 0.035 262), oklch(0.93 0.012 85));
+  --muted-foreground: light-dark(oklch(0.5 0.025 262), oklch(0.72 0.018 262));
+  --faint: light-dark(oklch(0.635 0.018 262), oklch(0.56 0.02 262));
+  --rule: light-dark(oklch(0.89 0.012 85), oklch(0.33 0.018 262));
+  --wash: light-dark(oklch(0.945 0.014 85), oklch(0.25 0.018 262));
+  --primary: light-dark(oklch(0.46 0.14 260), oklch(0.76 0.11 255));
+  --primary-foreground: light-dark(
+    oklch(0.975 0.011 85),
+    oklch(0.21 0.016 262)
+  );
+  --destructive: light-dark(oklch(0.52 0.17 28), oklch(0.7 0.15 25));
+  --ring: light-dark(oklch(0.46 0.14 260), oklch(0.76 0.11 255));
 }
 
 :root[data-theme="light"] {
