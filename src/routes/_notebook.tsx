@@ -16,6 +16,7 @@ import { database, store } from '#/data/client'
 import { dueFilters, itemsInView, trashDays, views } from '#/data/organize'
 import { itemTypes, statusSchema } from '#/data/schema'
 import { formatDay, greeting } from '#/lib/dates'
+import { reportError } from '#/lib/report-error'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
@@ -241,7 +242,7 @@ function usePurgeOldTrash() {
   useEffect(() => {
     const cutoff = new Date(Date.now() - trashDays * 86_400_000).toISOString()
     store.deleteTrashedBefore(cutoff).catch((error: unknown) => {
-      console.error('Could not empty old trash', error)
+      reportError('Could not empty old trash', error)
     })
   }, [])
 }
@@ -251,7 +252,7 @@ function useStorageFailed() {
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     database.init().catch((error: unknown) => {
-      console.error('Could not open the local database', error)
+      reportError('Could not open the local database', error)
       setFailed(true)
     })
   }, [])

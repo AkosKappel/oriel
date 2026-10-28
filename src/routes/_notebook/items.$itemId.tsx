@@ -15,7 +15,6 @@ export const Route = createFileRoute('/_notebook/items/$itemId')({
 })
 
 function ItemError({ error, reset }: ErrorComponentProps) {
-  console.error(error)
   return (
     // The layout's pane is the page's main landmark already.
     <div className="flex flex-col gap-6 pb-12">

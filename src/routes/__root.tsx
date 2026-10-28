@@ -140,7 +140,6 @@ function NotFound() {
 }
 
 function ErrorPage({ error, reset }: ErrorComponentProps) {
-  console.error(error)
   return (
     <SubPage>
       <ErrorNotice error={error} reset={reset} />

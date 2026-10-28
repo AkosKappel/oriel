@@ -17,6 +17,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as NotebookIndexRouteImport } from './routes/_notebook/index'
+import { Route as ApiClientErrorRouteImport } from './routes/api/client-error'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as SpacesIndexRouteImport } from './routes/spaces.index'
@@ -64,6 +65,11 @@ const NotebookIndexRoute = NotebookIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => NotebookRoute,
+} as any)
+const ApiClientErrorRoute = ApiClientErrorRouteImport.update({
+  id: '/api/client-error',
+  path: '/api/client-error',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -149,6 +157,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/api/client-error'
     | '/api/health'
     | '/invite/$token'
     | '/spaces/$spaceId'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/api/client-error'
     | '/api/health'
     | '/invite/$token'
     | '/spaces/$spaceId'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/api/client-error'
     | '/api/health'
     | '/invite/$token'
     | '/spaces/$spaceId'
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ShareRoute: typeof ShareRoute
   SignInRoute: typeof SignInRoute
+  ApiClientErrorRoute: typeof ApiClientErrorRoute
   ApiHealthRoute: typeof ApiHealthRoute
   InviteTokenRoute: typeof InviteTokenRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
@@ -288,6 +301,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof NotebookIndexRouteImport
       parentRoute: typeof NotebookRoute
+    }
+    '/api/client-error': {
+      id: '/api/client-error'
+      path: '/api/client-error'
+      fullPath: '/api/client-error'
+      preLoaderRoute: typeof ApiClientErrorRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/health': {
       id: '/api/health'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ShareRoute: ShareRoute,
   SignInRoute: SignInRoute,
+  ApiClientErrorRoute: ApiClientErrorRoute,
   ApiHealthRoute: ApiHealthRoute,
   InviteTokenRoute: InviteTokenRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,

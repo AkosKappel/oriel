@@ -1,6 +1,8 @@
 import { useRouter } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { Button } from 'react-aria-components'
 import { Logo } from '#/components/logo'
+import { reportError } from '#/lib/report-error'
 
 // Thrown when a page's code was never downloaded and the network is gone (Chrome, Safari, Firefox).
 const missingCode =
@@ -25,6 +27,8 @@ export function ErrorNotice({
   const router = useRouter()
   const offline = typeof navigator !== 'undefined' && !navigator.onLine
   const message = error instanceof Error ? error.message : String(error)
+
+  useEffect(() => reportError('Render error', error), [error])
 
   function retry() {
     reset()
