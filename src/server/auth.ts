@@ -5,6 +5,7 @@ import { tanstackStartCookies } from 'better-auth/tanstack-start'
 import { env } from '#/env'
 import { db } from '#/server/db'
 import * as schema from '#/server/db/schema'
+import { sendPasswordResetEmail } from '#/server/email'
 import { releaseSpaces, SharingError } from '#/server/sharing'
 import { ensurePersonalSpace } from '#/server/spaces'
 
@@ -12,8 +13,16 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, { provider: 'pg', schema }),
-  // Email verification and password reset need an email provider (backlog B-02).
-  emailAndPassword: { enabled: true, minPasswordLength: 10 },
+  // Email verification needs a verified sender domain first (backlog B-02).
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 10,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail({ to: user.email, url })
+    },
+    // Whoever knew the old password is signed out everywhere.
+    revokeSessionsOnPasswordReset: true,
+  },
   // Always on: Better Auth's default enables it only when NODE_ENV is `production`, which the
   // server does not set by itself. Per client IP from `X-Forwarded-For`, which the Tailscale
   // sidecar sets and overwrites; in memory, so limits reset on restart. Stricter than the default
@@ -23,6 +32,7 @@ export const auth = betterAuth({
     customRules: {
       '/sign-in/email': { window: 60, max: 5 },
       '/sign-up/email': { window: 3600, max: 10 },
+      '/request-password-reset': { window: 3600, max: 5 },
       '/delete-user': { window: 60, max: 5 },
     },
   },

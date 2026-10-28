@@ -121,6 +121,15 @@ function SignIn() {
         </Button>
       </Form>
 
+      {!creating && (
+        <Link
+          to="/reset-password"
+          className="-mt-4 w-fit text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        >
+          Forgot your password?
+        </Link>
+      )}
+
       <p className="text-sm text-muted-foreground">
         {creating ? 'Already have an account? ' : 'New to Oriel? '}
         <Link

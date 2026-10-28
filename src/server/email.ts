@@ -73,3 +73,20 @@ export function sendInviteEmail(invite: {
 </div>`,
   })
 }
+
+/** The link from Better Auth's reset flow; it expires after an hour and works once. */
+export function sendPasswordResetEmail(reset: { to: string; url: string }) {
+  const intro = 'Someone asked to reset the password of your Oriel account.'
+  const outro =
+    'The link works once and expires in an hour. If it was not you, ignore the email; your password stays the same.'
+  return sendEmail({
+    to: reset.to,
+    subject: 'Reset your Oriel password',
+    text: `${intro}\n\nChoose a new password: ${reset.url}\n\n${outro}`,
+    html: `<div style="font-family:Georgia,serif;max-width:32rem;color:#1f1d1a">
+<p style="font-size:18px">${escapeHtml(intro)}</p>
+<p><a href="${escapeHtml(reset.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#1f1d1a;color:#faf8f3;text-decoration:none;font-family:system-ui,sans-serif">Choose a new password</a></p>
+<p style="color:#6b665d;font-size:14px;font-family:system-ui,sans-serif">${escapeHtml(outro)}</p>
+</div>`,
+  })
+}
