@@ -16,6 +16,11 @@ export function getRouter() {
     ssr: ssrOptions(),
     scrollRestoration: true,
     defaultPreload: 'intent',
+    // A quick crossfade when the page changes (opening an item, going back). Filters and search
+    // only change the query string, and typing must not wait for a transition.
+    defaultViewTransition: {
+      types: ({ pathChanged }) => (pathChanged ? ['page'] : false),
+    },
   })
 }
 

@@ -21,11 +21,11 @@ export function Checkbox({
         className,
       )}
     >
-      <span className="grid size-[1.125rem] place-items-center rounded-full border-[1.5px] border-faint transition-colors group-hover:border-muted-foreground group-data-disabled:opacity-50 group-data-focus-visible:outline-2 group-data-focus-visible:outline-offset-2 group-data-selected:border-foreground group-data-selected:bg-foreground motion-reduce:transition-none">
+      <span className="grid size-[1.125rem] place-items-center rounded-full border-[1.5px] border-faint transition-[color,background-color,border-color,scale] group-hover:border-muted-foreground group-data-disabled:opacity-50 group-data-focus-visible:outline-2 group-data-focus-visible:outline-offset-2 group-data-pressed:scale-90 group-data-selected:border-foreground group-data-selected:bg-foreground motion-reduce:transition-none">
         <Check
           aria-hidden
           strokeWidth={3}
-          className="size-2.5 text-background opacity-0 group-data-selected:opacity-100"
+          className="size-2.5 scale-50 text-background opacity-0 transition-[opacity,scale] duration-200 group-data-selected:scale-100 group-data-selected:opacity-100 motion-reduce:transition-none"
         />
       </span>
     </AriaCheckbox>
