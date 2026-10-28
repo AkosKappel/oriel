@@ -2,18 +2,16 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Logo } from '#/components/logo'
 import { SubPage } from '#/components/sub-page'
+import { pageMeta } from '#/lib/seo'
 
 // Public and static: rendered on the server, no local database.
 export const Route = createFileRoute('/about')({
   head: () => ({
-    meta: [
-      { title: 'About Oriel' },
-      {
-        name: 'description',
-        content:
-          'Oriel keeps notes, lists and tasks on your device first, works offline, and syncs and shares them with the people you choose.',
-      },
-    ],
+    meta: pageMeta(
+      'About Oriel',
+      'Oriel keeps notes, lists and tasks on your device first, works offline, and syncs and shares them with the people you choose.',
+      { indexed: true },
+    ),
   }),
   component: About,
 })

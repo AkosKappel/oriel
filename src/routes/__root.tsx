@@ -14,6 +14,7 @@ import { OfflineBanner } from '#/components/offline-banner'
 import { SubPage } from '#/components/sub-page'
 import { useFocusAfterNavigation } from '#/lib/route-focus'
 import { contentSecurityPolicy } from '#/lib/security-headers'
+import { pageMeta } from '#/lib/seo'
 import { registerServiceWorker } from '#/lib/service-worker'
 import { themeScript, useTheme } from '#/lib/theme'
 import appCss from '../styles.css?url'
@@ -28,11 +29,10 @@ export const Route = createRootRoute({
         content:
           'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
       },
-      { title: 'Oriel' },
-      {
-        name: 'description',
-        content: 'One calm place for notes, lists and tasks.',
-      },
+      ...pageMeta('Oriel', 'One calm place for notes, lists and tasks.'),
+      { property: 'og:site_name', content: 'Oriel' },
+      { property: 'og:type', content: 'website' },
+      { name: 'twitter:card', content: 'summary' },
       { name: 'apple-mobile-web-app-title', content: 'Oriel' },
     ],
     links: [

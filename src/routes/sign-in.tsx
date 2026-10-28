@@ -7,6 +7,7 @@ import { SubPage } from '#/components/sub-page'
 import { TextField } from '#/components/ui/text-field'
 import { completeSignIn, DifferentAccountError } from '#/lib/account'
 import { authClient } from '#/lib/auth-client'
+import { pageMeta } from '#/lib/seo'
 
 const searchSchema = z.object({
   mode: z.enum(['sign-in', 'create']).optional().catch(undefined),
@@ -20,6 +21,13 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/sign-in')({
   ssr: false,
+  head: () => ({
+    meta: pageMeta(
+      'Sign in to Oriel',
+      'Notes, lists and tasks that work offline and sync between your devices. Create a free account or sign in.',
+      { indexed: true },
+    ),
+  }),
   validateSearch: searchSchema,
   component: SignIn,
 })
