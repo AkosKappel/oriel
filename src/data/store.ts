@@ -140,7 +140,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
     return rows.map((row) => row.id)
   }
 
-  return {
+  const store = {
     items,
     entries,
     spaces,
@@ -322,6 +322,28 @@ export function createStore(database: CommonPowerSyncDatabase) {
         }
       })
       return id
+    },
+
+    /**
+     * A fresh copy in the same space: title (marked as a copy), text and list entries in their
+     * order, all unchecked, so a packing or shopping list can be reused as a template.
+     */
+    async duplicateItem(id: string) {
+      const source = items.get(id)
+      if (!source) throw new Error('No such item')
+      const texts = entries.toArray
+        .filter((entry) => entry.item_id === id)
+        .sort((a, b) => a.position - b.position)
+        .map((entry) => entry.text)
+      return store.createItem(
+        {
+          type: source.type,
+          title: `${source.title.slice(0, 193)} (copy)`,
+          body: source.body,
+          entries: texts,
+        },
+        { spaceId: source.space_id ?? undefined },
+      )
     },
 
     async updateItem(id: string, changes: { title?: string; body?: string }) {
@@ -623,6 +645,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
       })
     },
   }
+  return store
 }
 
 export type Store = ReturnType<typeof createStore>

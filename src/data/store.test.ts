@@ -118,6 +118,33 @@ describe('organizing items', () => {
     await expect(store.setItemPriority(id, 5)).rejects.toThrow()
   })
 
+  it('duplicates a list with its entries in order, all unchecked', async () => {
+    const id = await store.createItem({
+      type: 'list',
+      title: 'Packing',
+      entries: ['Passport', 'Charger', 'Socks'],
+    })
+    const [passport] = store.entries.toArray.filter(
+      (entry) => entry.text === 'Passport',
+    )
+    await store.setEntryCompleted(passport.id, true)
+
+    const copyId = await store.duplicateItem(id)
+
+    expect(store.items.get(copyId)).toMatchObject({
+      type: 'list',
+      title: 'Packing (copy)',
+    })
+    const copied = store.entries.toArray
+      .filter((entry) => entry.item_id === copyId)
+      .sort((a, b) => a.position - b.position)
+    expect(copied.map((entry) => [entry.text, entry.completed_at])).toEqual([
+      ['Passport', null],
+      ['Charger', null],
+      ['Socks', null],
+    ])
+  })
+
   it('sets and clears a due day, rejecting anything but a calendar day', async () => {
     const id = await store.createItem({ type: 'task', title: 'Pay rent' })
     expect(store.items.get(id)?.due_on).toBeNull()

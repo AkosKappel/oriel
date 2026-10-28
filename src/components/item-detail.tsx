@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Archive, ArrowLeft, Pin, Share, Trash2 } from 'lucide-react'
+import { Archive, ArrowLeft, Copy, Pin, Share, Trash2 } from 'lucide-react'
 import { type RefObject, useEffect, useId, useRef, useState } from 'react'
 import { Button, ToggleButton } from 'react-aria-components'
 import { toast } from 'sonner'
@@ -112,6 +112,18 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     })
   }
 
+  async function duplicate() {
+    const id = await store.duplicateItem(item.id)
+    await navigate({
+      to: '/items/$itemId',
+      params: { itemId: id },
+      search: true,
+    })
+    toast(`${label} duplicated`, {
+      action: { label: 'Undo', onClick: () => void store.deleteItem(id) },
+    })
+  }
+
   async function archive(next: boolean) {
     await store.setItemArchived(item.id, next)
     toast(next ? `${label} archived` : `${label} back from the archive`, {
@@ -186,6 +198,17 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             className={cn(iconButton, 'grid hover:text-foreground')}
           >
             <Share aria-hidden className="size-[1.125rem]" />
+          </Button>
+          <Button
+            onPress={() => void duplicate()}
+            aria-label={`Duplicate ${label.toLowerCase()}`}
+            className={cn(
+              iconButton,
+              'hover:text-foreground',
+              editable ? 'grid' : 'hidden',
+            )}
+          >
+            <Copy aria-hidden className="size-[1.125rem]" />
           </Button>
           <ToggleButton
             isSelected={archived}
