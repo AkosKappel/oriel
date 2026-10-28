@@ -38,6 +38,8 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
   if (request.method !== 'GET' || url.origin !== self.location.origin) return
+  // Sync shares the origin in production (nginx /powersync/); it must never come from a cache.
+  if (url.pathname.startsWith('/powersync/')) return
 
   // Pages: the server when online, the cached shell when not.
   if (request.mode === 'navigate') {
