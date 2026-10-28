@@ -88,7 +88,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 ## Conventions
 
 - Imports from `src` use the `#/` alias (`#/lib/utils`).
-- Routes are files in `src/routes`; `src/routeTree.gen.ts` is generated, never edit it. Home and the item page share the `_notebook` layout (filters in its search params, list and reading pane side by side from `lg`).
+- Routes are files in `src/routes`; `src/routeTree.gen.ts` is generated, never edit it. The dev server and `npm run build` append a `Register` block that `tsr generate` (run by `npm run typecheck`) leaves out; commit the `tsr generate` form, so stop the dev server and run `npx tsr generate` before committing a route change. Home and the item page share the `_notebook` layout (filters in its search params, list and reading pane side by side from `lg`).
 - Pages need one `main` landmark and an `h1` (an `sr-only` one where the title is an editable input). Text uses `text-muted-foreground` or stronger; `text-faint` is for placeholders and decoration only.
 - Interactive primitives are React Aria Components, wrapped in `src/components/ui` (`Checkbox`, `ChoiceGroup`). Use React Aria (`Button`, `ToggleButton`, `RadioGroup`, ...) for new controls; style their states with Tailwind data variants (`data-selected:`, `data-focus-visible:`, `data-pressed:`).
 - Visual direction is "Paper": serif (Newsreader) for content, small sans (Instrument Sans) for controls and metadata, whitespace instead of borders and boxes, the selected option underlined. Titles share one column; checkboxes sit in the left margin (`pl-10` on the content, `-left-[2.375rem]` on the checkbox).
