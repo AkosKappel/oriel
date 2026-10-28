@@ -21,8 +21,10 @@ import { formatShortDate } from '#/lib/dates'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
 
+// No display or hover color here: each button sets its own, since `cn` adds classes and does not
+// override them.
 const iconButton =
-  'grid size-11 place-items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground data-focus-visible:outline-2 motion-reduce:transition-none'
+  'size-11 place-items-center rounded-sm text-muted-foreground transition-colors data-focus-visible:outline-2 motion-reduce:transition-none'
 
 // Phones and Safari open the share sheet; elsewhere the text goes to the clipboard.
 const canShare = () => typeof navigator.share === 'function'
@@ -174,7 +176,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           <Button
             onPress={() => void share()}
             aria-label={canShare() ? 'Share' : 'Copy as text'}
-            className={iconButton}
+            className={cn(iconButton, 'grid hover:text-foreground')}
           >
             <Share aria-hidden className="size-[1.125rem]" />
           </Button>
@@ -184,8 +186,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             aria-label="Archive"
             className={cn(
               iconButton,
-              'data-selected:text-foreground',
-              !editable && 'hidden',
+              'hover:text-foreground data-selected:text-foreground',
+              editable ? 'grid' : 'hidden',
             )}
           >
             <Archive aria-hidden className="size-[1.125rem]" />
@@ -196,8 +198,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             aria-label="Pin to the top"
             className={cn(
               iconButton,
-              'data-selected:text-foreground',
-              !editable && 'hidden',
+              'hover:text-foreground data-selected:text-foreground',
+              editable ? 'grid' : 'hidden',
             )}
           >
             {({ isSelected }) => (
@@ -213,7 +215,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             className={cn(
               iconButton,
               'hover:text-destructive',
-              !editable && 'hidden',
+              editable ? 'grid' : 'hidden',
             )}
           >
             <Trash2 aria-hidden className="size-[1.125rem]" />

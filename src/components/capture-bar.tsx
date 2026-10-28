@@ -1,4 +1,3 @@
-import { useLiveQuery } from '@tanstack/react-db'
 import {
   type FormEvent,
   type KeyboardEvent,
@@ -17,6 +16,7 @@ import { type ItemType, itemTypes, newItemSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { requestPersistentStorage } from '#/lib/storage'
+import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 
 const placeholders: Record<ItemType, string> = {
@@ -110,9 +110,7 @@ export function CaptureBar({
   }, [])
 
   const { byId } = useSpaces()
-  const { data: items } = useLiveQuery({
-    query: (q) => q.from({ item: store.items }),
-  })
+  const { data: items } = useRows(store.items)
   const appendDraft = text.trimStart().startsWith('+')
     ? parseAppend(
         text,

@@ -1,4 +1,3 @@
-import { useLiveQuery } from '@tanstack/react-db'
 import { Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { Button } from 'react-aria-components'
@@ -16,6 +15,7 @@ import { type Item, type ItemType, priorities } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { formatShortDate } from '#/lib/dates'
 import { canEdit, type SpaceView } from '#/lib/spaces'
+import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 
 const emptyMessages: Record<ItemType | 'all', string> = {
@@ -45,12 +45,8 @@ export function ItemList({
   view?: View
   spaces: Map<string, SpaceView>
 }) {
-  const { data: items, isLoading } = useLiveQuery({
-    query: (q) => q.from({ item: store.items }),
-  })
-  const { data: entries } = useLiveQuery({
-    query: (q) => q.from({ entry: store.entries }),
-  })
+  const { data: items, isLoading } = useRows(store.items)
+  const { data: entries } = useRows(store.entries)
 
   if (isLoading) return null
 

@@ -8,6 +8,7 @@ import { stripBullet } from '#/data/capture'
 import { countEntries, sortEntries, suggestEntries } from '#/data/organize'
 import { type Entry, entryTextSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 
 const listAction =
@@ -178,9 +179,7 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
   const [text, setText] = useState('')
   const suggestionsId = useId()
   // Every list's entries: what was bought or packed before is likely to come up again.
-  const { data: allEntries } = useLiveQuery({
-    query: (q) => q.from({ entry: store.entries }),
-  })
+  const { data: allEntries } = useRows(store.entries)
   const suggestions = suggestEntries(allEntries, itemId)
 
   function add(value: string) {

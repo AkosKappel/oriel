@@ -1,7 +1,7 @@
-import { useLiveQuery } from '@tanstack/react-db'
 import { store } from '#/data/client'
 import type { Member, MemberRole, Space } from '#/data/schema'
 import { useAccount } from '#/lib/account'
+import { useRows } from '#/lib/use-rows'
 
 export type SpaceView = Space & {
   role: MemberRole
@@ -18,12 +18,8 @@ export const canEdit = (role: MemberRole | undefined) =>
  */
 export function useSpaces() {
   const account = useAccount()
-  const { data: spaces, isLoading } = useLiveQuery({
-    query: (q) => q.from({ space: store.spaces }),
-  })
-  const { data: members } = useLiveQuery({
-    query: (q) => q.from({ member: store.members }),
-  })
+  const { data: spaces, isLoading } = useRows(store.spaces)
+  const { data: members } = useRows(store.members)
 
   const views: SpaceView[] = []
   for (const space of account ? spaces : []) {

@@ -1,7 +1,7 @@
-import type { ClassValue } from 'clsx'
-import { clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { type ClassValue, clsx } from 'clsx'
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+/**
+ * Joins class names. Plain clsx, no tailwind-merge: building its rules took a noticeable share of
+ * the home page's start-up, and no component relies on one class overriding another.
+ */
+export const cn = (...inputs: ClassValue[]) => clsx(inputs)
