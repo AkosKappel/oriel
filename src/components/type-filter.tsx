@@ -13,6 +13,10 @@ const typeOptions = [
   ...itemTypes.map((type) => ({ type, label: labels[type] })),
 ]
 
+// The router marks a link active when its search is part of the current one, and a filter set to
+// undefined would match every page. Undefined has to match undefined instead.
+const activeOptions = { explicitUndefined: true }
+
 const linkClass =
   'shrink-0 py-2 text-muted-foreground underline-offset-[6px] hover:text-foreground focus-visible:rounded-sm focus-visible:outline-2 aria-[current=page]:text-foreground aria-[current=page]:underline aria-[current=page]:decoration-[1.5px]'
 
@@ -26,6 +30,7 @@ export function TypeFilter({ active }: { active?: ItemType }) {
           to="/"
           search={(previous) => ({ ...previous, type })}
           aria-current={active === type ? 'page' : undefined}
+          activeOptions={activeOptions}
           className={linkClass}
         >
           {label}
@@ -52,6 +57,7 @@ export function SpaceFilter({
         to="/"
         search={(previous) => ({ ...previous, space: undefined })}
         aria-current={active ? undefined : 'page'}
+        activeOptions={activeOptions}
         className={linkClass}
       >
         All spaces
@@ -62,6 +68,7 @@ export function SpaceFilter({
           to="/"
           search={(previous) => ({ ...previous, space: space.id })}
           aria-current={active === space.id ? 'page' : undefined}
+          activeOptions={activeOptions}
           className={linkClass}
         >
           {space.name}
