@@ -1,5 +1,6 @@
 import { useRouter } from '@tanstack/react-router'
 import { Button } from 'react-aria-components'
+import { Logo } from '#/components/logo'
 
 // Thrown when a page's code was never downloaded and the network is gone (Chrome, Safari, Firefox).
 const missingCode =
@@ -65,11 +66,12 @@ export function ErrorNotice({
  */
 export function Pending() {
   return (
-    <p
+    <div
       role="status"
-      className="flex min-h-dvh animate-[fade-in_300ms_600ms_both] items-center justify-center pb-24 font-serif text-xl text-muted-foreground italic"
+      className="flex min-h-dvh animate-[fade-in_300ms_600ms_both] flex-col items-center justify-center gap-4 pb-24 font-serif text-xl text-muted-foreground italic"
     >
+      <Logo className="size-10 text-primary" />
       Opening your notebook…
-    </p>
+    </div>
   )
 }

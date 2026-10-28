@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
+import { Logo } from '#/components/logo'
 import { SubPage } from '#/components/sub-page'
 
 // Public and static: rendered on the server, no local database.
@@ -23,6 +24,7 @@ function About() {
   return (
     <SubPage back="/">
       <div className="flex flex-col gap-3">
+        <Logo className="size-12 text-primary" />
         <h1 className="font-serif text-4xl tracking-tight">About Oriel</h1>
         <p className="max-w-prose font-serif text-lg leading-relaxed">
           Oriel is one calm place for notes, lists and tasks. Everything is
