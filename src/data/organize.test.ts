@@ -346,6 +346,11 @@ describe('matchRanges', () => {
     ])
   })
 
+  it('counts emoji and other characters outside the basic plane correctly', () => {
+    expect(marked('📝 Groceries', 'groc')).toEqual(['Groc'])
+    expect(marked('👩‍👩‍👧 family 🇸🇰 trip', 'trip')).toEqual(['trip'])
+  })
+
   it('keeps a combining accent inside the match', () => {
     expect(marked('cafe\u0301 au lait', 'cafe')).toEqual(['cafe\u0301'])
   })

@@ -175,8 +175,10 @@ export function matchRanges(text: string, query: string): [number, number][] {
   const origin: number[] = []
   for (let index = 0; index < text.length; ) {
     const character = String.fromCodePoint(text.codePointAt(index) ?? 0)
-    for (const _ of fold(character)) origin.push(index)
-    folded += fold(character)
+    const piece = fold(character)
+    // One entry per UTF-16 unit, as `indexOf` counts them: an emoji is two.
+    for (let unit = 0; unit < piece.length; unit++) origin.push(index)
+    folded += piece
     index += character.length
   }
   // A match ends where the next folded character starts, so trailing combining marks stay in it.
