@@ -48,6 +48,19 @@ await check('sync service', async () => {
   expectStatus(response, 200)
 })
 
+// Server functions must refuse calls from other sites; any server function path will do.
+await check('cross-site server function call refused', async () => {
+  const response = await fetch(`${base}/_serverFn/any-function`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'sec-fetch-site': 'cross-site',
+    },
+    body: '{}',
+  })
+  expectStatus(response, 403)
+})
+
 await check('not found', async () => {
   const response = await fetch(`${base}/no-such-page`)
   expectStatus(response, 404)
