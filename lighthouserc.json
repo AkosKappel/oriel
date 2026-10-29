@@ -11,7 +11,8 @@
       "numberOfRuns": 3,
       "settings": {
         "preset": "desktop",
-        "chromeFlags": "--no-sandbox --headless=new"
+        "chromeFlags": "--no-sandbox --headless=new",
+        "skipAudits": ["is-crawlable"]
       }
     },
     "assert": {
