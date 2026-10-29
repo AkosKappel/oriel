@@ -96,8 +96,11 @@ export const revokeInvite = createServerFn({ method: 'POST' })
     sharing.revokeInvite(context.userId, data.inviteId),
   )
 
-/** Public: the invite page shows this before the visitor has an account. */
-export const describeInvite = createServerFn({ method: 'GET' })
+/**
+ * Public: the invite page shows this before the visitor has an account. POST, because a GET server
+ * function carries its input, the invite token, in the URL, which the access log records.
+ */
+export const describeInvite = createServerFn({ method: 'POST' })
   .validator(z.object({ token: z.string().min(1).max(100) }))
   .handler(({ data }) => sharing.describeInvite(data.token))
 
