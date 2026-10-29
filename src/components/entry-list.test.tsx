@@ -53,6 +53,13 @@ describe('EntryList', () => {
     await user.keyboard('{ArrowUp}')
     await waitFor(() => expect(texts()).toEqual(['Milk', 'Bread', 'Eggs']))
     expect(await screen.findByText('Bread, 2 of 3')).toBeDefined()
+    // Focus stays on the moved entry's handle, set a frame later; on a slow runner that frame could
+    // otherwise land after the next line and send the End key to Bread.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: 'Move Bread' }),
+      ),
+    )
 
     screen.getByRole('button', { name: 'Move Milk' }).focus()
     await user.keyboard('{End}')
