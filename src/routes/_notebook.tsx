@@ -5,7 +5,7 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { AccountLink } from '#/components/account-link'
 import { CaptureBar } from '#/components/capture-bar'
@@ -13,11 +13,13 @@ import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
 import { SpaceFilter, TaskFilter, TypeFilter } from '#/components/type-filter'
 import { database, store } from '#/data/client'
+import { announce, describeMemberChanges } from '#/data/member-changes'
 import { dueFilters, itemsInView, trashDays, views } from '#/data/organize'
-import { itemTypes, statusSchema } from '#/data/schema'
+import { type Item, itemTypes, statusSchema } from '#/data/schema'
+import { useAccount } from '#/lib/account'
 import { formatDay, greeting } from '#/lib/dates'
 import { reportError } from '#/lib/report-error'
-import { canEdit, useSpaces } from '#/lib/spaces'
+import { canEdit, type SpaceView, useSpaces } from '#/lib/spaces'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 
@@ -62,6 +64,7 @@ function Notebook() {
   return (
     <div className="mx-auto max-w-xl px-4 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,26rem)_minmax(0,36rem)] lg:justify-between lg:gap-16 lg:px-8 print:block">
       <AppBadge />
+      <MemberAnnouncer spaces={byId} />
       <CommandPaletteOnShortcut />
       <div
         className={cn(
@@ -260,6 +263,42 @@ function useEscapeToClose(itemId: string | undefined) {
 
 /** Deletes what has been in the trash for longer than it promises to keep it, once per visit. */
 /** Open tasks as a number on the installed app's icon (Badging API, where supported). */
+/**
+ * Tells screen reader users what other members of shared spaces just added or finished, which
+ * sighted users notice as the list changes. Nothing is said on load or about the user's own changes.
+ */
+function MemberAnnouncer({ spaces }: { spaces: Map<string, SpaceView> }) {
+  const account = useAccount()
+  const { data: items, isLoading } = useRows(store.items)
+  const previous = useRef<Map<string, Item> | null>(null)
+  const latestSpaces = useRef(spaces)
+  latestSpaces.current = spaces
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (isLoading) return
+    const before = previous.current
+    previous.current = new Map(items.map((item) => [item.id, item]))
+    if (!before || !account) return
+    const messages = describeMemberChanges(
+      before,
+      items,
+      account.userId,
+      (item, userId) =>
+        latestSpaces.current
+          .get(item.space_id ?? '')
+          ?.members.find((member) => member.user_id === userId)?.member_name,
+    )
+    if (messages.length > 0) setMessage(announce(messages))
+  }, [items, isLoading, account])
+
+  return (
+    <p role="status" className="sr-only">
+      {message}
+    </p>
+  )
+}
+
 function AppBadge() {
   const { data: items } = useRows(store.items)
   const open = itemsInView(items).filter(

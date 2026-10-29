@@ -40,6 +40,12 @@ test('a viewer joins a shared space by link and sees it read-only', async ({
   )
   await expect(viewer.getByRole('button', { name: /trash/ })).toBeHidden()
 
+  // What another member adds while Ben looks on is announced to his screen reader.
+  await capture(owner, 'Note', 'Bring dessert')
+  await expect(
+    viewer.getByRole('status').filter({ hasText: 'Anna added Bring dessert' }),
+  ).toBeAttached()
+
   await owner.context().close()
   await viewer.context().close()
 })
