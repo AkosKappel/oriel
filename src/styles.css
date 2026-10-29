@@ -167,6 +167,18 @@
     & hr {
       border-color: var(--rule);
     }
+    /* Tables scroll on their own on a phone instead of widening the page. */
+    & table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      border-collapse: collapse;
+    }
+    & :is(th, td) {
+      padding: 0.25em 1em 0.25em 0;
+      border-bottom: 1px solid var(--rule);
+      text-align: start;
+    }
   }
 }
 
