@@ -417,7 +417,10 @@ function Highlight({ text, query }: { text: string; query: string }) {
   for (const [start, end] of ranges) {
     parts.push(text.slice(at, start))
     parts.push(
-      <mark key={start} className="rounded-[2px] bg-primary/15 text-current">
+      <mark
+        key={start}
+        className="bg-transparent text-foreground underline decoration-primary decoration-2 underline-offset-2"
+      >
         {text.slice(start, end)}
       </mark>,
     )
