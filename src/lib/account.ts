@@ -1,6 +1,5 @@
 import { useSyncExternalStore } from 'react'
 import type { Owner } from '#/data/schema'
-import { authClient } from '#/lib/auth-client'
 import { getAccount } from '#/server/account'
 
 /**
@@ -9,7 +8,8 @@ import { getAccount } from '#/server/account'
  * for the server.
  *
  * This module stays light: the local database (`#/data/client`) loads only on the pages that use
- * it, or here when signing in or out. The database module starts sync for this account itself.
+ * it, or here when signing in or out, and Better Auth's client only for account actions. The
+ * database module starts sync for this account itself.
  */
 export type Account = Owner & {
   name: string
@@ -68,6 +68,7 @@ export function useAccount() {
 }
 
 const loadClient = () => import('#/data/client')
+const loadAuth = async () => (await import('#/lib/auth-client')).authClient
 
 export class DifferentAccountError extends Error {
   constructor() {
@@ -87,7 +88,7 @@ export async function completeSignIn() {
   if (!account) throw new Error('The session was not created. Try again.')
   // The device still holds another account's data (its session expired): never mix the two.
   if (current && current.userId !== account.userId) {
-    await authClient.signOut()
+    await (await loadAuth()).signOut()
     throw new DifferentAccountError()
   }
   write(account)
@@ -99,7 +100,7 @@ export async function completeSignIn() {
 
 /** Renames the account; spaces show the new name once it syncs. Returns an error message or null. */
 export async function changeName(name: string) {
-  const { error } = await authClient.updateUser({ name })
+  const { error } = await (await loadAuth()).updateUser({ name })
   if (error) return error.message ?? 'Could not change the name. Try again.'
   if (current) write({ ...current, name })
   return null
@@ -113,7 +114,7 @@ export async function changePassword(
   currentPassword: string,
   newPassword: string,
 ) {
-  const { error } = await authClient.changePassword({
+  const { error } = await (await loadAuth()).changePassword({
     currentPassword,
     newPassword,
     revokeOtherSessions: true,
@@ -141,7 +142,7 @@ export async function signOut() {
   while ((await pendingChanges()) > 0 && Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, 250))
   }
-  await authClient.signOut()
+  await (await loadAuth()).signOut()
   write(null)
   await (await loadClient()).database.disconnectAndClear()
 }
@@ -151,7 +152,7 @@ export async function signOut() {
  * should read when the server refuses (a wrong password, a space that still needs an owner).
  */
 export async function deleteAccount(password: string) {
-  const { error } = await authClient.deleteUser({ password })
+  const { error } = await (await loadAuth()).deleteUser({ password })
   if (error) return error.message ?? 'Could not delete the account. Try again.'
   write(null)
   await (await loadClient()).database.disconnectAndClear()
