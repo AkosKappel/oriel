@@ -32,7 +32,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 
 ## Data layer
 
-- `src/data/schema.ts`: the PowerSync table schema plus Zod schemas for rows and inputs. PowerSync views are schemaless, so adding a column needs no client migration.
+- `src/data/schema.ts`: the PowerSync table schema plus Zod schemas for rows and inputs. PowerSync views are schemaless, so adding a column needs no client migration. Row schemas read leniently (`.catch` on enums, numbers and dates): one row a collection's schema refuses fails the whole batch it loads, and a newer version of the app may sync values an older one does not know. Strictness belongs in the input schemas and the server.
 - `src/data/store.ts`: `createStore(database)` builds the TanStack DB collections and every write operation. Writes validate input, apply optimistically and resolve once stored in SQLite. Writes that span tables use one `createTransaction` with `PowerSyncTransactor`.
 - `src/data/client.ts`: the browser database and store. Routes that read it set `ssr: false`; during server rendering PowerSync only opens a placeholder.
 - `src/data/capture.ts` and `src/data/organize.ts` hold the pure parsing and sorting rules; keep that logic out of components and cover it with unit tests.

@@ -110,17 +110,23 @@ export const itemSchema = z.object({
   id: z.string(),
   space_id: z.string().nullable(),
   created_by: z.string().nullable(),
-  type: z.enum(itemTypes),
+  // A type from a newer version reads as a note (title and text still show): one row that fails
+  // here fails the whole batch the collection loads, so nothing in this schema may refuse a row
+  // over a value it does not know.
+  type: z.enum(itemTypes).catch('note'),
   title: z.string(),
   body: z.string(),
   completed_at: z.string().nullable(),
   // Set by the server to whoever checked it; the client fills it in early for its own checks.
   completed_by: z.string().nullable(),
   pinned_at: z.string().nullable(),
-  // Rows written before the column existed have no value.
-  priority: prioritySchema.nullable().transform((value) => value ?? 0),
-  status: statusSchema,
-  due_on: dueSchema,
+  // Rows written before a column existed have no value, and a newer version of the app may sync
+  // values this one does not know (A-08). Such a row shows the field as unset;
+  // edits write only the columns they change, so the newer value is kept until someone changes it.
+  // Writes are validated by the input schemas, and the server by its own.
+  priority: prioritySchema.catch(0),
+  status: statusSchema.catch(null),
+  due_on: dueSchema.catch(null),
   archived_at: z.string().nullable(),
   // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
   deleted_at: z.string().nullable(),
@@ -195,7 +201,8 @@ export const memberSchema = z.object({
   id: z.string(),
   space_id: z.string(),
   user_id: z.string(),
-  role: z.enum(memberRoles),
+  // A role from a newer version reads as the least one; the server decides what is allowed.
+  role: z.enum(memberRoles).catch('viewer'),
   member_name: z.string(),
 })
 

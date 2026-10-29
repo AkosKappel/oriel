@@ -48,8 +48,9 @@ async function reinsert(tx: Transaction, table: 'items' | 'entries', row: Row) {
  * resolve once they are stored in local SQLite, from where PowerSync will upload them.
  */
 export function createStore(database: CommonPowerSyncDatabase) {
+  // A row the schema refuses stops the whole batch from loading, so the row schemas read leniently.
   const onDeserializationError = (error: unknown) =>
-    console.error('Skipped a row that does not match the schema', error)
+    console.error('A row does not match the schema', error)
 
   const items = createCollection(
     powerSyncCollectionOptions({

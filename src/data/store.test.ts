@@ -183,6 +183,44 @@ describe('organizing items', () => {
   })
 })
 
+// A newer version of the app may sync values this one does not know yet (A-08). Rows stay
+// visible with a safe reading of those values; edits write only the changed columns, so the
+// newer values survive on the server until someone changes that field.
+describe('rows from a newer version', () => {
+  it('shows unknown types, statuses, priorities and due days safely, without losing other rows', async () => {
+    await database.execute(
+      `INSERT INTO items (id, type, title, body, status, priority, due_on, created_at, updated_at)
+       VALUES ('blocked', 'task', 'Blocked', '', 'blocked', 9, 'next week', '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z'),
+              ('board', 'board', 'A board', '', NULL, 0, NULL, '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z'),
+              ('fine', 'note', 'Fine', '', NULL, 0, NULL, '2026-10-01T00:00:00Z', '2026-10-01T00:00:00Z')`,
+    )
+
+    await vi.waitFor(() => expect(store.items.has('fine')).toBe(true))
+    expect(store.items.get('blocked')).toMatchObject({
+      status: null,
+      priority: 0,
+      due_on: null,
+    })
+    // One refused row used to fail the whole batch, hiding "Fine" as well.
+    expect(store.items.get('board')?.type).toBe('note')
+
+    await store.updateItem('blocked', { title: 'Still blocked' })
+    expect(
+      await database.get('SELECT status, priority FROM items WHERE id = ?', [
+        'blocked',
+      ]),
+    ).toEqual({ status: 'blocked', priority: 9 })
+  })
+
+  it('keeps a membership with an unknown role, as a viewer', async () => {
+    await database.execute(
+      `INSERT INTO space_member (id, space_id, user_id, role, member_name)
+       VALUES ('m', 'shared', 'user-1', 'commenter', 'Me')`,
+    )
+    await vi.waitFor(() => expect(store.members.get('m')?.role).toBe('viewer'))
+  })
+})
+
 describe('undo', () => {
   it('restores a deleted list with its entries and ids', async () => {
     const id = await store.createItem({
