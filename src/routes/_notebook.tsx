@@ -5,11 +5,10 @@ import {
   useNavigate,
   useParams,
 } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { z } from 'zod'
 import { AccountLink } from '#/components/account-link'
 import { CaptureBar } from '#/components/capture-bar'
-import { CommandPalette } from '#/components/command-palette'
 import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
 import { SpaceFilter, TaskFilter, TypeFilter } from '#/components/type-filter'
@@ -63,7 +62,7 @@ function Notebook() {
   return (
     <div className="mx-auto max-w-xl px-4 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,26rem)_minmax(0,36rem)] lg:justify-between lg:gap-16 lg:px-8 print:block">
       <AppBadge />
-      <CommandPalette store={store} />
+      <CommandPaletteOnShortcut />
       <div
         className={cn(
           'min-h-dvh flex-col pt-[max(1rem,env(safe-area-inset-top))]',
@@ -160,6 +159,37 @@ function Notebook() {
         <Outlet />
       </div>
     </div>
+  )
+}
+
+// Loaded on the first Ctrl+K, so home does not carry it (the menu and autocomplete code).
+const CommandPalette = lazy(() =>
+  import('#/components/command-palette').then((module) => ({
+    default: module.CommandPalette,
+  })),
+)
+
+/** Ctrl+K (⌘K) opens the command palette from anywhere on these pages, also from a text field. */
+function CommandPaletteOnShortcut() {
+  const [isOpen, setOpen] = useState(false)
+  const [wanted, setWanted] = useState(false)
+  useEffect(() => {
+    function open(event: KeyboardEvent) {
+      if (event.key.toLowerCase() !== 'k') return
+      if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey)
+        return
+      event.preventDefault()
+      setWanted(true)
+      setOpen(true)
+    }
+    window.addEventListener('keydown', open)
+    return () => window.removeEventListener('keydown', open)
+  }, [])
+  if (!wanted) return null
+  return (
+    <Suspense fallback={null}>
+      <CommandPalette store={store} isOpen={isOpen} onOpenChange={setOpen} />
+    </Suspense>
   )
 }
 

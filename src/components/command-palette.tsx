@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Autocomplete,
   Dialog,
@@ -34,30 +34,24 @@ function focusCapture() {
 }
 
 /**
- * Ctrl+K (⌘K on a Mac) on home and the item page: jump to any note, list or task by typing part of
+ * Opened with Ctrl+K (⌘K on a Mac) on home and the item page, loaded on first use: jump to any note, list or task by typing part of
  * it, or run a command (new item, filters, archive, settings) without the mouse. Matches like
  * search, ignoring case and accents; with nothing typed it offers the most recently changed items.
  */
-export function CommandPalette({ store }: { store: Store }) {
-  const [isOpen, setOpen] = useState(false)
+export function CommandPalette({
+  store,
+  isOpen,
+  onOpenChange: setOpen,
+}: {
+  store: Store
+  isOpen: boolean
+  onOpenChange: (isOpen: boolean) => void
+}) {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
   const account = useAccount()
   const { data: items } = useRows(store.items)
   const { data: entries } = useRows(store.entries)
-
-  useEffect(() => {
-    function open(event: KeyboardEvent) {
-      if (event.key.toLowerCase() !== 'k') return
-      if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey)
-        return
-      event.preventDefault()
-      setQuery('')
-      setOpen(true)
-    }
-    window.addEventListener('keydown', open)
-    return () => window.removeEventListener('keydown', open)
-  }, [])
 
   const newItem = (type: ItemType) => () => {
     void navigate({ to: '/', search: { type } }).then(focusCapture)
@@ -116,6 +110,7 @@ export function CommandPalette({ store }: { store: Store }) {
 
   function run(key: string) {
     setOpen(false)
+    setQuery('')
     const command = commands.find((candidate) => candidate.id === key)
     if (command) command.run()
     else void navigate({ to: '/items/$itemId', params: { itemId: key } })
@@ -127,7 +122,10 @@ export function CommandPalette({ store }: { store: Store }) {
   return (
     <ModalOverlay
       isOpen={isOpen}
-      onOpenChange={setOpen}
+      onOpenChange={(open) => {
+        setOpen(open)
+        if (!open) setQuery('')
+      }}
       isDismissable
       className="fixed inset-0 z-50 bg-foreground/20 p-4"
     >
