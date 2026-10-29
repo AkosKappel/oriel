@@ -1,5 +1,11 @@
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router'
-import { type FormEvent, type ReactNode, useEffect, useState } from 'react'
+import {
+  type FormEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 import {
   Button,
   Dialog,
@@ -22,6 +28,7 @@ import {
 } from '#/lib/account'
 import { useOnline } from '#/lib/online'
 import { describeSync, useSyncStatus } from '#/lib/sync-status'
+import { getDevices, signOutOtherDevice } from '#/server/account'
 
 export const Route = createFileRoute('/account')({
   ssr: false,
@@ -30,6 +37,12 @@ export const Route = createFileRoute('/account')({
 
 const quietButton =
   'h-11 rounded-sm px-4 text-sm transition-colors data-focus-visible:outline-2 data-focus-visible:outline-offset-2 motion-reduce:transition-none'
+
+const dayFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+})
 
 const timeFormat = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
@@ -103,6 +116,8 @@ function AccountPage() {
         Spaces and sharing
       </Link>
 
+      {!account.needsSignIn && <Devices />}
+
       <div className="flex flex-col">
         <ChangeName name={account.name} />
         <ChangePassword />
@@ -110,6 +125,76 @@ function AccountPage() {
         <DeleteAccount />
       </div>
     </SubPage>
+  )
+}
+
+type Device = Awaited<ReturnType<typeof getDevices>>[number]
+
+function Devices() {
+  const online = useOnline()
+  const [devices, setDevices] = useState<Device[] | null>(null)
+
+  const refresh = useCallback(() => {
+    getDevices().then(setDevices, (error) => {
+      console.error('Could not load devices', error)
+      setDevices(null)
+    })
+  }, [])
+  useEffect(() => {
+    if (online) refresh()
+  }, [online, refresh])
+
+  async function signOutDevice(device: Device) {
+    try {
+      await signOutOtherDevice({ data: { sessionId: device.id } })
+      toast(`${device.device} is signed out. It stops syncing within minutes.`)
+    } catch (error) {
+      console.error('Could not sign out the device', error)
+      toast('Could not sign out that device. Try again.')
+    }
+    refresh()
+  }
+
+  return (
+    <section aria-labelledby="devices" className="flex flex-col gap-1">
+      <h2 id="devices" className="text-xs text-muted-foreground">
+        Signed-in devices
+      </h2>
+      {!online ? (
+        <p className="text-sm text-muted-foreground">
+          Connect to see your devices.
+        </p>
+      ) : devices === null ? (
+        <p className="text-sm text-muted-foreground">Loading</p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {devices.map((device) => (
+            <li
+              key={device.id}
+              className="flex min-h-11 items-center justify-between gap-3"
+            >
+              <span className="flex flex-col">
+                <span className="font-serif text-lg">{device.device}</span>
+                <span className="text-sm text-muted-foreground">
+                  {device.current
+                    ? 'This device'
+                    : `Signed in ${dayFormat.format(new Date(device.signedInAt))}`}
+                </span>
+              </span>
+              {!device.current && (
+                <Button
+                  onPress={() => void signOutDevice(device)}
+                  aria-label={`Sign out ${device.device}, signed in ${dayFormat.format(new Date(device.signedInAt))}`}
+                  className={`${quietButton} -mr-4 text-muted-foreground hover:text-foreground`}
+                >
+                  Sign out
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 
