@@ -42,11 +42,13 @@ function readStoredType(): ItemType {
   }
 }
 
+/** Typing there, or in a dialog (whose search re-sends keys to its list), keeps the letters. */
 function isEditable(target: EventTarget | null) {
   return (
     target instanceof HTMLElement &&
     (target.isContentEditable ||
-      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+      target.closest('[role="dialog"]') !== null)
   )
 }
 

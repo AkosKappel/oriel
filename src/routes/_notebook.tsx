@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { AccountLink } from '#/components/account-link'
 import { CaptureBar } from '#/components/capture-bar'
+import { CommandPalette } from '#/components/command-palette'
 import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
 import { SpaceFilter, TaskFilter, TypeFilter } from '#/components/type-filter'
@@ -62,6 +63,7 @@ function Notebook() {
   return (
     <div className="mx-auto max-w-xl px-4 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,26rem)_minmax(0,36rem)] lg:justify-between lg:gap-16 lg:px-8 print:block">
       <AppBadge />
+      <CommandPalette store={store} />
       <div
         className={cn(
           'min-h-dvh flex-col pt-[max(1rem,env(safe-area-inset-top))]',
@@ -164,7 +166,7 @@ function Notebook() {
 /**
  * j and k open the next and previous item in the list, like in mail apps, and move the focus
  * there. Only rows on screen count: not the folded completed tasks, and nothing on a phone
- * while an item covers the list. Text fields keep the letters.
+ * while an item covers the list. Text fields and dialogs keep the letters.
  */
 function useNextAndPreviousKeys() {
   useEffect(() => {
@@ -172,7 +174,12 @@ function useNextAndPreviousKeys() {
       if (event.key !== 'j' && event.key !== 'k') return
       if (event.ctrlKey || event.metaKey || event.altKey) return
       const target = event.target as HTMLElement
-      if (target.closest('input, textarea, select, [contenteditable="true"]'))
+      // Dialogs keep them too: the command palette's search re-sends keys to its list.
+      if (
+        target.closest(
+          'input, textarea, select, [contenteditable="true"], [role="dialog"]',
+        )
+      )
         return
       const links = [
         ...document.querySelectorAll<HTMLAnchorElement>('[data-item-link]'),

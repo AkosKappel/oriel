@@ -53,7 +53,7 @@ afterEach(async () => {
   })
 })
 
-/** Renders a component inside a router (for links) with the toaster (for Undo). */
+/** Renders a component inside a router (for links, returned for navigation) with the toaster. */
 export function renderPage(ui: ReactNode) {
   const router = createRouter({
     routeTree: createRootRoute({
@@ -66,7 +66,7 @@ export function renderPage(ui: ReactNode) {
     }),
     history: createMemoryHistory(),
   })
-  return render(<RouterProvider router={router} />)
+  return { ...render(<RouterProvider router={router} />), router }
 }
 
 /** The Undo button of the toast with this message, so an older toast's Undo is never clicked. */
