@@ -16,6 +16,7 @@ npm only (`package-lock.json`).
 | `npm run build`       | Production build into `.output/`                    |
 | `npm run db:generate` | Migration from changes in `src/server/db/schema.ts` |
 | `npm run db:migrate`  | Apply migrations (`docker compose up -d db` first)  |
+| `npm run db:seed`     | Demo accounts and data (`scripts/seed.ts`, `--big`) |
 
 Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same.
 
