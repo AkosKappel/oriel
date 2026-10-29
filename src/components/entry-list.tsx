@@ -95,7 +95,7 @@ export function EntryList({
               : `${open} of ${total} left`}
         </p>
         {checked > 0 && !readOnly && (
-          <div className="-mr-2 flex">
+          <div className="-mr-2 flex print:hidden">
             <Button onPress={() => void uncheckAll()} className={listAction}>
               Uncheck all
             </Button>
@@ -218,7 +218,7 @@ function EntryRow({
 }
 
 const rowAction =
-  'grid size-11 shrink-0 place-items-center rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100'
+  'grid size-11 shrink-0 place-items-center rounded-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-visible:opacity-100 print:hidden'
 
 /**
  * Drag to move an entry; with the keyboard, focus the handle and use the arrow keys. A plain
@@ -326,7 +326,7 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="relative flex items-center">
+    <form onSubmit={submit} className="relative flex items-center print:hidden">
       <span className="absolute -left-[2.375rem] grid size-11 place-items-center text-faint">
         <Plus aria-hidden className="size-4" />
       </span>

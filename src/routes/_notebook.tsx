@@ -60,12 +60,13 @@ function Notebook() {
   if (storageFailed) return <StorageProblem />
 
   return (
-    <div className="mx-auto max-w-xl px-4 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,26rem)_minmax(0,36rem)] lg:justify-between lg:gap-16 lg:px-8">
+    <div className="mx-auto max-w-xl px-4 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,26rem)_minmax(0,36rem)] lg:justify-between lg:gap-16 lg:px-8 print:block">
       <AppBadge />
       <div
         className={cn(
           'min-h-dvh flex-col pt-[max(1rem,env(safe-area-inset-top))]',
-          itemOpen ? 'hidden lg:flex' : 'flex',
+          // A printed item leaves the list off the page.
+          itemOpen ? 'hidden lg:flex print:hidden' : 'flex',
         )}
       >
         {/* The left margin holds task checkboxes, so every title starts on the same line. */}
@@ -150,7 +151,7 @@ function Notebook() {
       <div
         role={itemRole}
         className={cn(
-          'min-h-dvh flex-col pt-[max(0.5rem,env(safe-area-inset-top))] lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:pt-6',
+          'min-h-dvh flex-col pt-[max(0.5rem,env(safe-area-inset-top))] lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:pt-6 print:static print:h-auto print:overflow-visible',
           itemOpen ? 'flex' : 'hidden lg:flex',
         )}
       >

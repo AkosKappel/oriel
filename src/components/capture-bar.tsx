@@ -232,7 +232,7 @@ export function CaptureBar({
       ref={formRef}
       onSubmit={submit}
       aria-label="Capture"
-      className="sticky bottom-0 -mx-4 flex flex-col bg-background pt-2 pr-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-14"
+      className="sticky bottom-0 -mx-4 flex flex-col bg-background pt-2 pr-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-14 print:hidden"
     >
       <div
         // Capture phase: React Aria stops pointer events from bubbling out of the radios.

@@ -181,7 +181,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
 
   return (
     <article className="flex flex-col pb-10">
-      <header className="-ml-3 flex items-center justify-between pt-2 pb-6">
+      <header className="-ml-3 flex items-center justify-between pt-2 pb-6 print:hidden">
         <Link
           to="/"
           search={true}
@@ -354,7 +354,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             {item.due_on && editable && (
               <Button
                 onPress={() => void store.setItemDue(item.id, null)}
-                className="rounded-sm py-2 text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
+                className="rounded-sm py-2 text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
               >
                 No date
               </Button>
@@ -381,7 +381,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         {editable && item.type !== 'task' && (
           <Button
             onPress={() => void convert()}
-            className="mt-6 -ml-2 block rounded-sm px-2 py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
+            className="mt-6 -ml-2 block rounded-sm px-2 py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
           >
             {item.type === 'note' ? 'Turn into a list' : 'Turn into a note'}
           </Button>
@@ -397,7 +397,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             }))}
             value={item.space_id}
             onChange={(spaceId) => void move(spaceId)}
-            className="mt-8"
+            className="mt-8 print:hidden"
           />
         )}
       </div>
@@ -524,7 +524,7 @@ function BodyField({
         {!readOnly && (
           <Button
             onPress={() => setEditing(true)}
-            className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
+            className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
           >
             Edit {label.toLowerCase()}
           </Button>

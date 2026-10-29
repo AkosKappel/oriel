@@ -51,6 +51,18 @@
   color-scheme: dark;
 }
 
+/* Paper prints as paper, whatever the theme on screen. */
+@media print {
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+  }
+
+  [data-sonner-toaster] {
+    display: none;
+  }
+}
+
 @theme inline {
   --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Newsreader Variable", ui-serif, Georgia, serif;
