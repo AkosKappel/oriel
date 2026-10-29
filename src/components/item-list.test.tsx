@@ -100,6 +100,12 @@ describe('ItemList pages', () => {
     await user.click(screen.getByRole('button', { name: 'Show 5 more' }))
     expect(screen.getAllByRole('listitem')).toHaveLength(rowsPerPage + 5)
     expect(screen.queryByRole('button', { name: /more/ })).toBeNull()
+    // The button is gone; focus is on the first row it revealed.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('link', { name: `Note ${rowsPerPage + 1}` }),
+      ),
+    )
   })
 })
 

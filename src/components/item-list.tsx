@@ -272,17 +272,28 @@ export const rowsPerPage = 100
 
 function Rows({ items, ...context }: RowContext & { items: Item[] }) {
   const [limit, setLimit] = useState(rowsPerPage)
+  const list = useRef<HTMLUListElement>(null)
   const hidden = items.length - limit
+
+  // Focus goes to the first new row: the button may disappear, and the place in the list stays.
+  function showMore() {
+    const first = limit
+    setLimit(limit + rowsPerPage)
+    requestAnimationFrame(() =>
+      list.current?.children[first]?.querySelector('a')?.focus(),
+    )
+  }
+
   return (
     <>
-      <ul>
+      <ul ref={list}>
         {items.slice(0, limit).map((item) => (
           <ItemRow key={item.id} item={item} {...context} />
         ))}
       </ul>
       {hidden > 0 && (
         <Button
-          onPress={() => setLimit(limit + rowsPerPage)}
+          onPress={showMore}
           className="flex h-11 w-fit items-center rounded-sm text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
         >
           Show {Math.min(hidden, rowsPerPage)} more
