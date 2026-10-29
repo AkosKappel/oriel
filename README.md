@@ -88,7 +88,7 @@ flowchart LR
 - **Security headers:** pages carry a Content-Security-Policy with a fresh nonce per request (scripts only with the nonce, `wasm-unsafe-eval` for SQLite, connections only to the app and the sync service); every response carries HSTS, `nosniff`, a same-origin referrer policy and no framing. Sign-in, sign-up and account deletion are rate-limited per visitor, sync uploads and tokens per user.
 - **Errors** that crash a screen or stop the local database from opening are sent to the server's log (`/api/client-error`, rate-limited, no third-party tracking).
 
-Why it is built this way (PowerSync, the upload checks, the conflict rules, the hosting): [decision records](docs/decisions/).
+Why it is built this way (PowerSync, the upload checks, the conflict rules, the hosting, browser storage): [decision records](docs/decisions/).
 
 ## Getting started
 
