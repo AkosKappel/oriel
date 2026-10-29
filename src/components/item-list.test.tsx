@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { store } from '#/test/client'
 import { findUndo, renderPage } from '#/test/dom'
-import { ItemList } from './item-list'
+import { ItemList, rowsPerPage } from './item-list'
 
 vi.mock('#/data/client', () => import('#/test/client'))
 
@@ -64,5 +64,41 @@ describe('ItemList swipes', () => {
       deleted_at: null,
       archived_at: null,
     })
+  })
+})
+
+describe('ItemList pages', () => {
+  it('shows a page of rows and the rest on request', async () => {
+    const user = userEvent.setup()
+    await store.importItems(
+      Array.from({ length: rowsPerPage + 5 }, (_, n) => ({
+        id: crypto.randomUUID(),
+        space_id: null,
+        created_by: null,
+        type: 'note' as const,
+        title: `Note ${n + 1}`,
+        body: '',
+        completed_at: null,
+        completed_by: null,
+        pinned_at: null,
+        priority: 0 as const,
+        status: null,
+        due_on: null,
+        archived_at: null,
+        deleted_at: null,
+        deleted_by: null,
+        created_at: new Date(Date.now() - n * 1000).toISOString(),
+        updated_at: new Date().toISOString(),
+        entries: [],
+      })),
+    )
+    renderPage(<ItemList store={store} spaces={new Map()} />)
+
+    await screen.findByRole('link', { name: 'Note 1' })
+    expect(screen.getAllByRole('listitem')).toHaveLength(rowsPerPage)
+
+    await user.click(screen.getByRole('button', { name: 'Show 5 more' }))
+    expect(screen.getAllByRole('listitem')).toHaveLength(rowsPerPage + 5)
+    expect(screen.queryByRole('button', { name: /more/ })).toBeNull()
   })
 })
