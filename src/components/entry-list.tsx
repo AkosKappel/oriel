@@ -5,7 +5,9 @@ import {
   type FormEvent,
   type KeyboardEvent,
   type PointerEvent,
+  useEffect,
   useId,
+  useRef,
   useState,
 } from 'react'
 import { Button } from 'react-aria-components'
@@ -38,7 +40,7 @@ export function EntryList({
   /** The name to show beside an entry someone else checked. */
   checkedBy?: (userId: string | null) => string | undefined
 }) {
-  const { data } = useLiveQuery({
+  const { data, isReady } = useLiveQuery({
     query: (q) =>
       q
         .from({ entry: store.entries })
@@ -50,6 +52,16 @@ export function EntryList({
   // Only open entries can be moved; checked ones keep the order they were checked in.
   const openEntries = entries.filter((entry) => !entry.completed_at)
   const [announcement, setAnnouncement] = useState('')
+
+  // Entries there when the list first loaded; any other entry was just added, here or by another
+  // member, and slides in. Opening a list therefore shows it still.
+  const seen = useRef<Set<string> | null>(null)
+  if (isReady && !seen.current) {
+    seen.current = new Set(entries.map((entry) => entry.id))
+  }
+  useEffect(() => {
+    for (const entry of entries) seen.current?.add(entry.id)
+  })
 
   async function move(from: number, to: number) {
     const entry = openEntries[from]
@@ -114,6 +126,7 @@ export function EntryList({
             key={`${entry.id}:${entry.text}`}
             store={store}
             entry={entry}
+            added={seen.current !== null && !seen.current.has(entry.id)}
             readOnly={readOnly}
             movable={!readOnly && !entry.completed_at && openEntries.length > 1}
             onMove={(to) => void move(openEntries.indexOf(entry), to)}
@@ -131,6 +144,7 @@ export function EntryList({
 function EntryRow({
   store,
   entry,
+  added,
   readOnly,
   movable,
   onMove,
@@ -138,6 +152,8 @@ function EntryRow({
 }: {
   store: Store
   entry: Entry
+  /** Just added: plays the entrance once, kept when the row re-renders. */
+  added: boolean
   readOnly: boolean
   movable: boolean
   /** Moves this entry to an index among the open entries. */
@@ -145,6 +161,7 @@ function EntryRow({
   checker?: string
 }) {
   const done = entry.completed_at !== null
+  const [entering] = useState(added)
 
   async function remove() {
     await store.deleteEntry(entry.id)
@@ -167,7 +184,12 @@ function EntryRow({
   }
 
   return (
-    <li className="group relative flex items-center bg-background data-dragging:z-10 data-dragging:shadow-sm">
+    <li
+      className={cn(
+        'group relative flex items-center bg-background data-dragging:z-10 data-dragging:shadow-sm',
+        entering && 'motion-safe:animate-[entry-in_180ms_ease-out]',
+      )}
+    >
       <Checkbox
         className="absolute -left-[2.375rem]"
         isSelected={done}

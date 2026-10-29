@@ -105,6 +105,25 @@ describe('EntryList', () => {
     await waitFor(() => expect(texts()).toHaveLength(3))
   })
 
+  it('slides in entries added after the list opened, not the ones already there', async () => {
+    const user = userEvent.setup()
+    await renderList(['Milk'])
+    const row = (text: string) =>
+      screen
+        .getAllByRole('textbox', { name: 'Item text' })
+        .find((field) => (field as HTMLInputElement).value === text)
+        ?.closest('li')
+
+    await user.type(
+      screen.getByRole('combobox', { name: 'Add an item' }),
+      'Eggs{Enter}',
+    )
+    await waitFor(() => expect(texts()).toEqual(['Milk', 'Eggs']))
+
+    expect(row('Milk')?.className).not.toContain('entry-in')
+    expect(row('Eggs')?.className).toContain('entry-in')
+  })
+
   it('offers no changes when read-only', async () => {
     await renderList(['Milk'], true)
 

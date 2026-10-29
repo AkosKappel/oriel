@@ -188,6 +188,14 @@
   }
 }
 
+/* A list entry that was just added (src/components/entry-list.tsx). */
+@keyframes entry-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.375rem);
+  }
+}
+
 /* Page changes crossfade (see `defaultViewTransition` in src/router.tsx); no motion when reduced. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
