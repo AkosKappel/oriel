@@ -8,6 +8,7 @@ import {
   countEntries,
   type DueFilter,
   itemsInView,
+  matchRanges,
   organizeItems,
   previewLine,
   searchItems,
@@ -137,6 +138,7 @@ export function ItemList({
             counts={counts}
             spaces={spaces}
             showSpace={!spaceId}
+            query={query}
           />
         </Section>
       )}
@@ -148,6 +150,7 @@ export function ItemList({
             counts={counts}
             spaces={spaces}
             showSpace={!spaceId}
+            query={query}
           />
         </Section>
       )}
@@ -165,6 +168,7 @@ export function ItemList({
             counts={counts}
             spaces={spaces}
             showSpace={!spaceId}
+            query={query}
           />
         </details>
       )}
@@ -235,7 +239,7 @@ function PastItems({
               : 'Archive finished lists and old notes to keep them out of the way.'}
         </p>
       ) : (
-        <Rows items={items} {...context} />
+        <Rows items={items} query={query} {...context} />
       )}
     </section>
   )
@@ -256,6 +260,8 @@ type RowContext = {
   spaces: Map<string, SpaceView>
   /** Name the space of shared items, when not already filtered to one space. */
   showSpace: boolean
+  /** Search words to highlight in titles and previews. */
+  query?: string
 }
 
 /**
@@ -296,6 +302,7 @@ function ItemRow({
   counts,
   spaces,
   showSpace,
+  query = '',
 }: RowContext & { item: Item }) {
   const done = item.completed_at !== null
   const space = item.space_id ? spaces.get(item.space_id) : undefined
@@ -378,16 +385,35 @@ function ItemRow({
             done && 'text-muted-foreground line-through decoration-1',
           )}
         >
-          {item.title}
+          <Highlight text={item.title} query={query} />
         </span>
         {detail && (
           <span className="truncate text-sm text-muted-foreground">
-            {detail}
+            <Highlight text={detail} query={query} />
           </span>
         )}
       </Link>
     </SwipeRow>
   )
+}
+
+/** Text with the words of a search marked. */
+function Highlight({ text, query }: { text: string; query: string }) {
+  const ranges = matchRanges(text, query)
+  if (ranges.length === 0) return text
+  const parts: ReactNode[] = []
+  let at = 0
+  for (const [start, end] of ranges) {
+    parts.push(text.slice(at, start))
+    parts.push(
+      <mark key={start} className="rounded-[2px] bg-primary/15 text-current">
+        {text.slice(start, end)}
+      </mark>,
+    )
+    at = end
+  }
+  parts.push(text.slice(at))
+  return parts
 }
 
 type SwipeAction = { label: string; run: () => Promise<void> }

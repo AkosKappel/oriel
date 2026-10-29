@@ -163,6 +163,46 @@ export const fold = (text: string) =>
     .toLowerCase()
 
 /**
+ * Where the words of a search query appear in a text, as `[start, end)` positions in the original
+ * text, sorted and merged, for highlighting. Matches like `searchItems`: case and accents ignored.
+ */
+export function matchRanges(text: string, query: string): [number, number][] {
+  const words = fold(query).split(/\s+/).filter(Boolean)
+  if (words.length === 0) return []
+
+  // The folded text, and for each folded character the original character it came from.
+  let folded = ''
+  const origin: number[] = []
+  for (let index = 0; index < text.length; ) {
+    const character = String.fromCodePoint(text.codePointAt(index) ?? 0)
+    for (const _ of fold(character)) origin.push(index)
+    folded += fold(character)
+    index += character.length
+  }
+  // A match ends where the next folded character starts, so trailing combining marks stay in it.
+  const endOf = (foldedEnd: number) => origin[foldedEnd] ?? text.length
+
+  const ranges: [number, number][] = []
+  for (const word of words) {
+    for (
+      let at = folded.indexOf(word);
+      at !== -1;
+      at = folded.indexOf(word, at + 1)
+    ) {
+      ranges.push([origin[at], endOf(at + word.length)])
+    }
+  }
+  ranges.sort((a, b) => a[0] - b[0])
+  const merged: [number, number][] = []
+  for (const range of ranges) {
+    const last = merged.at(-1)
+    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1])
+    else merged.push(range)
+  }
+  return merged
+}
+
+/**
  * Items whose title, text or list entries contain every word of the query, in any order. An empty
  * query keeps everything.
  */

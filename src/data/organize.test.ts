@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   countEntries,
   itemsInView,
+  matchRanges,
   organizeItems,
   positionForMove,
   previewLine,
@@ -325,5 +326,32 @@ describe('due dates', () => {
 
   it('keeps everything without a filter', () => {
     expect(withDue(items, undefined, today)).toBe(items)
+  })
+})
+
+describe('matchRanges', () => {
+  const marked = (text: string, query: string) =>
+    matchRanges(text, query).map(([start, end]) => text.slice(start, end))
+
+  it('finds every word of the query, ignoring case and accents', () => {
+    expect(marked('Árvíztűrő tükörfúrógép', 'arvizturo TUKOR')).toEqual([
+      'Árvíztűrő',
+      'tükör',
+    ])
+    // Inside words too, like search: "then" contains "the".
+    expect(marked('Call the dentist, then the vet', 'the')).toEqual([
+      'the',
+      'the',
+      'the',
+    ])
+  })
+
+  it('keeps a combining accent inside the match', () => {
+    expect(marked('cafe\u0301 au lait', 'cafe')).toEqual(['cafe\u0301'])
+  })
+
+  it('merges overlapping words and ignores an empty query', () => {
+    expect(matchRanges('bookshelf', 'book shelf ks')).toEqual([[0, 9]])
+    expect(matchRanges('anything', '  ')).toEqual([])
   })
 })

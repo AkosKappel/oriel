@@ -102,3 +102,15 @@ describe('ItemList pages', () => {
     expect(screen.queryByRole('button', { name: /more/ })).toBeNull()
   })
 })
+
+describe('ItemList search', () => {
+  it('marks the searched words in matching titles', async () => {
+    await store.createItem({ type: 'note', title: 'Kávé és croissant' })
+    await store.createItem({ type: 'note', title: 'Tea' })
+    renderPage(<ItemList store={store} spaces={new Map()} query="kave" />)
+
+    const row = await screen.findByRole('link', { name: 'Kávé és croissant' })
+    expect(row.querySelector('mark')?.textContent).toBe('Kávé')
+    expect(screen.queryByRole('link', { name: 'Tea' })).toBeNull()
+  })
+})
