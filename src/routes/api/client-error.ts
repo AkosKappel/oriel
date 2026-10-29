@@ -34,10 +34,13 @@ export const Route = createFileRoute('/api/client-error')({
             .catch(() => null),
         )
         if (report.success) {
-          console.error('Client error', {
-            ...report.data,
-            userAgent: request.headers.get('user-agent')?.slice(0, 300),
-          })
+          // One JSON line, like the request log.
+          console.error(
+            JSON.stringify({
+              clientError: report.data,
+              userAgent: request.headers.get('user-agent')?.slice(0, 300),
+            }),
+          )
         }
         return new Response(null, { status: 204 })
       },
