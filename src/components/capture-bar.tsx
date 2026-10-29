@@ -249,6 +249,7 @@ export function CaptureBar({
       </div>
       <div className="flex items-end gap-3 border-b-[1.5px] border-foreground/25 focus-within:border-foreground has-aria-invalid:border-destructive">
         <textarea
+          dir="auto"
           ref={fieldRef}
           value={text}
           onChange={(event) => {

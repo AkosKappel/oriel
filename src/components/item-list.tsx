@@ -354,6 +354,7 @@ function ItemRow({
         className="group flex min-h-12 flex-col justify-center rounded-sm py-2.5 focus-visible:outline-2 focus-visible:outline-offset-4"
       >
         <span
+          dir="auto"
           className={cn(
             'truncate font-serif text-[1.1875rem] leading-snug decoration-1 underline-offset-4 group-data-[status=active]:underline',
             done && 'text-muted-foreground line-through decoration-1',

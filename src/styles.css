@@ -112,6 +112,11 @@
     line-height: 1.625;
     overflow-wrap: anywhere;
 
+    /* Each paragraph takes its direction from its own text, so Arabic or Hebrew lines read right to left. */
+    & :is(p, li, h1, h2, h3, h4, h5, h6, blockquote) {
+      unicode-bidi: plaintext;
+    }
+
     & > * + * {
       margin-top: 0.75em;
     }

@@ -178,6 +178,7 @@ function EntryRow({
         aria-label={`Check ${entry.text}`}
       />
       <input
+        dir="auto"
         defaultValue={entry.text}
         readOnly={readOnly}
         aria-label="Item text"

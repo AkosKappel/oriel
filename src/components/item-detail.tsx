@@ -429,6 +429,7 @@ function TitleField({
       // Remounts when the title changes elsewhere (another tab), so it never shows stale text.
       key={item.title}
       defaultValue={item.title}
+      dir="auto"
       readOnly={readOnly}
       aria-label="Title"
       rows={1}
@@ -536,6 +537,7 @@ function BodyField({
   return (
     <div className="flex flex-col gap-1">
       <textarea
+        dir="auto"
         value={body}
         readOnly={readOnly}
         ref={textarea}
