@@ -102,11 +102,10 @@ docker compose up -d db
 npm run db:migrate
 ./scripts/setup-powersync-db.sh
 docker compose up -d powersync
-npm run db:seed         # optional: demo accounts (see below)
 npm run dev
 ```
 
-`npm run db:seed` creates three demo accounts with the password `demo-password`: `anna@example.com` (every kind of note, list and task, owner of the shared "Home" space), `ben@example.com` (editor in Home) and `cleo@example.com` (viewer, empty personal space). Add `-- --big` for 2,000 more items. It deletes and recreates those accounts each time; never run it against production.
+For sample data, run `npm run samples` and load the written `oriel-samples.json` with Settings → Import a JSON export, signed in or not. It covers edge cases: very short and very long text, punctuation, Markdown and HTML, emoji, diacritics, other scripts including right to left, and every item state. Add `-- --big` for 2,000 more plain items.
 
 The app runs at http://localhost:3000 and the PowerSync Service at http://localhost:8086. Without the database the app still works fully on the device; accounts and sync need both services.
 
@@ -135,7 +134,7 @@ The production stack (app, PostgreSQL, PowerSync, nginx, nightly backups and a T
 | `npm run test:e2e`    | Run the end-to-end tests (Playwright)  |
 | `npm run db:generate` | Create a migration from schema changes |
 | `npm run db:migrate`  | Apply migrations                       |
-| `npm run db:seed`     | Demo accounts and sample data          |
+| `npm run samples`     | Write sample data to import            |
 
 ## License
 
