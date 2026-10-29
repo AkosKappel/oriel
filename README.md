@@ -1,12 +1,20 @@
 # Oriel
 
+[![CI](https://github.com/AkosKappel/oriel/actions/workflows/ci.yml/badge.svg)](https://github.com/AkosKappel/oriel/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Author: **Ákos Kappel**
 
 One calm place for the everyday things you don't want to forget: notes, shopping lists, tasks and quick thoughts, alone or shared with the people you live with. Built mobile-first and offline-first, so it opens instantly and keeps working without a connection.
 
-**Status:** early development. Capture, editing and organization of notes, lists and tasks work fully offline: data lives in a local SQLite database and the app installs as a PWA. Sign-in and sync come next.
+**Status:** in active development, self-hosted on a home server. Notes, lists and tasks work fully offline in a local SQLite database, and the app installs as a PWA. An optional account adds sync between devices and spaces shared with others.
+
+<p>
+  <img src="docs/screenshots/mobile-home.png" alt="Home on a phone: a pinned grocery list, tasks with due days and priorities, and the capture field at the bottom" width="260">
+  <img src="docs/screenshots/mobile-list.png" alt="A grocery list on a phone with open and checked entries" width="260">
+</p>
+
+![The desktop layout in dark mode: the list on the left and a Markdown note open beside it](docs/screenshots/desktop-dark.png)
 
 ## Principles
 
