@@ -8,12 +8,14 @@ describe('contentSecurityPolicy', () => {
       "script-src 'self' 'nonce-abc123' 'wasm-unsafe-eval'",
     )
     expect(policy).toContain(
-      "connect-src 'self' https://sync.example.com wss://sync.example.com",
+      "connect-src 'self' https://sync.example.com wss://sync.example.com https://world.openfoodfacts.org",
     )
     expect(policy).not.toContain("script-src 'self' 'unsafe-inline'")
   })
 
-  it('connects only to its own origin without a sync service', () => {
-    expect(contentSecurityPolicy('n')).toContain("connect-src 'self';")
+  it('connects only to its own origin and Open Food Facts without a sync service', () => {
+    expect(contentSecurityPolicy('n')).toContain(
+      "connect-src 'self' https://world.openfoodfacts.org;",
+    )
   })
 })

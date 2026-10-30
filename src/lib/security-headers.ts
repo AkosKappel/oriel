@@ -1,3 +1,5 @@
+import { openFoodFactsOrigin } from './products'
+
 /**
  * Headers for every response (static files, API and pages), set through Nitro route rules in
  * vite.config.ts. The pages' Content-Security-Policy needs a nonce per request, so it is set by
@@ -12,7 +14,7 @@ export const securityHeaders = {
   'X-Frame-Options': 'DENY',
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Permissions-Policy':
-    'camera=(), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()',
+    'camera=(self), microphone=(self), geolocation=(), payment=(), usb=(), interest-cohort=()',
 }
 
 /**
@@ -20,7 +22,7 @@ export const securityHeaders = {
  * and the theme script) and `wasm-unsafe-eval` to compile SQLite's WebAssembly; workers run
  * PowerSync's database and the service worker; the sync service may live on its own origin.
  * Styles allow inline because the toast library and React set style attributes; scripts are what
- * the policy is for.
+ * the policy is for. Open Food Facts names scanned products.
  */
 export function contentSecurityPolicy(nonce: string, powerSyncUrl?: string) {
   const sync = powerSyncUrl ? new URL(powerSyncUrl) : null
@@ -36,7 +38,7 @@ export function contentSecurityPolicy(nonce: string, powerSyncUrl?: string) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self'",
-    ["connect-src 'self'", ...syncOrigins].join(' '),
+    ["connect-src 'self'", ...syncOrigins, openFoodFactsOrigin].join(' '),
     "worker-src 'self' blob:",
     "manifest-src 'self'",
     "object-src 'none'",

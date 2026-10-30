@@ -113,10 +113,16 @@ function Privacy() {
             recipient’s address and the email’s content, and for invites your
             name and email address as the reply-to address.
           </li>
+          <li>
+            <strong>Open Food Facts</strong> (a non-profit in France) looks up
+            the name of a product when you scan its barcode into a list. Only
+            then does your browser contact it, sending the barcode number and,
+            like any web request, your IP address.
+          </li>
         </ul>
         <p>
-          Both companies are based in the United States, so this data may be
-          processed there. No other services receive your data.
+          Tailscale and Resend are based in the United States, so their data may
+          be processed there. No other services receive your data.
         </p>
       </TextSection>
 

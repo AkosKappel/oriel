@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
+import { ScanButton } from '#/components/scan-button'
 import { Checkbox } from '#/components/ui/checkbox'
 import { stripBullet } from '#/data/capture'
 import {
@@ -320,6 +321,7 @@ const openRows = (element: HTMLElement) =>
 
 function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
   const [text, setText] = useState('')
+  const field = useRef<HTMLInputElement>(null)
   const suggestionsId = useId()
   // Every list's entries: what was bought or packed before is likely to come up again.
   const { data: allEntries } = useRows(store.entries)
@@ -354,6 +356,7 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
         <Plus aria-hidden className="size-4" />
       </span>
       <input
+        ref={field}
         value={text}
         onChange={(event) => setText(event.target.value)}
         onPaste={paste}
@@ -371,6 +374,13 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
           <option key={suggestion} value={suggestion} />
         ))}
       </datalist>
+      {/* A scanned product's name lands in the field, to check or change before adding it. */}
+      <ScanButton
+        onProduct={(name) => {
+          setText(name)
+          field.current?.focus()
+        }}
+      />
     </form>
   )
 }
