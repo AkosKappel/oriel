@@ -230,12 +230,28 @@ export async function applyUpload(userId: string, operations: Operation[]) {
       }
     }
 
-    for (const operation of operations) {
+    // A move re-sends an item as a DELETE and then a PUT (`moveItem`). Keeping the row instead
+    // keeps its history, and a PUT the server refuses cannot lose the item.
+    const lastPut = new Map(
+      operations.flatMap((operation, index) =>
+        operation.table === 'items' && operation.op === 'PUT'
+          ? [[operation.id, index] as const]
+          : [],
+      ),
+    )
+
+    for (const [index, operation] of operations.entries()) {
+      const moving =
+        operation.table === 'items' &&
+        operation.op === 'DELETE' &&
+        (lastPut.get(operation.id) ?? -1) > index
       try {
         // A savepoint per operation: a failure undoes only that operation.
-        const outcome = await tx.transaction((savepoint) =>
-          applyOperation(savepoint, operation, userId, requireEditor, log),
-        )
+        const outcome = moving
+          ? 'skipped'
+          : await tx.transaction((savepoint) =>
+              applyOperation(savepoint, operation, userId, requireEditor, log),
+            )
         if (outcome === 'applied') applied += 1
         else skipped += 1
       } catch (error) {
@@ -305,19 +321,36 @@ async function recordVersion(
 }
 
 /** A task can be for any member of its space, and nobody else. */
-async function requireAssignable(
+async function isAssignable(
   tx: Tx,
   spaceId: string,
   assignee: string | null | undefined,
 ) {
-  if (!assignee) return
+  if (!assignee) return true
   const [member] = await tx
     .select({ userId: spaceMember.userId })
     .from(spaceMember)
     .where(
       and(eq(spaceMember.spaceId, spaceId), eq(spaceMember.userId, assignee)),
     )
-  if (!member) throw new Rejected('invalid')
+  return member !== undefined
+}
+
+/**
+ * An item that changes space leaves the old space's log behind, so its members no longer see
+ * it. Earlier texts go with it only out of a personal space, where all of them are the mover's.
+ */
+async function leaveSpace(tx: Tx, itemId: string, from: string) {
+  await tx
+    .delete(activity)
+    .where(and(eq(activity.itemId, itemId), eq(activity.spaceId, from)))
+  const [old] = await tx
+    .select({ personalOwnerId: space.personalOwnerId })
+    .from(space)
+    .where(eq(space.id, from))
+  if (!old?.personalOwnerId) {
+    await tx.delete(noteVersion).where(eq(noteVersion.itemId, itemId))
+  }
 }
 
 async function applyOperation(
@@ -338,7 +371,14 @@ async function applyOperation(
       const row = parse(itemPut, data)
       await requireEditor(row.space_id)
       if (existing) await requireEditor(existing.spaceId)
-      await requireAssignable(tx, row.space_id, row.assigned_to)
+      if (existing && existing.spaceId !== row.space_id) {
+        await leaveSpace(tx, id, existing.spaceId)
+      }
+      // Someone who is not in the target space (removed a moment ago) leaves the task unassigned
+      // instead of the whole move being refused.
+      const assignedTo = (await isAssignable(tx, row.space_id, row.assigned_to))
+        ? row.assigned_to
+        : null
       const values = {
         spaceId: row.space_id,
         type: row.type,
@@ -352,7 +392,7 @@ async function applyOperation(
         dueOn: row.due_on,
         repeat: row.repeat,
         snoozedUntil: row.snoozed_until,
-        assignedTo: row.assigned_to,
+        assignedTo,
         archivedAt: row.archived_at,
         deletedAt: row.deleted_at,
         deletedBy: markedBy(row.deleted_at, userId),
@@ -377,7 +417,9 @@ async function applyOperation(
     }
 
     const patch = parse(itemPatch, data)
-    await requireAssignable(tx, existing.spaceId, patch.assigned_to)
+    if (!(await isAssignable(tx, existing.spaceId, patch.assigned_to))) {
+      throw new Rejected('invalid')
+    }
     const values = {
       type: patch.type,
       title: patch.title,
@@ -422,6 +464,9 @@ async function applyOperation(
     }
     await requireEditor(row.space_id)
     if (existing) await requireEditor(existing.spaceId)
+    if (existing && existing.spaceId !== row.space_id) {
+      await tx.delete(activity).where(eq(activity.entryId, id))
+    }
     const values = {
       itemId: row.item_id,
       spaceId: row.space_id,

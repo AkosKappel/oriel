@@ -192,8 +192,14 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     const task = put('items', itemRow(aliceSpace, { assigned_to: bob }))
     const own = put('items', itemRow(aliceSpace, { assigned_to: alice }))
     const result = await applyUpload(alice, [task, own])
-    expect(result.rejected).toMatchObject([{ id: task.id, reason: 'invalid' }])
+    // A full row keeps the task and drops an assignee from outside the space.
+    expect(result.rejected).toEqual([])
+    expect(await findItem(task.id)).toMatchObject({ assignedTo: null })
     expect(await findItem(own.id)).toMatchObject({ assignedTo: alice })
+    const patch = await applyUpload(alice, [
+      { op: 'PATCH', table: 'items', id: own.id, data: { assigned_to: bob } },
+    ])
+    expect(patch.rejected).toMatchObject([{ reason: 'invalid' }])
 
     await db.insert(spaceMember).values({
       spaceId: aliceSpace,
@@ -473,5 +479,74 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
         )
     }
     await expect(listVersions(bob, note.id)).rejects.toThrow()
+  })
+
+  it('moves an item without deleting it, so a refused move loses nothing', async () => {
+    const { createSharedSpace } = await import('#/server/sharing')
+    const { activity, noteVersion, space } = await import('#/server/db/schema')
+    const home = await createSharedSpace(alice, 'Home')
+    const work = await createSharedSpace(alice, 'Work')
+    const versions = async (id: string) =>
+      (await db.select().from(noteVersion).where(eq(noteVersion.itemId, id)))
+        .length
+    const logged = async (id: string, spaceId: string) =>
+      (
+        await db
+          .select()
+          .from(activity)
+          .where(and(eq(activity.itemId, id), eq(activity.spaceId, spaceId)))
+      ).length
+    const move = (id: string, row: Record<string, unknown>): Operation[] => [
+      { op: 'DELETE', table: 'items', id },
+      { op: 'PUT', table: 'items', id, data: row },
+    ]
+    try {
+      // Out of the personal space (sharing one note): its history comes along.
+      const note = put(
+        'items',
+        itemRow(aliceSpace, { type: 'note', body: 'v1' }),
+      )
+      await applyUpload(alice, [note])
+      // An earlier editing session, so the moved text is a version of its own.
+      await db
+        .update(noteVersion)
+        .set({ savedAt: new Date(Date.now() - 3_600_000) })
+        .where(eq(noteVersion.itemId, note.id))
+      const moved = await applyUpload(
+        alice,
+        move(note.id, itemRow(home, { type: 'note', body: 'v2' })),
+      )
+      expect(moved.rejected).toEqual([])
+      expect(await findItem(note.id)).toMatchObject({ spaceId: home })
+      expect(await versions(note.id)).toBe(2)
+
+      // From one shared space to another: the old space's log and texts stay behind.
+      await applyUpload(alice, [
+        {
+          op: 'PATCH',
+          table: 'items',
+          id: note.id,
+          data: { title: 'Renamed' },
+        },
+      ])
+      expect(await logged(note.id, home)).toBeGreaterThan(0)
+      await applyUpload(
+        alice,
+        move(note.id, itemRow(work, { type: 'note', body: 'v2' })),
+      )
+      expect(await logged(note.id, home)).toBe(0)
+      // History starts over with the current text.
+      expect(await versions(note.id)).toBe(1)
+
+      // A move the server refuses (no edit rights in the target) leaves the item where it was.
+      const refused = await applyUpload(alice, move(note.id, itemRow(bobSpace)))
+      expect(refused.rejected).toMatchObject([
+        { op: 'PUT', reason: 'forbidden' },
+      ])
+      expect(await findItem(note.id)).toMatchObject({ spaceId: work })
+    } finally {
+      await db.delete(space).where(eq(space.id, home))
+      await db.delete(space).where(eq(space.id, work))
+    }
   })
 })
