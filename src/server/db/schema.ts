@@ -167,6 +167,8 @@ export const items = pgTable(
     // A calendar day, for tasks.
     dueOn: date({ mode: 'string' }),
     repeat: text(),
+    // Off home until this day.
+    snoozedUntil: date({ mode: 'string' }),
     archivedAt: timestamp({ withTimezone: true }),
     // In the trash since then; devices delete it for good after 30 days.
     deletedAt: timestamp({ withTimezone: true }),

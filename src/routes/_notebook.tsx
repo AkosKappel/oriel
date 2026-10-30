@@ -130,6 +130,13 @@ function Notebook() {
               >
                 <Link
                   to="/app"
+                  search={(previous) => ({ ...previous, view: 'snoozed' })}
+                  className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
+                >
+                  Snoozed
+                </Link>
+                <Link
+                  to="/app"
                   search={(previous) => ({ ...previous, view: 'archive' })}
                   className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
                 >

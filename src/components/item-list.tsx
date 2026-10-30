@@ -26,7 +26,7 @@ import {
   type TaskStatus,
 } from '#/data/schema'
 import type { Store } from '#/data/store'
-import { describeDue, formatShortDate, localDay } from '#/lib/dates'
+import { describeDue, formatDay, formatShortDate, localDay } from '#/lib/dates'
 import { tick } from '#/lib/haptics'
 import { canEdit, type SpaceView } from '#/lib/spaces'
 import { useRows } from '#/lib/use-rows'
@@ -61,7 +61,7 @@ export function ItemList({
   spaceId?: string
   /** Show only items that contain these words. */
   query?: string
-  /** The archive or the trash instead of home. */
+  /** Snoozed, the archive or the trash instead of home. */
   view?: View
   spaces: Map<string, SpaceView>
 }) {
@@ -177,9 +177,19 @@ export function ItemList({
   )
 }
 
-const viewTitles: Record<View, string> = { archive: 'Archive', trash: 'Trash' }
+const viewTitles: Record<View, string> = {
+  snoozed: 'Snoozed',
+  archive: 'Archive',
+  trash: 'Trash',
+}
 
-/** The archive and the trash: one list, most recent first, each row saying when it went there. */
+const emptyViews: Record<View, string> = {
+  snoozed: 'Snooze an item to put it away until a day you choose.',
+  archive: 'Archive finished lists and old notes to keep them out of the way.',
+  trash: 'The trash is empty.',
+}
+
+/** Snoozed, the archive and the trash: one list, each row saying when it went there or comes back. */
 function PastItems({
   view,
   items,
@@ -235,9 +245,7 @@ function PastItems({
         <p className="pt-6 text-sm text-muted-foreground" role="status">
           {query.trim()
             ? `Nothing here mentions “${query.trim()}”.`
-            : view === 'trash'
-              ? 'The trash is empty.'
-              : 'Archive finished lists and old notes to keep them out of the way.'}
+            : emptyViews[view]}
         </p>
       ) : (
         <Rows items={items} query={query} {...context} />
@@ -323,7 +331,9 @@ function ItemRow({
       ? `Deleted ${formatShortDate(item.deleted_at)}`
       : item.archived_at
         ? `Archived ${formatShortDate(item.archived_at)}`
-        : null,
+        : item.snoozed_until && item.snoozed_until > localDay(new Date())
+          ? `Back ${formatDay(new Date(`${item.snoozed_until}T12:00:00`))}`
+          : null,
     showSpace && space && !space.personal ? space.name : null,
     describeItem(item, counts),
   ]

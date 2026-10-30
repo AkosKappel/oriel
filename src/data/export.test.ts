@@ -22,6 +22,7 @@ const item = (overrides: Partial<Item> & Pick<Item, 'id' | 'type'>): Item => ({
   status: null,
   due_on: null,
   repeat: null,
+  snoozed_until: null,
   archived_at: null,
   deleted_at: null,
   deleted_by: null,
@@ -102,10 +103,12 @@ describe('itemToText', () => {
 })
 
 describe('parseExport', () => {
-  it('reads exports from before archive, trash, task status, due dates and repeats', () => {
+  it('reads exports from before archive, trash, task status, due dates, repeats and snoozing', () => {
     const {
       status: _status,
       due_on: _due,
+      repeat: _repeat,
+      snoozed_until: _snoozed,
       archived_at: _archived,
       deleted_at: _deleted,
       deleted_by: _deletedBy,
@@ -119,6 +122,7 @@ describe('parseExport', () => {
       status: null,
       due_on: null,
       repeat: null,
+      snoozed_until: null,
       archived_at: null,
       deleted_at: null,
     })

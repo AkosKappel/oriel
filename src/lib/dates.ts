@@ -88,6 +88,19 @@ export function nextDue(
   }
 }
 
+/** The days to snooze until, from `today`: tomorrow, next Monday, and a month on. */
+export function snoozeDays(today: string) {
+  const [year, month, day] = today.split('-').map(Number)
+  const weekday = new Date(Date.UTC(year, month - 1, day, 12)).getUTCDay()
+  const daysToMonday = (8 - weekday) % 7 || 7
+  const nextMonday = new Date(Date.UTC(year, month - 1, day + daysToMonday, 12))
+  return {
+    tomorrow: nextDue(today, 'daily', today),
+    nextWeek: nextMonday.toISOString().slice(0, 10),
+    nextMonth: nextDue(today, 'monthly', today),
+  }
+}
+
 export function greeting(date: Date) {
   const hour = date.getHours()
   if (hour >= 5 && hour < 12) return 'Good morning'

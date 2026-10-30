@@ -3,6 +3,7 @@ import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { NewItem } from '#/data/schema'
+import { localDay, snoozeDays } from '#/lib/dates'
 import { store } from '#/test/client'
 import { findUndo, renderPage } from '#/test/dom'
 import { ItemDetail } from './item-detail'
@@ -135,6 +136,24 @@ describe('ItemDetail', () => {
     await waitFor(() => expect(item()?.deleted_at).not.toBeNull())
     await user.click(await findUndo('List moved to the trash'))
     await waitFor(() => expect(item()?.deleted_at).toBeNull())
+  })
+
+  it('snoozes an item from a menu, with Undo, and brings it back', async () => {
+    const user = userEvent.setup()
+    const { id, item } = await openItem({ type: 'note', title: 'Gift ideas' })
+    const tomorrow = snoozeDays(localDay(new Date())).tomorrow
+
+    await user.click(screen.getByRole('button', { name: 'Snooze note' }))
+    await user.click(await screen.findByRole('menuitem', { name: /Tomorrow/ }))
+    await waitFor(() => expect(item()?.snoozed_until).toBe(tomorrow))
+    await user.click(await findUndo(/^Note snoozed until /))
+    await waitFor(() => expect(item()?.snoozed_until).toBeNull())
+
+    await store.setItemSnoozed(id, '2099-01-01')
+    await user.click(
+      await screen.findByRole('button', { name: 'Bring back now' }),
+    )
+    await waitFor(() => expect(item()?.snoozed_until).toBeNull())
   })
 
   it('shows a trashed item read-only until it is restored', async () => {

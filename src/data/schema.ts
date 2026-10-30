@@ -25,6 +25,7 @@ const items = new Table(
     status: column.text,
     due_on: column.text,
     repeat: column.text,
+    snoozed_until: column.text,
     archived_at: column.text,
     deleted_at: column.text,
     deleted_by: column.text,
@@ -140,6 +141,8 @@ export const itemSchema = z.object({
   due_on: dueSchema.catch(null),
   // A finished repeating task stays open with its due day moved on.
   repeat: repeatSchema.catch(null),
+  // Off home until this day; in a shared space, for every member (like a pin).
+  snoozed_until: dueSchema.catch(null),
   archived_at: z.string().nullable(),
   // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
   deleted_at: z.string().nullable(),

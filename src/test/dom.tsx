@@ -70,7 +70,7 @@ export function renderPage(ui: ReactNode) {
 }
 
 /** The Undo button of the toast with this message, so an older toast's Undo is never clicked. */
-export async function findUndo(message: string) {
+export async function findUndo(message: string | RegExp) {
   const toastItem = (await screen.findByText(message)).closest('li')
   if (!toastItem) throw new Error(`No toast says "${message}"`)
   return within(toastItem).getByRole('button', { name: 'Undo' })

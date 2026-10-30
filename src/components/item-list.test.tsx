@@ -85,6 +85,7 @@ describe('ItemList pages', () => {
         status: null,
         due_on: null,
         repeat: null,
+        snoozed_until: null,
         archived_at: null,
         deleted_at: null,
         deleted_by: null,

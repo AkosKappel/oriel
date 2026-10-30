@@ -1,8 +1,23 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Archive, ArrowLeft, Copy, Pin, Share, Trash2 } from 'lucide-react'
+import {
+  AlarmClock,
+  Archive,
+  ArrowLeft,
+  Copy,
+  Pin,
+  Share,
+  Trash2,
+} from 'lucide-react'
 import { type RefObject, useEffect, useId, useRef, useState } from 'react'
-import { Button, ToggleButton } from 'react-aria-components'
+import {
+  Button,
+  Menu,
+  MenuItem,
+  MenuTrigger,
+  Popover,
+  ToggleButton,
+} from 'react-aria-components'
 import { toast } from 'sonner'
 import { completeTask } from '#/components/complete-task'
 import { EntryList } from '#/components/entry-list'
@@ -22,13 +37,22 @@ import {
 } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { useAccount } from '#/lib/account'
-import { formatShortDate } from '#/lib/dates'
+import { formatDay, formatShortDate, localDay, snoozeDays } from '#/lib/dates'
 import { renderMarkdown } from '#/lib/markdown'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
 
 // No display or hover color here: each button sets its own, since `cn` adds classes and does not
 // override them.
+const snoozeChoices = {
+  tomorrow: 'Tomorrow',
+  nextWeek: 'Next week',
+  nextMonth: 'In a month',
+}
+
+/** "Monday, 2 November" for a `YYYY-MM-DD` day. */
+const dayName = (day: string) => formatDay(new Date(`${day}T12:00:00`))
+
 const iconButton =
   'size-11 place-items-center rounded-sm text-muted-foreground transition-colors data-focus-visible:outline-2 motion-reduce:transition-none'
 
@@ -93,6 +117,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   // Trashed items are read-only until restored.
   const editable = canChange && item.deleted_at === null
   const archived = item.archived_at !== null
+  const today = localDay(new Date())
+  const snoozedUntil =
+    item.snoozed_until && item.snoozed_until > today ? item.snoozed_until : null
   // Only other people are named; your own notes and checks need no label.
   const otherName = (userId: string | null) =>
     userId && userId !== account?.userId
@@ -115,6 +142,18 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     await store.trashItem(item.id)
     toast(`${label} moved to the trash`, {
       action: { label: 'Undo', onClick: () => void store.restoreItem(item.id) },
+    })
+  }
+
+  async function snooze(until: string) {
+    const before = item.snoozed_until
+    await navigate({ to: '/app', search: true })
+    await store.setItemSnoozed(item.id, until)
+    toast(`${label} snoozed until ${dayName(until)}`, {
+      action: {
+        label: 'Undo',
+        onClick: () => void store.setItemSnoozed(item.id, before),
+      },
     })
   }
 
@@ -245,6 +284,43 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
               />
             )}
           </ToggleButton>
+          <MenuTrigger>
+            <Button
+              aria-label={`Snooze ${label.toLowerCase()}`}
+              className={cn(
+                iconButton,
+                'hover:text-foreground',
+                editable && !item.completed_at ? 'grid' : 'hidden',
+              )}
+            >
+              <AlarmClock aria-hidden className="size-[1.125rem]" />
+            </Button>
+            <Popover className="min-w-48 rounded-sm bg-background p-1 shadow-lg ring-1 ring-rule">
+              <Menu
+                aria-label="Snooze until"
+                onAction={(key) => void snooze(String(key))}
+                className="outline-none"
+              >
+                {Object.entries(snoozeChoices).map(([key, text]) => {
+                  const day =
+                    snoozeDays(today)[key as keyof typeof snoozeChoices]
+                  return (
+                    <MenuItem
+                      key={key}
+                      id={day}
+                      textValue={text}
+                      className="flex min-h-11 cursor-default items-center justify-between gap-4 rounded-sm px-3 text-sm outline-none data-focused:bg-wash"
+                    >
+                      <span>{text}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatShortDate(`${day}T12:00:00`)}
+                      </span>
+                    </MenuItem>
+                  )
+                })}
+              </Menu>
+            </Popover>
+          </MenuTrigger>
           <Button
             onPress={() => void trash()}
             aria-label={`Move ${label.toLowerCase()} to the trash`}
@@ -260,6 +336,19 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       </header>
 
       <div className="pl-10">
+        {snoozedUntil && !item.deleted_at && (
+          <div className="mb-6 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+            <p>Snoozed until {dayName(snoozedUntil)}.</p>
+            {editable && (
+              <Button
+                onPress={() => void store.setItemSnoozed(item.id, null)}
+                className="rounded-sm py-2 text-foreground underline underline-offset-4 data-focus-visible:outline-2"
+              >
+                Bring back now
+              </Button>
+            )}
+          </div>
+        )}
         {item.deleted_at && (
           <div className="mb-6 flex flex-col gap-1 text-sm text-muted-foreground">
             <p>

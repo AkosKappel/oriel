@@ -28,6 +28,7 @@ function item(overrides: Partial<Item> & Pick<Item, 'id'>): Item {
     status: null,
     due_on: null,
     repeat: null,
+    snoozed_until: null,
     archived_at: null,
     deleted_at: null,
     deleted_by: null,
@@ -259,6 +260,22 @@ describe('itemsInView', () => {
       'archived-then-trashed',
       'trashed',
     ])
+  })
+  it('puts snoozed items away until their day, then back near the top', () => {
+    const today = '2026-10-30'
+    const snoozed = [
+      item({ id: 'next-week', snoozed_until: '2026-11-06' }),
+      item({ id: 'tomorrow', snoozed_until: '2026-10-31' }),
+      item({ id: 'back', snoozed_until: today }),
+      item({ id: 'newer', created_at: '2026-10-29T00:00:00Z' }),
+    ]
+
+    expect(ids(itemsInView(snoozed, 'snoozed', today))).toEqual([
+      'tomorrow',
+      'next-week',
+    ])
+    const home = itemsInView(snoozed, undefined, today)
+    expect(ids(organizeItems(home).open)).toEqual(['back', 'newer'])
   })
 })
 

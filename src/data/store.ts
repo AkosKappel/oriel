@@ -333,6 +333,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           status: null,
           due_on: null,
           repeat: null,
+          snoozed_until: null,
           archived_at: null,
           deleted_at: null,
           deleted_by: null,
@@ -452,6 +453,17 @@ export function createStore(database: CommonPowerSyncDatabase) {
       await saved(
         items.update(id, (draft) => {
           draft.due_on = parsed
+          draft.updated_at = now()
+        }),
+      )
+    },
+
+    /** Puts an item off home until a day, or brings it back with null. */
+    async setItemSnoozed(id: string, until: string | null) {
+      const parsed = dueSchema.parse(until)
+      await saved(
+        items.update(id, (draft) => {
+          draft.snoozed_until = parsed
           draft.updated_at = now()
         }),
       )

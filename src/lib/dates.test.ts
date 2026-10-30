@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describeDue, greeting, localDay, nextDue } from './dates'
+import { describeDue, greeting, localDay, nextDue, snoozeDays } from './dates'
 
 const at = (hour: number) => new Date(2026, 9, 27, hour, 30)
 
@@ -60,5 +60,19 @@ describe('nextDue', () => {
     expect(nextDue('2026-01-31', 'monthly', '2026-01-31')).toBe('2026-02-28')
     expect(nextDue('2026-01-31', 'monthly', '2026-03-01')).toBe('2026-03-31')
     expect(nextDue('2028-01-31', 'monthly', '2028-01-31')).toBe('2028-02-29')
+  })
+})
+
+describe('snoozeDays', () => {
+  it('offers tomorrow, next Monday and a month on', () => {
+    // A Friday.
+    expect(snoozeDays('2026-10-30')).toEqual({
+      tomorrow: '2026-10-31',
+      nextWeek: '2026-11-02',
+      nextMonth: '2026-11-30',
+    })
+    // On a Monday, next week is the Monday after.
+    expect(snoozeDays('2026-11-02').nextWeek).toBe('2026-11-09')
+    expect(snoozeDays('2026-11-01').nextWeek).toBe('2026-11-02')
   })
 })

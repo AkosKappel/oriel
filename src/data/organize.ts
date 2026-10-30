@@ -1,3 +1,4 @@
+import { localDay } from '#/lib/dates'
 import type { Entry, Item, ItemType, TaskStatus } from './schema'
 
 export type OrganizedItems = { pinned: Item[]; open: Item[]; completed: Item[] }
@@ -26,12 +27,18 @@ export function organizeItems(items: Item[], type?: ItemType): OrganizedItems {
     (a, b) =>
       soonestDue(a.due_on, b.due_on) ||
       b.priority - a.priority ||
-      newestFirst(a.created_at, b.created_at),
+      newestFirst(since(a), since(b)),
   )
   completed.sort((a, b) => newestFirst(a.completed_at, b.completed_at))
 
   return { pinned, open, completed }
 }
+
+/** A snoozed item counts as new on the day it comes back, so it returns near the top. */
+const since = (item: Item) =>
+  item.snoozed_until && item.snoozed_until > item.created_at
+    ? item.snoozed_until
+    : item.created_at
 
 /** Earlier days first; anything without a day after everything with one. */
 function soonestDue(a: string | null, b: string | null) {
@@ -72,17 +79,25 @@ export function withStatus(items: Item[], status?: TaskStatus) {
   )
 }
 
-export const views = ['archive', 'trash'] as const
+export const views = ['snoozed', 'archive', 'trash'] as const
 export type View = (typeof views)[number]
 
 /** Days an item stays in the trash before devices delete it for good. */
 export const trashDays = 30
 
+const isSnoozed = (item: Item, today: string) =>
+  item.snoozed_until !== null && item.snoozed_until > today
+
 /**
- * The items one view shows: home has neither archived nor trashed items, the archive the archived
- * ones that are not in the trash, the trash everything deleted, most recent first.
+ * The items one view shows: home has no snoozed, archived or trashed items; snoozed the ones put
+ * off past today, soonest back first; the archive the archived ones that are not in the trash;
+ * the trash everything deleted, most recent first.
  */
-export function itemsInView(items: Item[], view?: View) {
+export function itemsInView(
+  items: Item[],
+  view?: View,
+  today = localDay(new Date()),
+) {
   if (view === 'trash') {
     return items
       .filter((item) => item.deleted_at)
@@ -93,7 +108,13 @@ export function itemsInView(items: Item[], view?: View) {
       .filter((item) => item.archived_at && !item.deleted_at)
       .sort((a, b) => newestFirst(a.archived_at, b.archived_at))
   }
-  return items.filter((item) => !item.archived_at && !item.deleted_at)
+  const active = items.filter((item) => !item.archived_at && !item.deleted_at)
+  if (view === 'snoozed') {
+    return active
+      .filter((item) => isSnoozed(item, today))
+      .sort((a, b) => soonestDue(a.snoozed_until, b.snoozed_until))
+  }
+  return active.filter((item) => !isSnoozed(item, today))
 }
 
 /** Open entries in list order, then checked ones in the order they were checked. */

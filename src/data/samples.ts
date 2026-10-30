@@ -15,6 +15,8 @@ type Sample = {
   /** Days from today. */
   due?: number
   repeat?: Item['repeat']
+  /** Snoozed until this many days from today. */
+  snoozed?: number
   pinned?: boolean
   done?: boolean
   archived?: boolean
@@ -210,6 +212,7 @@ const samples: Sample[] = [
   },
   { type: 'task', title: 'Due next year', due: 400 },
   { type: 'task', title: 'Repeats every week', due: 2, repeat: 'weekly' },
+  { type: 'note', title: 'Snoozed until next week', snoozed: 7 },
   { type: 'task', title: 'Waiting for someone', status: 'waiting' },
   {
     type: 'task',
@@ -305,6 +308,12 @@ export function buildSamples(today: Date, extra = 0) {
               .toISOString()
               .slice(0, 10),
       repeat: sample.repeat ?? null,
+      snoozed_until:
+        sample.snoozed === undefined
+          ? null
+          : new Date(today.getTime() + sample.snoozed * day)
+              .toISOString()
+              .slice(0, 10),
       archived_at: sample.archived ? stamp : null,
       deleted_at: null,
       deleted_by: null,
