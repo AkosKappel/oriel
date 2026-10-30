@@ -54,10 +54,10 @@ export function CommandPalette({
   const { data: entries } = useRows(store.entries)
 
   const newItem = (type: ItemType) => () => {
-    void navigate({ to: '/', search: { type } }).then(focusCapture)
+    void navigate({ to: '/app', search: { type } }).then(focusCapture)
   }
   const show = (search: Record<string, string>) => () => {
-    void navigate({ to: '/', search })
+    void navigate({ to: '/app', search })
   }
   const commands: Command[] = [
     { id: 'new-note', label: 'New note', run: newItem('note') },

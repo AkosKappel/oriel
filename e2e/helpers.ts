@@ -27,7 +27,7 @@ export async function signUp(page: Page, name: string, email = newEmail()) {
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Create account' }).click()
-  await page.waitForURL('/')
+  await page.waitForURL('/app')
   return email
 }
 
@@ -37,7 +37,7 @@ export async function signIn(page: Page, email: string) {
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Sign in' }).click()
-  await page.waitForURL('/')
+  await page.waitForURL('/app')
 }
 
 /** Types into the capture bar as the given type and saves with Enter. */

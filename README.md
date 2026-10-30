@@ -16,6 +16,8 @@ One calm place for the everyday things you don't want to forget: notes, shopping
 
 ![The desktop layout in dark mode: the list on the left and a Markdown note open beside it](docs/screenshots/desktop-dark.png)
 
+The public site at `/` (home, about, FAQ, privacy, terms, accessibility) introduces the app; the notebook itself lives at `/app`, which is also where the installed app opens.
+
 ## Principles
 
 - **Fast capture:** adding something takes seconds, without forms.

@@ -28,7 +28,7 @@ function Share() {
     started.current = true
     const note = sharedNote(shared)
     if (!note) {
-      void navigate({ to: '/', replace: true })
+      void navigate({ to: '/app', replace: true })
       return
     }
     store.createItem(note).then(
@@ -36,7 +36,7 @@ function Share() {
         navigate({ to: '/items/$itemId', params: { itemId }, replace: true }),
       (error: unknown) => {
         console.error('Could not save the shared note', error)
-        void navigate({ to: '/', replace: true })
+        void navigate({ to: '/app', replace: true })
       },
     )
   }, [shared, navigate])

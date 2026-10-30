@@ -1,4 +1,10 @@
 User-agent: *
+Allow: /$
 Allow: /about
+Allow: /faq
+Allow: /privacy
+Allow: /terms
+Allow: /accessibility
 Allow: /sign-in
 Disallow: /
+Sitemap: https://oriel.tailb52c43.ts.net/sitemap.xml

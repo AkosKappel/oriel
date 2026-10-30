@@ -10,13 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NotebookRouteImport } from './routes/_notebook'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as SiteRouteImport } from './routes/_site'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ShareRouteImport } from './routes/share'
 import { Route as SignInRouteImport } from './routes/sign-in'
-import { Route as NotebookIndexRouteImport } from './routes/_notebook/index'
+import { Route as NotebookAppRouteImport } from './routes/_notebook/app'
+import { Route as SiteIndexRouteImport } from './routes/_site/index'
+import { Route as SiteAboutRouteImport } from './routes/_site/about'
+import { Route as SiteAccessibilityRouteImport } from './routes/_site/accessibility'
+import { Route as SiteFaqRouteImport } from './routes/_site/faq'
+import { Route as SitePrivacyRouteImport } from './routes/_site/privacy'
+import { Route as SiteTermsRouteImport } from './routes/_site/terms'
 import { Route as ApiClientErrorRouteImport } from './routes/api/client-error'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
@@ -31,9 +37,8 @@ const NotebookRoute = NotebookRouteImport.update({
   id: '/_notebook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const SiteRoute = SiteRouteImport.update({
+  id: '/_site',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -61,10 +66,40 @@ const SignInRoute = SignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NotebookIndexRoute = NotebookIndexRouteImport.update({
+const NotebookAppRoute = NotebookAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => NotebookRoute,
+} as any)
+const SiteIndexRoute = SiteIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => NotebookRoute,
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteAboutRoute = SiteAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteAccessibilityRoute = SiteAccessibilityRouteImport.update({
+  id: '/accessibility',
+  path: '/accessibility',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteFaqRoute = SiteFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SitePrivacyRoute = SitePrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteTermsRoute = SiteTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => SiteRoute,
 } as any)
 const ApiClientErrorRoute = ApiClientErrorRouteImport.update({
   id: '/api/client-error',
@@ -113,13 +148,18 @@ const ApiSyncUploadRoute = ApiSyncUploadRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof NotebookIndexRoute
-  '/about': typeof AboutRoute
+  '/': typeof SiteIndexRoute
   '/account': typeof AccountRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/app': typeof NotebookAppRoute
+  '/about': typeof SiteAboutRoute
+  '/accessibility': typeof SiteAccessibilityRoute
+  '/faq': typeof SiteFaqRoute
+  '/privacy': typeof SitePrivacyRoute
+  '/terms': typeof SiteTermsRoute
   '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
@@ -131,17 +171,22 @@ export interface FileRoutesByFullPath {
   '/api/sync/upload': typeof ApiSyncUploadRoute
 }
 export interface FileRoutesByTo {
-  '/about': typeof AboutRoute
+  '/': typeof SiteIndexRoute
   '/account': typeof AccountRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/app': typeof NotebookAppRoute
+  '/about': typeof SiteAboutRoute
+  '/accessibility': typeof SiteAccessibilityRoute
+  '/faq': typeof SiteFaqRoute
+  '/privacy': typeof SitePrivacyRoute
+  '/terms': typeof SiteTermsRoute
   '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
-  '/': typeof NotebookIndexRoute
   '/spaces': typeof SpacesIndexRoute
   '/items/$itemId': typeof NotebookItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -151,17 +196,23 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_notebook': typeof NotebookRouteWithChildren
-  '/about': typeof AboutRoute
+  '/_site': typeof SiteRouteWithChildren
   '/account': typeof AccountRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/share': typeof ShareRoute
   '/sign-in': typeof SignInRoute
+  '/_notebook/app': typeof NotebookAppRoute
+  '/_site/about': typeof SiteAboutRoute
+  '/_site/accessibility': typeof SiteAccessibilityRoute
+  '/_site/faq': typeof SiteFaqRoute
+  '/_site/privacy': typeof SitePrivacyRoute
+  '/_site/terms': typeof SiteTermsRoute
   '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
-  '/_notebook/': typeof NotebookIndexRoute
+  '/_site/': typeof SiteIndexRoute
   '/spaces/': typeof SpacesIndexRoute
   '/_notebook/items/$itemId': typeof NotebookItemsItemIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -172,12 +223,17 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
     | '/account'
     | '/reset-password'
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/app'
+    | '/about'
+    | '/accessibility'
+    | '/faq'
+    | '/privacy'
+    | '/terms'
     | '/api/client-error'
     | '/api/health'
     | '/invite/$token'
@@ -189,17 +245,22 @@ export interface FileRouteTypes {
     | '/api/sync/upload'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/about'
+    | '/'
     | '/account'
     | '/reset-password'
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/app'
+    | '/about'
+    | '/accessibility'
+    | '/faq'
+    | '/privacy'
+    | '/terms'
     | '/api/client-error'
     | '/api/health'
     | '/invite/$token'
     | '/spaces/$spaceId'
-    | '/'
     | '/spaces'
     | '/items/$itemId'
     | '/api/auth/$'
@@ -208,17 +269,23 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_notebook'
-    | '/about'
+    | '/_site'
     | '/account'
     | '/reset-password'
     | '/settings'
     | '/share'
     | '/sign-in'
+    | '/_notebook/app'
+    | '/_site/about'
+    | '/_site/accessibility'
+    | '/_site/faq'
+    | '/_site/privacy'
+    | '/_site/terms'
     | '/api/client-error'
     | '/api/health'
     | '/invite/$token'
     | '/spaces/$spaceId'
-    | '/_notebook/'
+    | '/_site/'
     | '/spaces/'
     | '/_notebook/items/$itemId'
     | '/api/auth/$'
@@ -228,7 +295,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   NotebookRoute: typeof NotebookRouteWithChildren
-  AboutRoute: typeof AboutRoute
+  SiteRoute: typeof SiteRouteWithChildren
   AccountRoute: typeof AccountRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
@@ -253,11 +320,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotebookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/_site': {
+      id: '/_site'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof SiteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -295,12 +362,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_notebook/': {
-      id: '/_notebook/'
+    '/_notebook/app': {
+      id: '/_notebook/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof NotebookAppRouteImport
+      parentRoute: typeof NotebookRoute
+    }
+    '/_site/': {
+      id: '/_site/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof NotebookIndexRouteImport
-      parentRoute: typeof NotebookRoute
+      preLoaderRoute: typeof SiteIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/about': {
+      id: '/_site/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof SiteAboutRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/accessibility': {
+      id: '/_site/accessibility'
+      path: '/accessibility'
+      fullPath: '/accessibility'
+      preLoaderRoute: typeof SiteAccessibilityRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/faq': {
+      id: '/_site/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof SiteFaqRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/privacy': {
+      id: '/_site/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof SitePrivacyRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/terms': {
+      id: '/_site/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof SiteTermsRouteImport
+      parentRoute: typeof SiteRoute
     }
     '/api/client-error': {
       id: '/api/client-error'
@@ -369,12 +478,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface NotebookRouteChildren {
-  NotebookIndexRoute: typeof NotebookIndexRoute
+  NotebookAppRoute: typeof NotebookAppRoute
   NotebookItemsItemIdRoute: typeof NotebookItemsItemIdRoute
 }
 
 const NotebookRouteChildren: NotebookRouteChildren = {
-  NotebookIndexRoute: NotebookIndexRoute,
+  NotebookAppRoute: NotebookAppRoute,
   NotebookItemsItemIdRoute: NotebookItemsItemIdRoute,
 }
 
@@ -382,9 +491,29 @@ const NotebookRouteWithChildren = NotebookRoute._addFileChildren(
   NotebookRouteChildren,
 )
 
+interface SiteRouteChildren {
+  SiteAboutRoute: typeof SiteAboutRoute
+  SiteAccessibilityRoute: typeof SiteAccessibilityRoute
+  SiteFaqRoute: typeof SiteFaqRoute
+  SitePrivacyRoute: typeof SitePrivacyRoute
+  SiteTermsRoute: typeof SiteTermsRoute
+  SiteIndexRoute: typeof SiteIndexRoute
+}
+
+const SiteRouteChildren: SiteRouteChildren = {
+  SiteAboutRoute: SiteAboutRoute,
+  SiteAccessibilityRoute: SiteAccessibilityRoute,
+  SiteFaqRoute: SiteFaqRoute,
+  SitePrivacyRoute: SitePrivacyRoute,
+  SiteTermsRoute: SiteTermsRoute,
+  SiteIndexRoute: SiteIndexRoute,
+}
+
+const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   NotebookRoute: NotebookRouteWithChildren,
-  AboutRoute: AboutRoute,
+  SiteRoute: SiteRouteWithChildren,
   AccountRoute: AccountRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,

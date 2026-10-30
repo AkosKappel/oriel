@@ -1,9 +1,11 @@
-// Template: `scripts/service-worker-plugin.ts` fills in the version and the precache list and emits
-// the result as `sw.js` with the client build.
+// Template: `scripts/service-worker-plugin.ts` fills in the version, the precache list and the public
+// pages, and emits the result as `sw.js` with the client build.
 const version = '__VERSION__'
 const precache = __PRECACHE__
-// The server's page for `/` boots the app for any URL, because every route renders on the client.
-const shell = '/'
+const publicPages = __PUBLIC_PAGES__
+// The server's page for `/app` boots the app for any app URL, because those routes render on the
+// client. The public pages are cached as they are.
+const appShell = '/app'
 const precacheName = `oriel-${version}`
 const runtimeName = 'oriel-runtime'
 
@@ -41,11 +43,12 @@ self.addEventListener('fetch', (event) => {
   // Sync shares the origin in production (nginx /powersync/); it must never come from a cache.
   if (url.pathname.startsWith('/powersync/')) return
 
-  // Pages: the server when online, the cached shell when not.
+  // Pages: the server when online; offline, a public page as cached, anything else the app shell.
   if (request.mode === 'navigate') {
+    const offline = publicPages.includes(url.pathname) ? url.pathname : appShell
     event.respondWith(
       fetch(request).catch(() =>
-        caches.match(shell).then((response) => response ?? Response.error()),
+        caches.match(offline).then((response) => response ?? Response.error()),
       ),
     )
     return

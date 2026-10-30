@@ -210,7 +210,7 @@ function PastItems({
           {viewTitles[view]}
         </h2>
         <Link
-          to="/"
+          to="/app"
           search={(previous) => ({ ...previous, view: undefined })}
           className="-mr-2 rounded-sm px-2 py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
         >

@@ -82,14 +82,14 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 
 ## Offline
 
-- `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and emits `sw.js` with the client build. It must be emitted during the build: Nitro only serves files it knows when it bundles.
+- `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and the public pages and emits `sw.js` with the client build. Offline, a public page comes from the cache as it is and every other page gets the `/app` shell. It must be emitted during the build: Nitro only serves files it knows when it bundles.
 - The worker only runs in production builds; test offline with `npm run build` and `npm start`.
 - Long text fields save when the page is hidden, not only on unmount.
 
 ## Conventions
 
 - Imports from `src` use the `#/` alias (`#/lib/utils`).
-- Routes are files in `src/routes`; `src/routeTree.gen.ts` is generated, never edit it. The dev server and `npm run build` append a `Register` block that `tsr generate` (run by `npm run typecheck`) leaves out; commit the `tsr generate` form, so stop the dev server and run `npx tsr generate` before committing a route change. Home and the item page share the `_notebook` layout (filters in its search params, list and reading pane side by side from `lg`).
+- Routes are files in `src/routes`; `src/routeTree.gen.ts` is generated, never edit it. The dev server and `npm run build` append a `Register` block that `tsr generate` (run by `npm run typecheck`) leaves out; commit the `tsr generate` form, so stop the dev server and run `npx tsr generate` before committing a route change. The notebook (`/app`) and the item page (`/items/$itemId`) share the `_notebook` layout (filters in its search params, `AppHeader` and list and reading pane side by side from `lg`); settings, account and spaces use `SubPage`. The public pages (`/`, about, FAQ, privacy, terms, accessibility) are server-rendered under the `_site` layout (`SiteShell`); they must not import the local database (`#/data/client`), and neither may anything in the root route or the headers, or every page loads PowerSync. The home page sends a device that has used the notebook (`oriel.used` or a remembered account) straight to `/app` when it opens `/` itself.
 - Pages need one `main` landmark and an `h1` (an `sr-only` one where the title is an editable input). Text uses `text-muted-foreground` or stronger; `text-faint` is for placeholders and decoration only.
 - Interactive primitives are React Aria Components, wrapped in `src/components/ui` (`Checkbox`, `ChoiceGroup`). Use React Aria (`Button`, `ToggleButton`, `RadioGroup`, ...) for new controls; style their states with Tailwind data variants (`data-selected:`, `data-focus-visible:`, `data-pressed:`).
 - Visual direction is "Paper": serif (Newsreader) for content, small sans (Instrument Sans) for controls and metadata, whitespace instead of borders and boxes, the selected option underlined. Titles share one column; checkboxes sit in the left margin (`pl-10` on the content, `-left-[2.375rem]` on the checkbox).

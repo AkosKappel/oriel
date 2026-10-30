@@ -23,14 +23,14 @@ test('a viewer joins a shared space by link and sees it read-only', async ({
   const link = await owner.getByLabel('Invite link').inputValue()
   await expectNoAxeViolations(owner)
 
-  await owner.goto(`/?space=${spaceId}`)
+  await owner.goto(`/app?space=${spaceId}`)
   await capture(owner, 'Note', 'Dinner on Sunday')
 
   await signUp(viewer, 'Ben')
   await viewer.goto(link)
   await viewer.getByRole('button', { name: `Join ${spaceName}` }).click()
-  await viewer.waitForURL(/\/spaces\/|\/$/)
-  await viewer.goto(`/?space=${spaceId}`)
+  await viewer.waitForURL(/\/spaces\/|\/app$/)
+  await viewer.goto(`/app?space=${spaceId}`)
   await rows(viewer).filter({ hasText: 'Dinner on Sunday' }).click()
 
   await expect(viewer.getByText(/· by Anna · View only/)).toBeVisible()

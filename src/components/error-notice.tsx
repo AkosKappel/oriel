@@ -46,7 +46,7 @@ export function ErrorNotice({
           Try again
         </Button>{' '}
         or{' '}
-        <a href="/" className="text-foreground underline underline-offset-4">
+        <a href="/app" className="text-foreground underline underline-offset-4">
           reload Oriel
         </a>
         .

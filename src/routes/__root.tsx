@@ -3,6 +3,7 @@ import {
   createRootRoute,
   type ErrorComponentProps,
   HeadContent,
+  Link,
   ScriptOnce,
   Scripts,
 } from '@tanstack/react-router'
@@ -11,6 +12,7 @@ import { type CSSProperties, type ReactNode, useEffect } from 'react'
 import { Toaster } from 'sonner'
 import { ErrorNotice } from '#/components/error-notice'
 import { OfflineBanner } from '#/components/offline-banner'
+import { SiteShell, TextPage } from '#/components/site-shell'
 import { SubPage } from '#/components/sub-page'
 import { useFocusAfterNavigation } from '#/lib/route-focus'
 import { contentSecurityPolicy } from '#/lib/security-headers'
@@ -128,14 +130,21 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 function NotFound() {
   return (
-    <SubPage>
-      <div className="flex flex-col gap-3">
-        <h1 className="font-serif text-3xl italic">No such page.</h1>
-        <p className="max-w-sm text-sm text-muted-foreground">
-          The link may be mistyped, or the page was moved.
+    <SiteShell>
+      <TextPage
+        title="No such page."
+        lead="The link may be mistyped, or the page was moved."
+      >
+        <p className="flex gap-6 text-sm">
+          <Link to="/app" className="underline underline-offset-4">
+            Open your notebook
+          </Link>
+          <Link to="/" className="underline underline-offset-4">
+            Go to the home page
+          </Link>
         </p>
-      </div>
-    </SubPage>
+      </TextPage>
+    </SiteShell>
   )
 }
 

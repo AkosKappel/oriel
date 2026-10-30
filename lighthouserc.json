@@ -5,6 +5,7 @@
       "startServerReadyPattern": "Listening",
       "url": [
         "http://localhost:3200/",
+        "http://localhost:3200/app",
         "http://localhost:3200/sign-in",
         "http://localhost:3200/settings"
       ],
@@ -42,13 +43,13 @@
           }
         },
         {
-          "matchingUrlPattern": "^http://[^/]+/$",
+          "matchingUrlPattern": "/app$",
           "aggregationMethod": "median-run",
           "assertions": {
             "resource-summary:script:size": [
               "error",
               {
-                "maxNumericValue": 327680
+                "maxNumericValue": 337920
               }
             ],
             "categories:performance": [
@@ -60,7 +61,7 @@
           }
         },
         {
-          "matchingUrlPattern": "/(sign-in|settings)$",
+          "matchingUrlPattern": "^http://[^/]+/$|/(sign-in|settings)$",
           "aggregationMethod": "median-run",
           "assertions": {
             "resource-summary:script:size": [

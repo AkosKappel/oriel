@@ -3,7 +3,7 @@
   "short_name": "Oriel",
   "description": "One calm place for notes, lists and tasks.",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#faf6ef",
@@ -20,9 +20,9 @@
     }
   ],
   "shortcuts": [
-    { "name": "New note", "url": "/?type=note" },
-    { "name": "New list", "url": "/?type=list" },
-    { "name": "New task", "url": "/?type=task" }
+    { "name": "New note", "url": "/app?type=note" },
+    { "name": "New list", "url": "/app?type=list" },
+    { "name": "New task", "url": "/app?type=task" }
   ],
   "share_target": {
     "action": "/share",

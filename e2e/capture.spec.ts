@@ -4,7 +4,7 @@ import { capture, expectNoAxeViolations, rows } from './helpers'
 test('captures notes, lists and tasks without an account, and keeps them after a reload', async ({
   page,
 }) => {
-  await page.goto('/')
+  await page.goto('/app')
   await expect(page.getByText('A blank page.')).toBeVisible()
 
   await capture(page, 'Note', 'Paint the door\nThe green one')
@@ -25,7 +25,7 @@ test('captures notes, lists and tasks without an account, and keeps them after a
 test('opens a list, checks an entry and finds it again by search', async ({
   page,
 }) => {
-  await page.goto('/')
+  await page.goto('/app')
   await capture(page, 'List', 'Packing: tent, stove')
   await rows(page).filter({ hasText: 'Packing' }).click()
 
@@ -35,7 +35,7 @@ test('opens a list, checks an entry and finds it again by search', async ({
   await expect(page.getByText('1 of 2 left')).toBeVisible()
   await expectNoAxeViolations(page)
 
-  await page.goto('/?q=stove')
+  await page.goto('/app?q=stove')
   await expect(rows(page)).toHaveCount(1)
   await expect(rows(page)).toContainText('Packing')
   await expectNoAxeViolations(page)
@@ -53,7 +53,7 @@ test('moves between items with j and k, and closes with Escape', async ({
   isMobile,
 }) => {
   test.skip(isMobile, 'Keyboard navigation is for wide screens with a keyboard')
-  await page.goto('/')
+  await page.goto('/app')
   await capture(page, 'Note', 'First note')
   await capture(page, 'Note', 'Second note')
   await page.locator('body').click()
@@ -73,6 +73,6 @@ test('moves between items with j and k, and closes with Escape', async ({
   ).toBeAttached()
 
   await page.keyboard.press('Escape')
-  await expect(page).toHaveURL(/\/$/)
+  await expect(page).toHaveURL(/\/app$/)
   await expect(rows(page).filter({ hasText: 'Second note' })).toBeFocused()
 })

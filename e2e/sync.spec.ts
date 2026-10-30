@@ -27,7 +27,7 @@ test('keeps two devices of one account in sync, also after one was offline', asy
   await phone.context().setOffline(true)
   await capture(phone, 'Task', 'Written on the train')
   await phone.context().setOffline(false)
-  await laptop.goto('/')
+  await laptop.goto('/app')
   await expect(
     rows(laptop).filter({ hasText: 'Written on the train' }),
   ).toBeVisible()

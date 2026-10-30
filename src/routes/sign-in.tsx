@@ -64,7 +64,7 @@ function SignIn() {
           ? `Signed in. ${claimed} ${claimed === 1 ? 'item' : 'items'} from this device now belong to your account.`
           : 'Signed in.',
       )
-      await navigate({ to: redirect ?? '/' })
+      await navigate({ to: redirect ?? '/app' })
     } catch (caught) {
       console.error('Sign-in failed', caught)
       setError(

@@ -63,7 +63,10 @@ export function ItemDetail({
         <p className="font-serif text-2xl italic">This page was torn out.</p>
         <p className="text-sm text-muted-foreground">
           It was deleted, here or on another device.{' '}
-          <Link to="/" className="text-foreground underline underline-offset-4">
+          <Link
+            to="/app"
+            className="text-foreground underline underline-offset-4"
+          >
             Back to everything
           </Link>
         </p>
@@ -105,7 +108,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   }
 
   async function trash() {
-    await navigate({ to: '/', search: true })
+    await navigate({ to: '/app', search: true })
     await store.trashItem(item.id)
     toast(`${label} moved to the trash`, {
       action: { label: 'Undo', onClick: () => void store.restoreItem(item.id) },
@@ -172,7 +175,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   }
 
   async function deleteForever() {
-    await navigate({ to: '/', search: true })
+    await navigate({ to: '/app', search: true })
     const snapshot = await store.deleteItem(item.id)
     toast(`${label} deleted for good`, {
       action: { label: 'Undo', onClick: () => void store.restore(snapshot) },
@@ -183,7 +186,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     <article className="flex flex-col pb-10">
       <header className="-ml-3 flex items-center justify-between pt-2 pb-6 print:hidden">
         <Link
-          to="/"
+          to="/app"
           search={true}
           // On a wide screen the list is already beside the item.
           className="flex h-11 items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 lg:invisible"

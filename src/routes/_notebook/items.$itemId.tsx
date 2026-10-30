@@ -20,7 +20,7 @@ function ItemError({ error, reset }: ErrorComponentProps) {
     <div className="flex flex-col gap-6 pb-12">
       {/* On a phone the list is hidden behind the item, so the way back has to be here. */}
       <Link
-        to="/"
+        to="/app"
         search={true}
         className="-ml-3 flex h-11 w-fit items-center gap-2 rounded-sm px-3 pt-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 lg:invisible"
       >

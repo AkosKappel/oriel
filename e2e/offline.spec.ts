@@ -5,7 +5,7 @@ test('opens and saves offline once the app has been loaded', async ({
   page,
   context,
 }) => {
-  await page.goto('/')
+  await page.goto('/app')
   await capture(page, 'Note', 'Written online')
   // The service worker precaches the app on the first visit.
   await page.evaluate(() => navigator.serviceWorker.ready)

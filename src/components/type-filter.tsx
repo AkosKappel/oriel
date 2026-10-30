@@ -33,7 +33,7 @@ export function TypeFilter({ active }: { active?: ItemType }) {
       {typeOptions.map(({ type, label }) => (
         <Link
           key={label}
-          to="/"
+          to="/app"
           // Task filters mean nothing for notes or lists.
           search={(previous) => ({
             ...previous,
@@ -75,7 +75,7 @@ export function TaskFilter({
       {taskOptions.map((option) => (
         <Link
           key={option.label}
-          to="/"
+          to="/app"
           // One task filter at a time: picking one clears the other.
           search={(previous) => ({
             ...previous,
@@ -109,7 +109,7 @@ export function SpaceFilter({
       className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
     >
       <Link
-        to="/"
+        to="/app"
         search={(previous) => ({ ...previous, space: undefined })}
         aria-current={active ? undefined : 'page'}
         activeOptions={activeOptions}
@@ -120,7 +120,7 @@ export function SpaceFilter({
       {spaces.map((space) => (
         <Link
           key={space.id}
-          to="/"
+          to="/app"
           search={(previous) => ({ ...previous, space: space.id })}
           aria-current={active === space.id ? 'page' : undefined}
           activeOptions={activeOptions}

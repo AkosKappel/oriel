@@ -8,6 +8,7 @@ import {
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { AccountLink } from '#/components/account-link'
+import { AppHeader } from '#/components/app-header'
 import { CaptureBar } from '#/components/capture-bar'
 import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
@@ -18,8 +19,10 @@ import { dueFilters, itemsInView, trashDays, views } from '#/data/organize'
 import { type Item, itemTypes, statusSchema } from '#/data/schema'
 import { useAccount } from '#/lib/account'
 import { formatDay, greeting } from '#/lib/dates'
+import { useOnline } from '#/lib/online'
 import { reportError } from '#/lib/report-error'
 import { canEdit, type SpaceView, useSpaces } from '#/lib/spaces'
+import { describeSync, useSyncStatus } from '#/lib/sync-status'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 
@@ -51,7 +54,9 @@ function Notebook() {
   useEscapeToClose(openItemId)
   useNextAndPreviousKeys()
   usePurgeOldTrash()
+  useRememberDevice()
   const { spaces, byId } = useSpaces()
+  const sync = describeSync(useSyncStatus(), useOnline())
   const space = spaceId ? byId.get(spaceId) : undefined
   const now = new Date()
   // One main landmark: the list on its own, the item when one is open. Roles switch instead of
@@ -62,104 +67,117 @@ function Notebook() {
   if (storageFailed) return <StorageProblem />
 
   return (
-    <div className="mx-auto max-w-xl px-4 lg:grid lg:max-w-6xl lg:grid-cols-[minmax(0,26rem)_minmax(0,36rem)] lg:justify-between lg:gap-16 lg:px-8 print:block">
-      <AppBadge />
-      <MemberAnnouncer spaces={byId} />
-      <CommandPaletteOnShortcut />
-      <div
-        className={cn(
-          'min-h-dvh flex-col pt-[max(1rem,env(safe-area-inset-top))]',
-          // A printed item leaves the list off the page.
-          itemOpen ? 'hidden lg:flex print:hidden' : 'flex',
-        )}
-      >
-        {/* The left margin holds task checkboxes, so every title starts on the same line. */}
-        <header className="flex flex-col gap-1 pt-6 pb-4 pl-10">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">{formatDay(now)}</p>
-            <div className="flex gap-4">
-              <Link
-                to="/settings"
-                className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
-              >
-                Settings
-              </Link>
-              <AccountLink />
-            </div>
-          </div>
-          <h1 className="font-serif text-4xl tracking-tight">
-            {greeting(now)}
-          </h1>
-          {spaces.length > 1 && (
-            <SpaceFilter spaces={spaces} active={spaceId} />
-          )}
-          <TypeFilter active={type} />
-          {type === 'task' && <TaskFilter status={status} due={due} />}
-          <SearchField query={q} />
-        </header>
-        {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is always region or main, both take a label */}
+    <div className="flex min-h-dvh flex-col print:block">
+      <AppHeader search sync={sync} />
+      {/* On a wide screen the list and the item each scroll on their own below the header. */}
+      <div className="mx-auto w-full max-w-xl flex-1 px-4 lg:grid lg:h-[calc(100dvh-3.5rem)] lg:min-h-0 lg:max-w-screen-2xl lg:flex-none lg:grid-cols-[minmax(20rem,28rem)_minmax(0,1fr)] lg:px-8 print:block print:h-auto">
+        <AppBadge />
+        <MemberAnnouncer spaces={byId} />
+        <CommandPaletteOnShortcut />
         <div
-          role={listRole}
-          aria-label={itemOpen ? 'Everything' : undefined}
-          className="flex flex-1 flex-col pb-6 pl-10"
+          className={cn(
+            'min-h-dvh flex-col pt-[max(1rem,env(safe-area-inset-top))] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:border-r lg:border-rule lg:pt-0 lg:pr-6',
+            // A printed item leaves the list off the page.
+            itemOpen ? 'hidden lg:flex print:hidden' : 'flex',
+          )}
         >
-          <ItemList
-            store={store}
-            type={type}
-            status={status}
-            due={due}
-            spaceId={spaceId}
-            query={q}
-            view={view}
-            spaces={byId}
-          />
-          {!view && (
-            <nav
-              aria-label="Put away"
-              className="mt-auto flex gap-x-4 pt-10 text-sm"
+          {/* The left margin holds task checkboxes, so every title starts on the same line. Not a
+            `header`: the app header is the page's one banner. */}
+          <div className="flex flex-col gap-1 pt-6 pb-4 pl-10">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">{formatDay(now)}</p>
+              {/* On a wide screen these are in the app header. */}
+              <div className="flex gap-4 lg:hidden">
+                <Link
+                  to="/settings"
+                  className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
+                >
+                  Settings
+                </Link>
+                <AccountLink sync={sync} />
+              </div>
+            </div>
+            <h1 className="font-serif text-4xl tracking-tight">
+              {greeting(now)}
+            </h1>
+            {spaces.length > 1 && (
+              <SpaceFilter spaces={spaces} active={spaceId} />
+            )}
+            <TypeFilter active={type} />
+            {type === 'task' && <TaskFilter status={status} due={due} />}
+            <SearchField query={q} />
+          </div>
+          {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is always region or main, both take a label */}
+          <div
+            role={listRole}
+            aria-label={itemOpen ? 'Everything' : undefined}
+            className="flex flex-1 flex-col pb-6 pl-10"
+          >
+            <ItemList
+              store={store}
+              type={type}
+              status={status}
+              due={due}
+              spaceId={spaceId}
+              query={q}
+              view={view}
+              spaces={byId}
+            />
+            {!view && (
+              <nav
+                aria-label="Put away"
+                className="mt-auto flex gap-x-4 pt-10 text-sm"
+              >
+                <Link
+                  to="/app"
+                  search={(previous) => ({ ...previous, view: 'archive' })}
+                  className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
+                >
+                  Archive
+                </Link>
+                <Link
+                  to="/app"
+                  search={(previous) => ({ ...previous, view: 'trash' })}
+                  className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
+                >
+                  Trash
+                </Link>
+              </nav>
+            )}
+          </div>
+          {view ? null : spaceId && !space ? (
+            // A space created or joined a moment ago reaches the device through sync. Capturing
+            // before then would file the item in the personal space instead.
+            <p
+              role="status"
+              className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground"
             >
-              <Link
-                to="/"
-                search={(previous) => ({ ...previous, view: 'archive' })}
-                className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
-              >
-                Archive
-              </Link>
-              <Link
-                to="/"
-                search={(previous) => ({ ...previous, view: 'trash' })}
-                className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
-              >
-                Trash
-              </Link>
-            </nav>
+              This space is not on this device yet. It appears once it syncs.
+            </p>
+          ) : space && !canEdit(space.role) ? (
+            <p className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground">
+              You can view {space.name}; only its editors can add to it.
+            </p>
+          ) : (
+            <CaptureBar
+              store={store}
+              preferredType={type}
+              spaceId={space?.id}
+            />
           )}
         </div>
-        {view ? null : spaceId && !space ? (
-          // A space created or joined a moment ago reaches the device through sync. Capturing
-          // before then would file the item in the personal space instead.
-          <p
-            role="status"
-            className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground"
-          >
-            This space is not on this device yet. It appears once it syncs.
-          </p>
-        ) : space && !canEdit(space.role) ? (
-          <p className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground">
-            You can view {space.name}; only its editors can add to it.
-          </p>
-        ) : (
-          <CaptureBar store={store} preferredType={type} spaceId={space?.id} />
-        )}
-      </div>
-      <div
-        role={itemRole}
-        className={cn(
-          'min-h-dvh flex-col pt-[max(0.5rem,env(safe-area-inset-top))] lg:sticky lg:top-0 lg:h-dvh lg:overflow-y-auto lg:pt-6 print:static print:h-auto print:overflow-visible',
-          itemOpen ? 'flex' : 'hidden lg:flex',
-        )}
-      >
-        <Outlet />
+        <div
+          role={itemRole}
+          className={cn(
+            'min-h-dvh flex-col pt-[max(0.5rem,env(safe-area-inset-top))] lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pt-6 lg:pl-12 print:h-auto print:overflow-visible print:pl-0',
+            itemOpen ? 'flex' : 'hidden lg:flex',
+          )}
+        >
+          {/* A comfortable reading width, however wide the screen. */}
+          <div className="flex w-full max-w-3xl flex-1 flex-col">
+            <Outlet />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -172,21 +190,29 @@ const CommandPalette = lazy(() =>
   })),
 )
 
-/** Ctrl+K (⌘K) opens the command palette from anywhere on these pages, also from a text field. */
+/** Ctrl+K (⌘K), or the header's search button, opens the command palette, also from a text field. */
 function CommandPaletteOnShortcut() {
   const [isOpen, setOpen] = useState(false)
   const [wanted, setWanted] = useState(false)
   useEffect(() => {
-    function open(event: KeyboardEvent) {
+    function open() {
+      setWanted(true)
+      setOpen(true)
+    }
+    function openOnShortcut(event: KeyboardEvent) {
       if (event.key.toLowerCase() !== 'k') return
       if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey)
         return
       event.preventDefault()
-      setWanted(true)
-      setOpen(true)
+      open()
     }
-    window.addEventListener('keydown', open)
-    return () => window.removeEventListener('keydown', open)
+    // The header's search button sends this (`openCommandPalette`).
+    window.addEventListener('oriel:command-palette', open)
+    window.addEventListener('keydown', openOnShortcut)
+    return () => {
+      window.removeEventListener('oriel:command-palette', open)
+      window.removeEventListener('keydown', openOnShortcut)
+    }
   }, [])
   if (!wanted) return null
   return (
@@ -249,7 +275,7 @@ function useEscapeToClose(itemId: string | undefined) {
       if (event.key !== 'Escape' || event.defaultPrevented) return
       const target = event.target as HTMLElement
       if (target.closest('input, textarea, [contenteditable="true"]')) return
-      await navigate({ to: '/', search: true })
+      await navigate({ to: '/app', search: true })
       requestAnimationFrame(() =>
         document
           .querySelector<HTMLElement>(`a[href^="/items/${itemId}"]`)
@@ -315,6 +341,17 @@ function AppBadge() {
   return null
 }
 
+/** The home page sends a device that has opened the notebook straight back to it. */
+function useRememberDevice() {
+  useEffect(() => {
+    try {
+      localStorage.setItem('oriel.used', '1')
+    } catch {
+      // Without storage the home page simply shows itself.
+    }
+  }, [])
+}
+
 function usePurgeOldTrash() {
   useEffect(() => {
     const cutoff = new Date(Date.now() - trashDays * 86_400_000).toISOString()
@@ -347,7 +384,7 @@ function StorageProblem() {
         no. Private or incognito windows, a full disk, or blocked site data are
         the usual causes. Try a normal window, free some space, or allow storage
         for this site, then{' '}
-        <a href="/" className="text-foreground underline underline-offset-4">
+        <a href="/app" className="text-foreground underline underline-offset-4">
           reload
         </a>
         .

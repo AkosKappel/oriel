@@ -85,7 +85,7 @@ function InvitePage() {
     try {
       await acceptInvite({ data: { token } })
       toast(`You joined ${spaceName}. Its notes and lists arrive in a moment.`)
-      await navigate({ to: '/' })
+      await navigate({ to: '/app' })
     } catch (error) {
       toast(error instanceof Error ? error.message : 'Could not join.')
     } finally {

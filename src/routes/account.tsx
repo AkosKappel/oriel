@@ -373,7 +373,7 @@ function SignOut({ pending }: { pending: number }) {
       await signOut()
       close()
       // A fresh start, so no screen still shows the removed data.
-      window.location.assign('/')
+      window.location.assign('/app')
     } catch (caught) {
       console.error('Sign-out failed', caught)
       setError('Could not sign out. Check the connection and try again.')
@@ -454,7 +454,7 @@ function DeleteAccount() {
         setError(refusal)
         return
       }
-      window.location.assign('/')
+      window.location.assign('/app')
     } catch (caught) {
       console.error('Account deletion failed', caught)
       setError(
