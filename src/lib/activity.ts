@@ -1,3 +1,6 @@
+import { formatLocale } from '#/lib/locale'
+import { m } from '#/paraglide/messages.js'
+import { getLocale, type Locale } from '#/paraglide/runtime.js'
 import type { ActivityAction } from '#/server/db/schema'
 
 export type ActivityLine = {
@@ -21,38 +24,34 @@ export type ActivitySentence = {
   after: string
 }
 
-const entryVerbs: Partial<Record<ActivityAction, [string, string]>> = {
-  added: ['added', 'to'],
-  completed: ['checked', 'in'],
-  reopened: ['unchecked', 'in'],
-  edited: ['changed', 'in'],
-}
+// Actions an entry can have; the rest are about the item itself.
+const entryActions: ActivityAction[] = [
+  'added',
+  'completed',
+  'reopened',
+  'edited',
+]
 
-const itemVerbs: Record<ActivityAction, [string, string]> = {
-  added: ['added', ''],
-  edited: ['edited', ''],
-  completed: ['finished', ''],
-  reopened: ['reopened', ''],
-  archived: ['archived', ''],
-  unarchived: ['took', 'out of the archive'],
-  trashed: ['moved', 'to the trash'],
-  restored: ['restored', ''],
-}
-
-function listOf(texts: string[]) {
+function listOf(texts: string[], locale: Locale) {
   const shown = texts.slice(0, 3)
   const more = texts.length - shown.length
-  if (more > 0) return `${shown.join(', ')} and ${more} more`
-  return shown.length > 1
-    ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}`
-    : shown[0]
+  if (more > 0) {
+    return m.activity_more({ list: shown.join(', '), count: more }, { locale })
+  }
+  return new Intl.ListFormat(formatLocale(locale), {
+    type: 'conjunction',
+  }).format(shown)
 }
 
 /**
  * Turns the newest-first log into sentences, joining runs of the same change by the same member
  * to the same list ("Anna checked Milk, Eggs and 2 more in Groceries").
  */
-export function describeActivity(lines: ActivityLine[]): ActivitySentence[] {
+export function describeActivity(
+  lines: ActivityLine[],
+  // Notifications are worded in the device's language, outside any request.
+  locale: Locale = getLocale(),
+): ActivitySentence[] {
   const runs: ActivityLine[][] = []
   for (const line of lines) {
     const run = runs.at(-1)
@@ -72,19 +71,31 @@ export function describeActivity(lines: ActivityLine[]): ActivitySentence[] {
 
   return runs.map((run) => {
     const [first] = run
-    const who = first.memberName ?? 'Someone who left'
+    const who = first.memberName ?? m.someone_who_left({}, { locale })
     const texts = [
       ...new Set(run.map((line) => line.entryText).filter((t) => t !== null)),
     ].reverse()
-    const entryVerb = entryVerbs[first.action]
-    const [verb, after] =
-      texts.length > 0 && entryVerb
-        ? [`${entryVerb[0]} ${listOf(texts)} ${entryVerb[1]}`, '']
-        : itemVerbs[first.action]
+    const { action } = first
+    const [before, after] =
+      texts.length > 0 && entryActions.includes(action)
+        ? [
+            m.activity_entry_before(
+              { action, who, entries: listOf(texts, locale) },
+              { locale },
+            ),
+            m.activity_entry_after(
+              { action, entries: listOf(texts, locale) },
+              { locale },
+            ),
+          ]
+        : [
+            m.activity_item_before({ action, who }, { locale }),
+            m.activity_item_after({ action }, { locale }),
+          ]
     return {
       key: first.id,
       at: first.at,
-      before: `${who} ${verb}`,
+      before,
       itemId: first.itemId,
       title: first.itemTitle,
       after,

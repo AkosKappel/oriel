@@ -1,0 +1,51 @@
+{
+  "err_sign_in_first": "Najprv sa prihlás.",
+  "err_not_shared": "Táto položka s tebou nie je zdieľaná.",
+  "err_push_off": "Na tomto serveri sú upozornenia vypnuté.",
+  "err_space_name": "Pridaj názov",
+  "err_email": "Skontroluj e-mailovú adresu",
+  "err_owner_only": "Toto môže urobiť len vlastník tohto priestoru.",
+  "err_personal_delete": "Tvoj osobný priestor sa nedá vymazať.",
+  "err_too_many_invites": "To je na jeden deň veľa pozvánok. Radšej zdieľaj odkaz alebo to skús zajtra.",
+  "err_personal_private": "Tvoj osobný priestor zostáva súkromný. Zdieľaj radšej samostatný priestor.",
+  "err_not_member": "Nie si členom tohto priestoru.",
+  "err_invite_invalid": "Tento odkaz na pozvánku nie je platný.",
+  "err_invite_used": "Tento odkaz na pozvánku už bol použitý.",
+  "err_invite_expired": "Platnosť tohto odkazu na pozvánku vypršala. Požiadaj o nový.",
+  "err_not_a_member": "Táto osoba nie je členom.",
+  "err_needs_owner": "Priestor potrebuje vlastníka. Najprv urob vlastníkom niekoho iného.",
+  "err_needs_owner_or_delete": "Priestor potrebuje vlastníka. Najprv urob vlastníkom niekoho iného alebo priestor vymaž.",
+  "err_personal_leave": "Z osobného priestoru nemôže nikto odísť.",
+  "err_spaces_need_owner": "Najprv potrebuje nového vlastníka: {spaces}. Urob niekoho vlastníkom v Priestoroch alebo priestor vymaž.",
+  "invite_subject": "{inviter} ťa pozýva do priestoru {space}",
+  "invite_intro": "{inviter} ťa pozýva do priestoru {space} v Oriel, aby ste spolu zdieľali poznámky, zoznamy a úlohy.",
+  "invite_action": "Pridať sa: {space}",
+  "invite_outro": "Odkaz funguje raz a o 7 dní vyprší. Ak si to nečakal(a), tento e-mail ignoruj.",
+  "reset_subject": "Obnovenie hesla do Oriel",
+  "reset_intro": "Niekto požiadal o obnovenie hesla k tvojmu účtu Oriel.",
+  "reset_action": "Zvoliť nové heslo",
+  "reset_outro": "Odkaz funguje raz a o hodinu vyprší. Ak si to nebol(a) ty, e-mail ignoruj; heslo zostáva rovnaké.",
+  "push_tasks_title": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Úloha na dnes",
+        "countPlural=few": "{count} úlohy na dnes",
+        "countPlural=other": "{count} úloh na dnes"
+      }
+    }
+  ],
+  "push_changes_title": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} zmena v tvojich priestoroch",
+        "countPlural=few": "{count} zmeny v tvojich priestoroch",
+        "countPlural=other": "{count} zmien v tvojich priestoroch"
+      }
+    }
+  ],
+  "push_and_more": "{text} a ďalšie {count}"
+}

@@ -34,6 +34,7 @@ import { canEdit, type SpaceView, useSpaces } from '#/lib/spaces'
 import { describeSync, useSyncStatus } from '#/lib/sync-status'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
+import { m } from '#/paraglide/messages.js'
 
 const statuses = taskStatuses.map(({ value }) => value)
 
@@ -113,7 +114,7 @@ function Notebook() {
                   to="/settings"
                   className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
                 >
-                  Settings
+                  {m.nav_settings()}
                 </Link>
                 <AccountLink sync={sync} />
               </div>
@@ -138,7 +139,7 @@ function Notebook() {
           {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is always region or main, both take a label */}
           <div
             role={listRole}
-            aria-label={itemOpen ? 'Everything' : undefined}
+            aria-label={itemOpen ? m.nav_everything() : undefined}
             className="flex flex-1 flex-col pb-6 pl-10"
           >
             <ItemList
@@ -154,7 +155,7 @@ function Notebook() {
             />
             {!view && (
               <nav
-                aria-label="Put away"
+                aria-label={m.view_put_away()}
                 className="mt-auto flex gap-x-4 pt-10 text-sm"
               >
                 <Link
@@ -162,21 +163,21 @@ function Notebook() {
                   search={(previous) => ({ ...previous, view: 'snoozed' })}
                   className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
                 >
-                  Snoozed
+                  {m.view_snoozed()}
                 </Link>
                 <Link
                   to="/app"
                   search={(previous) => ({ ...previous, view: 'archive' })}
                   className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
                 >
-                  Archive
+                  {m.view_archive()}
                 </Link>
                 <Link
                   to="/app"
                   search={(previous) => ({ ...previous, view: 'trash' })}
                   className="rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2"
                 >
-                  Trash
+                  {m.view_trash()}
                 </Link>
               </nav>
             )}
@@ -188,11 +189,11 @@ function Notebook() {
               role="status"
               className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground"
             >
-              This space is not on this device yet. It appears once it syncs.
+              {m.space_not_here_yet()}
             </p>
           ) : space && !canEdit(space.role) ? (
             <p className="pb-[max(1rem,env(safe-area-inset-bottom))] pl-10 text-sm text-muted-foreground">
-              You can view {space.name}; only its editors can add to it.
+              {m.space_view_only({ space: space.name })}
             </p>
           ) : (
             <CaptureBar
@@ -412,16 +413,11 @@ function useStorageFailed() {
 function StorageProblem() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-3 px-4 pb-24 pl-14">
-      <h1 className="font-serif text-3xl italic">
-        Oriel cannot open its notebook.
-      </h1>
+      <h1 className="font-serif text-3xl italic">{m.storage_title()}</h1>
       <p className="max-w-sm text-sm text-muted-foreground">
-        Oriel keeps everything in this browser's storage, and the browser said
-        no. Private or incognito windows, a full disk, or blocked site data are
-        the usual causes. Try a normal window, free some space, or allow storage
-        for this site, then{' '}
+        {m.storage_text()}{' '}
         <a href="/app" className="text-foreground underline underline-offset-4">
-          reload
+          {m.storage_reload()}
         </a>
         .
       </p>

@@ -1,7 +1,8 @@
 import { toast } from 'sonner'
 import type { Item } from '#/data/schema'
 import type { Store } from '#/data/store'
-import { describeDue, localDay } from '#/lib/dates'
+import { formatShortDate } from '#/lib/dates'
+import { m } from '#/paraglide/messages.js'
 
 /**
  * Finishes or reopens a task. A repeating task moves on to its next due day instead, which a
@@ -14,13 +15,17 @@ export async function completeTask(
 ) {
   const next = await store.setItemCompleted(item.id, completed)
   if (next === undefined) return false
-  // "Due 6 November" reads "next due 6 November".
-  const due = describeDue(next, localDay(new Date()))
-  toast(`${item.title}: next ${due[0].toLowerCase()}${due.slice(1)}`, {
-    action: {
-      label: 'Undo',
-      onClick: () => void store.setItemDue(item.id, item.due_on),
+  toast(
+    m.next_due({
+      title: item.title,
+      date: formatShortDate(`${next}T12:00:00`),
+    }),
+    {
+      action: {
+        label: m.undo(),
+        onClick: () => void store.setItemDue(item.id, item.due_on),
+      },
     },
-  })
+  )
   return true
 }

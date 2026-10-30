@@ -3,7 +3,11 @@ import { type PointerEvent, type ReactNode, useRef, useState } from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
 import { completeTask } from '#/components/complete-task'
-import { itemLabels } from '#/components/item-labels'
+import {
+  priorityDetail,
+  repeatDetail,
+  statusLabel,
+} from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
 import {
   assignedTo,
@@ -19,13 +23,7 @@ import {
   withDue,
   withStatus,
 } from '#/data/organize'
-import {
-  type Item,
-  type ItemType,
-  priorities,
-  statusLabel,
-  type TaskStatus,
-} from '#/data/schema'
+import type { Item, ItemType, TaskStatus } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { useAccount } from '#/lib/account'
 import { describeDue, formatDay, formatShortDate, localDay } from '#/lib/dates'
@@ -33,13 +31,7 @@ import { tick } from '#/lib/haptics'
 import { canEdit, type SpaceView } from '#/lib/spaces'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
-
-const emptyMessages: Record<ItemType | 'all', string> = {
-  all: 'Notes, lists and tasks you write down will show up here.',
-  note: 'Notes you write down will show up here.',
-  list: 'Lists you start will show up here.',
-  task: 'Tasks you write down will show up here.',
-}
+import { m } from '#/paraglide/messages.js'
 
 type EntryCounts = ReturnType<typeof countEntries>
 
@@ -117,29 +109,29 @@ export function ItemList({
     if (mine && type === 'task' && !query.trim()) {
       return (
         <p className="pt-6 text-sm text-muted-foreground" role="status">
-          Nothing is for you right now.
+          {m.empty_mine()}
         </p>
       )
     }
     if (due && type === 'task' && !query.trim()) {
       return (
         <p className="pt-6 text-sm text-muted-foreground" role="status">
-          {due === 'today' ? 'Nothing due today.' : 'Nothing due later.'}
+          {due === 'today' ? m.empty_due_today() : m.empty_due_later()}
         </p>
       )
     }
     if (query.trim()) {
       return (
         <p className="pt-6 text-sm text-muted-foreground" role="status">
-          Nothing here mentions “{query.trim()}”.
+          {m.empty_search({ query: query.trim() })}
         </p>
       )
     }
     return (
       <div className="flex flex-1 flex-col justify-center gap-2 pb-16">
-        <p className="font-serif text-2xl italic">A blank page.</p>
+        <p className="font-serif text-2xl italic">{m.empty_blank()}</p>
         <p className="max-w-xs text-sm text-muted-foreground">
-          {emptyMessages[type ?? 'all']}
+          {type ? m.empty_type({ type }) : m.empty_all()}
         </p>
       </div>
     )
@@ -148,7 +140,7 @@ export function ItemList({
   return (
     <div className="flex flex-col gap-8">
       {pinned.length > 0 && (
-        <Section title="Pinned">
+        <Section title={m.section_pinned()}>
           <Rows
             store={store}
             items={pinned}
@@ -160,7 +152,9 @@ export function ItemList({
         </Section>
       )}
       {open.length > 0 && (
-        <Section title={pinned.length > 0 ? 'Everything else' : undefined}>
+        <Section
+          title={pinned.length > 0 ? m.section_everything_else() : undefined}
+        >
           <Rows
             store={store}
             items={open}
@@ -175,9 +169,11 @@ export function ItemList({
         <details className="group">
           <summary className="flex h-11 w-fit cursor-pointer list-none items-center text-sm text-muted-foreground hover:text-foreground">
             <span className="group-open:hidden">
-              Show {completed.length} completed
+              {m.show_completed({ count: completed.length })}
             </span>
-            <span className="hidden group-open:inline">Hide completed</span>
+            <span className="hidden group-open:inline">
+              {m.hide_completed()}
+            </span>
           </summary>
           <Rows
             store={store}
@@ -193,16 +189,16 @@ export function ItemList({
   )
 }
 
-const viewTitles: Record<View, string> = {
-  snoozed: 'Snoozed',
-  archive: 'Archive',
-  trash: 'Trash',
+const viewTitles: Record<View, () => string> = {
+  snoozed: m.view_snoozed,
+  archive: m.view_archive,
+  trash: m.view_trash,
 }
 
-const emptyViews: Record<View, string> = {
-  snoozed: 'Snooze an item to put it away until a day you choose.',
-  archive: 'Archive finished lists and old notes to keep them out of the way.',
-  trash: 'The trash is empty.',
+const emptyViews: Record<View, () => string> = {
+  snoozed: m.empty_snoozed,
+  archive: m.empty_archive,
+  trash: m.empty_trash,
 }
 
 /** Snoozed, the archive and the trash: one list, each row saying when it went there or comes back. */
@@ -217,42 +213,37 @@ function PastItems({
       new Date().toISOString(),
     )
     const count = snapshot.items.length
-    toast(
-      count === 1
-        ? 'Deleted 1 item for good'
-        : `Deleted ${count} items for good`,
-      {
-        action: {
-          label: 'Undo',
-          onClick: () => void context.store.restore(snapshot),
-        },
+    toast(m.trash_emptied({ count }), {
+      action: {
+        label: m.undo(),
+        onClick: () => void context.store.restore(snapshot),
       },
-    )
+    })
   }
 
   return (
     <section aria-labelledby="past-items" className="flex flex-col gap-1">
       <div className="flex min-h-11 items-center justify-between">
         <h2 id="past-items" className="font-serif text-2xl">
-          {viewTitles[view]}
+          {viewTitles[view]()}
         </h2>
         <Link
           to="/app"
           search={(previous) => ({ ...previous, view: undefined })}
           className="-mr-2 rounded-sm px-2 py-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2"
         >
-          Close
+          {m.close()}
         </Link>
       </div>
       {view === 'trash' && (
         <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>Deleted items stay here for {trashDays} days.</p>
+          <p>{m.trash_note({ days: trashDays })}</p>
           {items.length > 0 && !query.trim() && (
             <Button
               onPress={() => void emptyTrash()}
               className="-mr-2 shrink-0 rounded-sm px-2 py-2 hover:text-destructive data-focus-visible:outline-2"
             >
-              Empty trash
+              {m.trash_empty_button()}
             </Button>
           )}
         </div>
@@ -260,8 +251,8 @@ function PastItems({
       {items.length === 0 ? (
         <p className="pt-6 text-sm text-muted-foreground" role="status">
           {query.trim()
-            ? `Nothing here mentions “${query.trim()}”.`
-            : emptyViews[view]}
+            ? m.empty_search({ query: query.trim() })
+            : emptyViews[view]()}
         </p>
       ) : (
         <Rows items={items} query={query} {...context} />
@@ -272,7 +263,7 @@ function PastItems({
 
 function Section({ title, children }: { title?: string; children: ReactNode }) {
   return (
-    <section aria-label={title ?? 'Notes, lists and tasks'}>
+    <section aria-label={title ?? m.section_all_items()}>
       {title && <h2 className="mb-1 text-xs text-muted-foreground">{title}</h2>}
       {children}
     </section>
@@ -321,7 +312,7 @@ function Rows({ items, ...context }: RowContext & { items: Item[] }) {
           onPress={showMore}
           className="flex h-11 w-fit items-center rounded-sm text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
         >
-          Show {Math.min(hidden, rowsPerPage)} more
+          {m.show_more({ count: Math.min(hidden, rowsPerPage) })}
         </Button>
       )}
     </>
@@ -346,44 +337,53 @@ function ItemRow({
   const assignee =
     item.type === 'task' && !done && item.assigned_to
       ? item.assigned_to === account?.userId
-        ? 'you'
+        ? m.row_for_you()
         : space?.members.find((member) => member.user_id === item.assigned_to)
             ?.member_name
       : undefined
   const detail = [
     item.deleted_at
-      ? `Deleted ${formatShortDate(item.deleted_at)}`
+      ? m.row_deleted({ date: formatShortDate(item.deleted_at) })
       : item.archived_at
-        ? `Archived ${formatShortDate(item.archived_at)}`
+        ? m.row_archived({ date: formatShortDate(item.archived_at) })
         : item.snoozed_until && item.snoozed_until > localDay(new Date())
-          ? `Back ${formatDay(new Date(`${item.snoozed_until}T12:00:00`))}`
+          ? m.row_back({
+              date: formatDay(new Date(`${item.snoozed_until}T12:00:00`)),
+            })
           : null,
     showSpace && space && !space.personal ? space.name : null,
-    assignee && `For ${assignee}`,
+    assignee &&
+      (item.assigned_to === account?.userId
+        ? assignee
+        : m.row_for({ name: assignee })),
     describeItem(item, counts),
   ]
     .filter(Boolean)
     .join(' · ')
 
   const editable = item.deleted_at === null && (!space || canEdit(space.role))
-  const label = itemLabels[item.type]
 
   // Tasks are finished (or reopened) with a swipe right; notes and lists are archived.
   async function swipeRight() {
     if (item.type === 'task') {
       if (await completeTask(store, item, !done)) return
-      toast(done ? `${item.title} reopened` : `${item.title} done`, {
-        action: {
-          label: 'Undo',
-          onClick: () => void store.setItemCompleted(item.id, done),
+      toast(
+        done
+          ? m.toast_reopened({ title: item.title })
+          : m.toast_done({ title: item.title }),
+        {
+          action: {
+            label: m.undo(),
+            onClick: () => void store.setItemCompleted(item.id, done),
+          },
         },
-      })
+      )
       return
     }
     await store.setItemArchived(item.id, true)
-    toast(`${label} archived`, {
+    toast(m.toast_archived({ type: item.type }), {
       action: {
-        label: 'Undo',
+        label: m.undo(),
         onClick: () => void store.setItemArchived(item.id, false),
       },
     })
@@ -391,8 +391,11 @@ function ItemRow({
 
   async function swipeLeft() {
     await store.trashItem(item.id)
-    toast(`${label} moved to the trash`, {
-      action: { label: 'Undo', onClick: () => void store.restoreItem(item.id) },
+    toast(m.toast_trashed({ type: item.type }), {
+      action: {
+        label: m.undo(),
+        onClick: () => void store.restoreItem(item.id),
+      },
     })
   }
 
@@ -400,10 +403,15 @@ function ItemRow({
     <SwipeRow
       enabled={editable && item.archived_at === null}
       right={{
-        label: item.type !== 'task' ? 'Archive' : done ? 'Reopen' : 'Done',
+        label:
+          item.type !== 'task'
+            ? m.swipe_archive()
+            : done
+              ? m.swipe_reopen()
+              : m.swipe_done(),
         run: swipeRight,
       }}
-      left={{ label: 'Delete', run: swipeLeft }}
+      left={{ label: m.swipe_delete(), run: swipeLeft }}
     >
       {item.type === 'task' && (
         <Checkbox
@@ -411,7 +419,7 @@ function ItemRow({
           isSelected={done}
           isDisabled={!editable}
           onChange={(selected) => void completeTask(store, item, selected)}
-          aria-label={`Done: ${item.title}`}
+          aria-label={m.check_task({ title: item.title })}
         />
       )}
       <Link
@@ -568,17 +576,17 @@ function SwipeRow({
 function describeItem(item: Item, counts: EntryCounts) {
   if (item.type === 'list') {
     const { total = 0, open = 0, upNext = [] } = counts.get(item.id) ?? {}
-    if (total === 0) return 'Empty list'
-    if (open === 0) return `All ${total} done`
-    return `${upNext.join(', ')}${open > upNext.length ? '…' : ''} · ${open} left`
+    if (total === 0) return m.list_empty()
+    if (open === 0) return m.list_all_done({ count: total })
+    return `${upNext.join(', ')}${open > upNext.length ? '…' : ''} · ${m.list_left({ count: open })}`
   }
   const firstLine = previewLine(item.body)
   if (item.type === 'task' && !item.completed_at) {
     return [
       item.due_on && describeDue(item.due_on, localDay(new Date())),
-      item.repeat && `Repeats ${item.repeat}`,
+      item.repeat && repeatDetail(item.repeat),
       item.status && statusLabel(item.status),
-      item.priority > 0 && `${priorities[item.priority].label} priority`,
+      item.priority > 0 && priorityDetail(item.priority),
       firstLine,
     ]
       .filter(Boolean)

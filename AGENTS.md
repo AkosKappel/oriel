@@ -97,6 +97,14 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - The worker only runs in production builds; test offline with `npm run build` and `npm start`.
 - Long text fields save when the page is hidden, not only on unmount.
 
+## Languages
+
+- English, Hungarian and Slovak with Paraglide (`project.inlang`, messages in `messages/{locale}/{app,account,site,server}.json`), as in BudgetMaster. The language comes from the `PARAGLIDE_LOCALE` cookie (set by the choice in Settings), then the browser's languages, then English; URLs carry none. `src/server.ts` runs every request in its language, so server-rendered pages, server function errors and emails match the browser.
+- Every user-facing string is a message, called where it is shown (`m.key()`), never kept in a module-level constant: the server renders pages in each request's language. Labels for item types, priorities, statuses and repeats are functions in `src/components/item-labels.ts`.
+- Write whole phrases per language: a phrase that depends on the item type selects on it (`type=note`, `type=list`, `type=*`) instead of gluing translated words together, and counts use plural forms (Slovak has one, few and other). Address the reader informally (tegeződés, tykanie), like BudgetMaster.
+- Dates and name lists follow the language through `formatLocale()` (`src/lib/locale.ts`: en-IE, hu-HU, sk-SK). Notifications are sent outside any request, so their messages get the device's `locale` explicitly (`push_subscription.locale`).
+- `src/paraglide` is generated and not committed: `npm run i18n` (run by `typecheck` and `test`) or the Vite plugin compiles it.
+
 ## Conventions
 
 - Imports from `src` use the `#/` alias (`#/lib/utils`).

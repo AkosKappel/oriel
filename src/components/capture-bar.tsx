@@ -9,7 +9,7 @@ import {
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
 import { DictateButton } from '#/components/dictate-button'
-import { itemLabels } from '#/components/item-labels'
+import { itemLabel } from '#/components/item-labels'
 import { ChoiceGroup } from '#/components/ui/choice-group'
 import { parseAppend, parseCapture } from '#/data/capture'
 import { itemsInView } from '#/data/organize'
@@ -19,17 +19,10 @@ import { canEdit, useSpaces } from '#/lib/spaces'
 import { requestPersistentStorage } from '#/lib/storage'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
+import { m } from '#/paraglide/messages.js'
 
-const placeholders: Record<ItemType, string> = {
-  note: 'Write something',
-  list: 'Groceries: milk, eggs, bread',
-  task: 'Call the vet',
-}
-
-const captureChoices = itemTypes.map((value) => ({
-  value,
-  label: itemLabels[value],
-}))
+const captureChoices = () =>
+  itemTypes.map((value) => ({ value, label: itemLabel(value) }))
 
 const typeStorageKey = 'oriel.capture-type'
 
@@ -144,12 +137,12 @@ export function CaptureBar({
   function append() {
     if (!appendDraft) return
     if (!appendDraft.list) {
-      setError('No list starts with that name')
+      setError(m.append_no_list())
       return
     }
     const { list, entries } = appendDraft
     if (entries.length === 0) {
-      setError(`Type what to add to ${list.title}`)
+      setError(m.append_type_what({ list: list.title }))
       return
     }
     const captured = text
@@ -157,9 +150,9 @@ export function CaptureBar({
     setError(null)
     store.addEntries(list.id, entries).then(
       (ids) => {
-        toast(`Added ${entries.length} to ${list.title}`, {
+        toast(m.append_added({ count: entries.length, list: list.title }), {
           action: {
-            label: 'Undo',
+            label: m.undo(),
             onClick: () => void Promise.all(ids.map(store.deleteEntry)),
           },
         })
@@ -167,7 +160,7 @@ export function CaptureBar({
       (saveError: unknown) => {
         console.error('Could not add to the list', saveError)
         setText(captured)
-        setError('Could not add. Keep each entry under 500 characters.')
+        setError(m.append_too_long())
       },
     )
   }
@@ -188,15 +181,18 @@ export function CaptureBar({
     setError(null)
     store.createItem(draft, { spaceId }).then(
       (id) => {
-        toast(`${itemLabels[draft.type]} saved`, {
-          action: { label: 'Undo', onClick: () => void store.deleteItem(id) },
+        toast(m.capture_saved({ type: draft.type }), {
+          action: {
+            label: m.undo(),
+            onClick: () => void store.deleteItem(id),
+          },
         })
         void requestPersistentStorage()
       },
       (saveError: unknown) => {
         console.error('Could not save the captured item', saveError)
         setText(captured)
-        setError('Could not save. Try again.')
+        setError(m.capture_save_failed())
       },
     )
   }
@@ -221,19 +217,26 @@ export function CaptureBar({
     error ??
     (appendDraft?.list
       ? appendDraft.entries.length > 0
-        ? `Add ${appendDraft.entries.length} to ${appendDraft.list.title}`
-        : `Adding to ${appendDraft.list.title}`
+        ? m.append_add_count({
+            count: appendDraft.entries.length,
+            list: appendDraft.list.title,
+          })
+        : m.append_adding({ list: appendDraft.list.title })
       : appendDraft
-        ? 'No list starts with that name yet'
+        ? m.append_no_list_yet()
         : draft?.type === 'list' && draft.entries.length > 0
-          ? `${draft.title} · ${draft.entries.length} ${draft.entries.length === 1 ? 'item' : 'items'}`
+          ? m.draft_list_items({
+              title: draft.title,
+              count: draft.entries.length,
+            })
           : '')
 
   return (
     <form
       ref={formRef}
       onSubmit={submit}
-      aria-label="Capture"
+      aria-label={m.capture()}
+      data-capture
       className="sticky bottom-0 -mx-4 flex flex-col bg-background pt-2 pr-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-14 print:hidden"
     >
       <div
@@ -243,8 +246,8 @@ export function CaptureBar({
         }}
       >
         <ChoiceGroup
-          label="Type"
-          choices={captureChoices}
+          label={m.capture_type()}
+          choices={captureChoices()}
           value={type}
           onChange={chooseType}
         />
@@ -259,8 +262,8 @@ export function CaptureBar({
             setError(null)
           }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholders[type]}
-          aria-label={`New ${itemLabels[type].toLowerCase()}`}
+          placeholder={m.capture_placeholder({ type })}
+          aria-label={m.capture_new({ type })}
           aria-describedby={hintId}
           aria-invalid={error ? true : undefined}
           enterKeyHint="done"
@@ -281,7 +284,7 @@ export function CaptureBar({
           type="submit"
           className="h-11 shrink-0 text-sm text-muted-foreground transition-colors hover:text-foreground data-focus-visible:rounded-sm data-focus-visible:outline-2 data-pressed:text-foreground motion-reduce:transition-none"
         >
-          Add
+          {m.capture_add()}
         </Button>
       </div>
       <p

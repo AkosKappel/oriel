@@ -2,6 +2,7 @@ import { Mic } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { ToggleButton } from 'react-aria-components'
 import { useOnline } from '#/lib/online'
+import { m } from '#/paraglide/messages.js'
 
 // The DOM typings know the events but not the recognizer itself, which Chrome and Safari still
 // ship under a prefix.
@@ -21,11 +22,11 @@ function recognizerClass(): RecognizerClass | undefined {
   return scope.SpeechRecognition ?? scope.webkitSpeechRecognition
 }
 
-const errorMessages: Record<string, string> = {
-  'not-allowed': 'The browser did not allow the microphone',
-  'service-not-allowed': 'The browser did not allow the microphone',
-  network: 'Dictation needs a connection',
-  'no-speech': 'Did not hear anything',
+const errorMessages: Record<string, () => string> = {
+  'not-allowed': m.dictate_no_mic,
+  'service-not-allowed': m.dictate_no_mic,
+  network: m.dictate_network,
+  'no-speech': m.dictate_no_speech,
 }
 
 /**
@@ -64,7 +65,7 @@ export function DictateButton({
     }
     next.onerror = (event) => {
       if (event.error !== 'aborted')
-        onError(errorMessages[event.error] ?? 'Dictation stopped')
+        onError((errorMessages[event.error] ?? m.dictate_stopped)())
     }
     next.onend = () => {
       recognizer.current = null
@@ -80,7 +81,7 @@ export function DictateButton({
       isSelected={listening}
       onChange={toggle}
       isDisabled={!online}
-      aria-label={listening ? 'Stop dictation' : 'Dictate'}
+      aria-label={listening ? m.dictate_stop() : m.dictate()}
       className="grid size-11 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground data-disabled:opacity-50 data-focus-visible:outline-2 data-selected:text-primary motion-reduce:transition-none"
     >
       <Mic aria-hidden className="size-4" />

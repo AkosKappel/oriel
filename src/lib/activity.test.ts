@@ -52,4 +52,19 @@ describe('describeActivity', () => {
       'Someone who left edited Groceries',
     ])
   })
+
+  it('words sentences in another language when asked', () => {
+    const sentences = describeActivity(
+      [
+        line({ action: 'completed', entryText: 'Kenyér' }),
+        line({ action: 'completed', entryText: 'Tej' }),
+      ],
+      'hu',
+    )
+    expect(sentences[0]).toMatchObject({
+      before: 'Anna kipipált itt:',
+      title: 'Groceries',
+      after: '– Tej és Kenyér',
+    })
+  })
 })

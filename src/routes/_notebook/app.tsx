@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { m } from '#/paraglide/messages.js'
 
 export const Route = createFileRoute('/_notebook/app')({
   component: NothingOpen,
@@ -12,7 +13,7 @@ function NothingOpen() {
       aria-hidden
       className="flex flex-1 items-center justify-center pb-24 font-serif text-xl text-muted-foreground italic"
     >
-      Open a note, list or task to read it here.
+      {m.nothing_open()}
     </p>
   )
 }

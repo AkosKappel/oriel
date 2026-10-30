@@ -1,4 +1,5 @@
 import { env } from '#/env'
+import { m } from '#/paraglide/messages.js'
 
 // Server-only. Sends a transactional email through the Resend API (a single fetch, no SDK).
 // Without RESEND_API_KEY the message goes to the console instead, so invites work in development
@@ -58,17 +59,19 @@ export function sendInviteEmail(invite: {
   spaceName: string
   url: string
 }) {
-  const intro = `${invite.inviterName} invites you to ${invite.spaceName} on Oriel, to share notes, lists and tasks.`
-  const outro =
-    'The link works once and expires in 7 days. If you did not expect this, ignore the email.'
+  // In the inviter's language: the only one known when the invite is sent.
+  const names = { inviter: invite.inviterName, space: invite.spaceName }
+  const intro = m.invite_intro(names)
+  const action = m.invite_action(names)
+  const outro = m.invite_outro()
   return sendEmail({
     to: invite.to,
     replyTo: invite.inviterEmail,
-    subject: `${invite.inviterName} invites you to ${invite.spaceName}`,
-    text: `${intro}\n\nJoin ${invite.spaceName}: ${invite.url}\n\n${outro}`,
+    subject: m.invite_subject(names),
+    text: `${intro}\n\n${action}: ${invite.url}\n\n${outro}`,
     html: `<div style="font-family:Georgia,serif;max-width:32rem;color:#1b2435">
 <p style="font-size:18px">${escapeHtml(intro)}</p>
-<p><a href="${escapeHtml(invite.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#2454a5;color:#faf6ef;text-decoration:none;font-family:system-ui,sans-serif">Join ${escapeHtml(invite.spaceName)}</a></p>
+<p><a href="${escapeHtml(invite.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#2454a5;color:#faf6ef;text-decoration:none;font-family:system-ui,sans-serif">${escapeHtml(action)}</a></p>
 <p style="color:#5c6472;font-size:14px;font-family:system-ui,sans-serif">${escapeHtml(outro)}</p>
 </div>`,
   })
@@ -76,16 +79,16 @@ export function sendInviteEmail(invite: {
 
 /** The link from Better Auth's reset flow; it expires after an hour and works once. */
 export function sendPasswordResetEmail(reset: { to: string; url: string }) {
-  const intro = 'Someone asked to reset the password of your Oriel account.'
-  const outro =
-    'The link works once and expires in an hour. If it was not you, ignore the email; your password stays the same.'
+  const intro = m.reset_intro()
+  const action = m.reset_action()
+  const outro = m.reset_outro()
   return sendEmail({
     to: reset.to,
-    subject: 'Reset your Oriel password',
-    text: `${intro}\n\nChoose a new password: ${reset.url}\n\n${outro}`,
+    subject: m.reset_subject(),
+    text: `${intro}\n\n${action}: ${reset.url}\n\n${outro}`,
     html: `<div style="font-family:Georgia,serif;max-width:32rem;color:#1b2435">
 <p style="font-size:18px">${escapeHtml(intro)}</p>
-<p><a href="${escapeHtml(reset.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#2454a5;color:#faf6ef;text-decoration:none;font-family:system-ui,sans-serif">Choose a new password</a></p>
+<p><a href="${escapeHtml(reset.url)}" style="display:inline-block;padding:10px 16px;border-radius:4px;background:#2454a5;color:#faf6ef;text-decoration:none;font-family:system-ui,sans-serif">${escapeHtml(action)}</a></p>
 <p style="color:#5c6472;font-size:14px;font-family:system-ui,sans-serif">${escapeHtml(outro)}</p>
 </div>`,
   })

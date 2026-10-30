@@ -25,3 +25,6 @@ lighthouse-report
 # Production sidecar auth key (deploy/README.md)
 deploy/tailscale/ts.env
 oriel-samples.json
+
+# Paraglide output, compiled from messages/ by `npm run i18n` and the Vite plugin
+src/paraglide

@@ -1,4 +1,5 @@
 import handler, { createServerEntry } from '@tanstack/react-start/server-entry'
+import { paraglideMiddleware } from '#/paraglide/server.js'
 
 // Notifications (morning reminders, changes by other members): checked every five minutes in this
 // one app process. Loaded on the first run, so settings are still checked on first use, not at
@@ -12,6 +13,9 @@ scheduled.notificationTimer ??= setInterval(
   5 * 60_000,
 )
 
+// Every request runs in its language (cookie, then Accept-Language, then English), so pages
+// rendered on the server and messages from server functions match the browser.
 export default createServerEntry({
-  fetch: (request, opts) => handler.fetch(request, opts),
+  fetch: (request, opts) =>
+    paraglideMiddleware(request, () => handler.fetch(request, opts)),
 })

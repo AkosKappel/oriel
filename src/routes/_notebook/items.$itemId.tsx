@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { ErrorNotice } from '#/components/error-notice'
 import { ItemDetail } from '#/components/item-detail'
 import { store } from '#/data/client'
+import { m } from '#/paraglide/messages.js'
 
 export const Route = createFileRoute('/_notebook/items/$itemId')({
   component: ItemPage,
@@ -25,14 +26,10 @@ function ItemError({ error, reset }: ErrorComponentProps) {
         className="-ml-3 flex h-11 w-fit items-center gap-2 rounded-sm px-3 pt-2 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 lg:invisible"
       >
         <ArrowLeft aria-hidden className="size-4" />
-        Everything
+        {m.nav_everything()}
       </Link>
       <div className="pl-10">
-        <ErrorNotice
-          error={error}
-          reset={reset}
-          title="This page could not be shown."
-        />
+        <ErrorNotice error={error} reset={reset} title={m.item_error_title()} />
       </div>
     </div>
   )

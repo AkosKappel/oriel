@@ -1,40 +1,47 @@
 import type { Repeat } from '#/data/schema'
+import { formatLocale } from '#/lib/locale'
+import { m } from '#/paraglide/messages.js'
 
-const dayFormat = new Intl.DateTimeFormat('en-GB', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-})
+// Formats follow the language (`formatLocale`); one formatter per language and shape, made on
+// first use.
+const formatters = new Map<string, Intl.DateTimeFormat>()
+function formatter(shape: 'day' | 'short' | 'time') {
+  const locale = formatLocale()
+  const key = `${locale} ${shape}`
+  let format = formatters.get(key)
+  if (!format) {
+    format = new Intl.DateTimeFormat(
+      locale,
+      shape === 'day'
+        ? { weekday: 'long', day: 'numeric', month: 'long' }
+        : shape === 'short'
+          ? { day: 'numeric', month: 'long' }
+          : { hour: '2-digit', minute: '2-digit' },
+    )
+    formatters.set(key, format)
+  }
+  return format
+}
 
-const shortFormat = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'long',
-})
-
-/** "Tuesday, 27 October" */
-export const formatDay = (date: Date) => dayFormat.format(date)
+/** "Tuesday 27 October" */
+export const formatDay = (date: Date) => formatter('day').format(date)
 
 /** "27 October" */
 export const formatShortDate = (iso: string) =>
-  shortFormat.format(new Date(iso))
-
-const timeFormat = new Intl.DateTimeFormat('en-GB', {
-  hour: '2-digit',
-  minute: '2-digit',
-})
+  formatter('short').format(new Date(iso))
 
 /** "30 October, 14:05" */
 export function formatDateTime(iso: string) {
   const date = new Date(iso)
-  return `${shortFormat.format(date)}, ${timeFormat.format(date)}`
+  return `${formatter('short').format(date)}, ${formatter('time').format(date)}`
 }
 
 /** "14:05" today, "27 October" before. */
 export function formatWhen(iso: string, now = new Date()) {
   const date = new Date(iso)
   return localDay(date) === localDay(now)
-    ? timeFormat.format(date)
-    : shortFormat.format(date)
+    ? formatter('time').format(date)
+    : formatter('short').format(date)
 }
 
 /** The device's calendar day as `YYYY-MM-DD`, the form due dates are stored in. */
@@ -45,14 +52,14 @@ export function localDay(date: Date) {
 
 /** "Due today", "Due tomorrow", "Due 3 November", or "Overdue since 27 October". */
 export function describeDue(due: string, today: string) {
-  if (due === today) return 'Due today'
+  if (due === today) return m.due_today()
   // Noon, so a daylight saving change cannot move the day.
   const day = new Date(`${due}T12:00:00`)
   const tomorrow = new Date(`${today}T12:00:00`)
   tomorrow.setDate(tomorrow.getDate() + 1)
-  if (due === localDay(tomorrow)) return 'Due tomorrow'
-  const date = shortFormat.format(day)
-  return due < today ? `Overdue since ${date}` : `Due ${date}`
+  if (due === localDay(tomorrow)) return m.due_tomorrow()
+  const date = formatter('short').format(day)
+  return due < today ? m.overdue_since({ date }) : m.due_on({ date })
 }
 
 /**
@@ -111,7 +118,7 @@ export function snoozeDays(today: string) {
 
 export function greeting(date: Date) {
   const hour = date.getHours()
-  if (hour >= 5 && hour < 12) return 'Good morning'
-  if (hour >= 12 && hour < 18) return 'Good afternoon'
-  return 'Good evening'
+  if (hour >= 5 && hour < 12) return m.greeting_morning()
+  if (hour >= 12 && hour < 18) return m.greeting_afternoon()
+  return m.greeting_evening()
 }

@@ -12,12 +12,13 @@ import {
   ModalOverlay,
   SearchField,
 } from 'react-aria-components'
-import { itemLabels } from '#/components/item-labels'
+import { itemLabel } from '#/components/item-labels'
 import { fold, itemsInView, searchItems } from '#/data/organize'
 import type { ItemType } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { useAccount } from '#/lib/account'
 import { useRows } from '#/lib/use-rows'
+import { m } from '#/paraglide/messages.js'
 
 type Command = { id: string; label: string; run: () => void }
 
@@ -28,7 +29,7 @@ const recentLimit = 5
 function focusCapture() {
   requestAnimationFrame(() =>
     document
-      .querySelector<HTMLTextAreaElement>('form[aria-label="Capture"] textarea')
+      .querySelector<HTMLTextAreaElement>('form[data-capture] textarea')
       ?.focus(),
   )
 }
@@ -60,39 +61,51 @@ export function CommandPalette({
     void navigate({ to: '/app', search })
   }
   const commands: Command[] = [
-    { id: 'new-note', label: 'New note', run: newItem('note') },
-    { id: 'new-list', label: 'New list', run: newItem('list') },
-    { id: 'new-task', label: 'New task', run: newItem('task') },
-    { id: 'everything', label: 'Show everything', run: show({}) },
-    { id: 'notes', label: 'Show notes', run: show({ type: 'note' }) },
-    { id: 'lists', label: 'Show lists', run: show({ type: 'list' }) },
-    { id: 'tasks', label: 'Show tasks', run: show({ type: 'task' }) },
+    {
+      id: 'new-note',
+      label: m.capture_new({ type: 'note' }),
+      run: newItem('note'),
+    },
+    {
+      id: 'new-list',
+      label: m.capture_new({ type: 'list' }),
+      run: newItem('list'),
+    },
+    {
+      id: 'new-task',
+      label: m.capture_new({ type: 'task' }),
+      run: newItem('task'),
+    },
+    { id: 'everything', label: m.cmd_show_everything(), run: show({}) },
+    { id: 'notes', label: m.cmd_show_notes(), run: show({ type: 'note' }) },
+    { id: 'lists', label: m.cmd_show_lists(), run: show({ type: 'list' }) },
+    { id: 'tasks', label: m.cmd_show_tasks(), run: show({ type: 'task' }) },
     {
       id: 'today',
-      label: 'Tasks due today',
+      label: m.cmd_due_today(),
       run: show({ type: 'task', due: 'today' }),
     },
     {
       id: 'upcoming',
-      label: 'Upcoming tasks',
+      label: m.cmd_upcoming(),
       run: show({ type: 'task', due: 'upcoming' }),
     },
-    { id: 'archive', label: 'Archive', run: show({ view: 'archive' }) },
-    { id: 'trash', label: 'Trash', run: show({ view: 'trash' }) },
+    { id: 'archive', label: m.view_archive(), run: show({ view: 'archive' }) },
+    { id: 'trash', label: m.view_trash(), run: show({ view: 'trash' }) },
     {
       id: 'settings',
-      label: 'Settings',
+      label: m.nav_settings(),
       run: () => void navigate({ to: '/settings' }),
     },
     account
       ? {
           id: 'account',
-          label: 'Account',
+          label: m.nav_account(),
           run: () => void navigate({ to: '/account' }),
         }
       : {
           id: 'sign-in',
-          label: 'Sign in',
+          label: m.nav_sign_in(),
           run: () => void navigate({ to: '/sign-in' }),
         },
   ]
@@ -133,21 +146,21 @@ export function CommandPalette({
         <Dialog aria-label="Go to or run" className="outline-none">
           <Autocomplete inputValue={query} onInputChange={setQuery}>
             <SearchField
-              aria-label="Find an item or a command"
+              aria-label={m.cmd_find()}
               autoFocus
               className="border-b border-rule px-4"
             >
               <Input
-                placeholder="Find an item or a command"
+                placeholder={m.cmd_find()}
                 className="h-14 w-full bg-transparent font-serif text-lg outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
               />
             </SearchField>
             <Menu
-              aria-label="Results"
+              aria-label={m.cmd_results()}
               onAction={(key) => run(String(key))}
               renderEmptyState={() => (
                 <p className="px-3 py-4 text-sm text-muted-foreground">
-                  Nothing matches “{query.trim()}”.
+                  {m.cmd_nothing({ query: query.trim() })}
                 </p>
               )}
               className="max-h-[60vh] overflow-y-auto p-2 outline-none"
@@ -155,7 +168,7 @@ export function CommandPalette({
               {matchingItems.length > 0 && (
                 <MenuSection>
                   <Header className="px-3 pt-2 pb-1 text-xs text-muted-foreground">
-                    {words ? 'Notes, lists and tasks' : 'Recently changed'}
+                    {words ? m.section_all_items() : m.cmd_recent()}
                   </Header>
                   {matchingItems.map((item) => (
                     <MenuItem
@@ -168,7 +181,7 @@ export function CommandPalette({
                         {item.title}
                       </span>
                       <span className="shrink-0 text-xs text-muted-foreground">
-                        {itemLabels[item.type]}
+                        {itemLabel(item.type)}
                       </span>
                     </MenuItem>
                   ))}
@@ -177,7 +190,7 @@ export function CommandPalette({
               {matchingCommands.length > 0 && (
                 <MenuSection>
                   <Header className="px-3 pt-2 pb-1 text-xs text-muted-foreground">
-                    Commands
+                    {m.cmd_commands()}
                   </Header>
                   {matchingCommands.map((command) => (
                     <MenuItem

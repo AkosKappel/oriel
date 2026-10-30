@@ -15,18 +15,20 @@
     "format": "biome format --write",
     "check": "biome check",
     "check:fix": "biome check --write",
-    "typecheck": "tsr generate && tsc --noEmit",
-    "test": "vitest run",
+    "typecheck": "npm run i18n && tsr generate && tsc --noEmit",
+    "test": "npm run i18n && vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "samples": "node scripts/samples.ts"
+    "samples": "node scripts/samples.ts",
+    "i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/paraglide --strategy cookie preferredLanguage baseLocale --emit-ts-declarations"
   },
   "dependencies": {
     "@fontsource-variable/instrument-sans": "^5.3.0",
     "@fontsource-variable/newsreader": "^5.3.0",
+    "@inlang/paraglide-js": "^2.29.3",
     "@powersync/common": "^2.4.0",
     "@powersync/web": "^2.5.0",
     "@tailwindcss/vite": "^4.3.3",
@@ -54,6 +56,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@biomejs/biome": "2.6.3",
+    "@inlang/plugin-message-format": "^4.5.6",
     "@playwright/test": "~1.64.1",
     "@powersync/node": "^1.2.0",
     "@tanstack/devtools-vite": "0.8.5",

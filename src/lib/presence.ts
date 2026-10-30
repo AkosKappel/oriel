@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { formatLocale } from '#/lib/locale'
+import { m } from '#/paraglide/messages.js'
 
 /**
  * The other members who have this shared item open, live (server-sent events from
@@ -32,9 +34,8 @@ export function usePresence(itemId: string, shared: boolean) {
 /** "Anna is here too", "Anna and Ben are here too". */
 export function presenceText(others: string[]) {
   if (others.length === 0) return null
-  const names =
-    others.length === 1
-      ? others[0]
-      : `${others.slice(0, -1).join(', ')} and ${others.at(-1)}`
-  return `${names} ${others.length === 1 ? 'is' : 'are'} here too`
+  const names = new Intl.ListFormat(formatLocale(), {
+    type: 'conjunction',
+  }).format(others)
+  return m.presence_here({ names, count: others.length })
 }

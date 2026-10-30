@@ -1,5 +1,6 @@
 import { column, Schema, Table } from '@powersync/common'
 import { z } from 'zod'
+import { m } from '#/paraglide/messages.js'
 import { itemTypes, taskStatuses } from './kinds'
 
 // The page's Content-Security-Policy forbids eval, so Zod must not probe for it with `Function`
@@ -174,13 +175,13 @@ export type Entry = z.infer<typeof entrySchema>
 export const titleSchema = z
   .string()
   .trim()
-  .min(1, 'Add a title')
-  .max(200, 'Keep the title under 200 characters')
+  .min(1, { error: () => m.invalid_title_missing() })
+  .max(200, { error: () => m.invalid_title_long() })
 export const bodySchema = z.string().trim().max(20_000)
 export const entryTextSchema = z
   .string()
   .trim()
-  .min(1, 'Add some text')
+  .min(1, { error: () => m.invalid_text_missing() })
   .max(500)
 
 export const newItemSchema = z

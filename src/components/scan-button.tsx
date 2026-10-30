@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner'
 import { useOnline } from '#/lib/online'
 import { lookupProduct } from '#/lib/products'
+import { m } from '#/paraglide/messages.js'
 
 // Not in the DOM typings yet: Chrome on Android, ChromeOS and macOS have it.
 type Detector = {
@@ -41,13 +42,13 @@ export function ScanButton({
   async function found(code: string) {
     const name = await lookupProduct(code)
     if (name) onProduct(name)
-    else toast(`Product ${code} is not in Open Food Facts. Type its name.`)
+    else toast(m.scan_unknown({ code }))
   }
 
   return (
     <DialogTrigger>
       <Button
-        aria-label="Scan a barcode"
+        aria-label={m.scan()}
         isDisabled={!online}
         className="grid size-11 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors hover:text-foreground data-disabled:opacity-50 data-focus-visible:outline-2 motion-reduce:transition-none"
       >
@@ -62,7 +63,7 @@ export function ScanButton({
             {({ close }) => (
               <>
                 <Heading slot="title" className="font-serif text-2xl">
-                  Scan a barcode
+                  {m.scan()}
                 </Heading>
                 <Camera
                   Detector={Detector}
@@ -79,7 +80,7 @@ export function ScanButton({
                   onPress={close}
                   className="self-end rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
                 >
-                  Cancel
+                  {m.cancel()}
                 </Button>
               </>
             )}
@@ -136,8 +137,7 @@ function Camera({
         void look()
       })
       .catch(() => {
-        if (!stopped)
-          handlers.current.onError('The browser did not allow the camera')
+        if (!stopped) handlers.current.onError(m.scan_no_camera())
       })
 
     return () => {
@@ -152,7 +152,7 @@ function Camera({
       ref={video}
       muted
       playsInline
-      aria-label="Camera view"
+      aria-label={m.scan_camera_view()}
       className="aspect-[4/3] w-full rounded-sm bg-foreground/10 object-cover"
     />
   )

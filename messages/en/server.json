@@ -1,0 +1,53 @@
+{
+  "err_sign_in_first": "Sign in first.",
+  "err_not_shared": "This item is not shared with you.",
+  "err_push_off": "Notifications are off on this server.",
+  "err_space_name": "Add a name",
+  "err_email": "Check the email address",
+  "err_owner_only": "Only an owner of this space can do that.",
+  "err_personal_delete": "Your personal space cannot be deleted.",
+  "err_too_many_invites": "That is a lot of invites for one day. Share the link instead, or try again tomorrow.",
+  "err_personal_private": "Your personal space stays private. Share a separate space instead.",
+  "err_not_member": "You are not a member of this space.",
+  "err_invite_invalid": "This invite link is not valid.",
+  "err_invite_used": "This invite link has already been used.",
+  "err_invite_expired": "This invite link has expired. Ask for a new one.",
+  "err_not_a_member": "That person is not a member.",
+  "err_needs_owner": "A space needs an owner. Make someone else owner first.",
+  "err_needs_owner_or_delete": "A space needs an owner. Make someone else owner first, or delete the space.",
+  "err_personal_leave": "Nobody can leave a personal space.",
+  "err_spaces_need_owner": [
+    {
+      "declarations": [
+        "input count",
+        "input spaces",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{spaces} needs another owner first. Make someone owner in Spaces, or delete the space.",
+        "countPlural=other": "{spaces} need another owner first. Make someone owner in Spaces, or delete the space."
+      }
+    }
+  ],
+  "invite_subject": "{inviter} invites you to {space}",
+  "invite_intro": "{inviter} invites you to {space} on Oriel, to share notes, lists and tasks.",
+  "invite_action": "Join {space}",
+  "invite_outro": "The link works once and expires in 7 days. If you did not expect this, ignore the email.",
+  "reset_subject": "Reset your Oriel password",
+  "reset_intro": "Someone asked to reset the password of your Oriel account.",
+  "reset_action": "Choose a new password",
+  "reset_outro": "The link works once and expires in an hour. If it was not you, ignore the email; your password stays the same.",
+  "push_tasks_title": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "A task for today",
+        "countPlural=other": "{count} tasks for today"
+      }
+    }
+  ],
+  "push_changes_title": "{count} changes in your spaces",
+  "push_and_more": "{text}, and {count} more"
+}

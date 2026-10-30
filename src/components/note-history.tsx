@@ -8,6 +8,7 @@ import {
   ModalOverlay,
 } from 'react-aria-components'
 import { formatDateTime } from '#/lib/dates'
+import { m } from '#/paraglide/messages.js'
 import { listVersions } from '#/server/history-functions'
 
 type Version = Awaited<ReturnType<typeof listVersions>>[number]
@@ -36,7 +37,7 @@ export function NoteHistory({
   return (
     <DialogTrigger>
       <Button className={`-ml-2 block px-2 ${textButton} print:hidden`}>
-        History
+        {m.history()}
       </Button>
       <ModalOverlay
         isDismissable
@@ -47,7 +48,7 @@ export function NoteHistory({
             {({ close }) => (
               <>
                 <Heading slot="title" className="font-serif text-2xl">
-                  Earlier versions
+                  {m.history_title()}
                 </Heading>
                 <Versions
                   itemId={itemId}
@@ -60,7 +61,7 @@ export function NoteHistory({
                   }}
                 />
                 <Button onPress={close} className={`self-end ${textButton}`}>
-                  Close
+                  {m.close()}
                 </Button>
               </>
             )}
@@ -93,27 +94,23 @@ function Versions({
   }, [itemId])
 
   if (versions === undefined) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>
+    return (
+      <p className="text-sm text-muted-foreground">{m.history_loading()}</p>
+    )
   }
   if (versions === 'offline') {
     return (
-      <p className="text-sm text-muted-foreground">
-        Earlier versions show when you are online.
-      </p>
+      <p className="text-sm text-muted-foreground">{m.history_offline()}</p>
     )
   }
   const earlier = versions.filter((version) => version.body !== currentBody)
   if (earlier.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No earlier versions yet. Each editing session is kept for 90 days.
-      </p>
-    )
+    return <p className="text-sm text-muted-foreground">{m.history_none()}</p>
   }
   return (
     <ul className="flex flex-col gap-5">
       {earlier.map((version) => {
-        const who = nameOf(version.savedBy) ?? 'Someone who left'
+        const who = nameOf(version.savedBy) ?? m.someone_who_left()
         return (
           <li key={version.id} className="flex flex-col gap-1">
             <div className="flex items-center justify-between gap-4 text-xs text-muted-foreground">
@@ -128,13 +125,15 @@ function Versions({
                   onPress={() => onRestore(version.body)}
                   className="rounded-sm px-2 py-2 text-foreground underline underline-offset-4 data-focus-visible:outline-2"
                 >
-                  Restore
+                  {m.restore()}
                 </Button>
               )}
             </div>
             <p className="line-clamp-4 font-serif text-base whitespace-pre-wrap">
               {version.body || (
-                <span className="text-muted-foreground">Empty</span>
+                <span className="text-muted-foreground">
+                  {m.history_empty_text()}
+                </span>
               )}
             </p>
           </li>

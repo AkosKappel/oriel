@@ -1,4 +1,5 @@
 import { and, desc, eq, lt } from 'drizzle-orm'
+import { m } from '#/paraglide/messages.js'
 import { db } from '#/server/db'
 import { items, noteVersion, spaceMember } from '#/server/db/schema'
 
@@ -21,7 +22,7 @@ export async function listVersions(actorId: string, itemId: string) {
         ),
       )
       .where(eq(items.id, itemId))
-    if (!member) throw new Error('This item is not shared with you.')
+    if (!member) throw new Error(m.err_not_shared())
 
     const cutoff = new Date(Date.now() - keepDays * 24 * 60 * 60 * 1000)
     await tx

@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { Button } from 'react-aria-components'
 import { Logo } from '#/components/logo'
 import { reportError } from '#/lib/report-error'
+import { m } from '#/paraglide/messages.js'
 
 // Thrown when a page's code was never downloaded and the network is gone (Chrome, Safari, Firefox).
 const missingCode =
@@ -18,7 +19,7 @@ const linkButton =
 export function ErrorNotice({
   error,
   reset,
-  title = 'Something went wrong.',
+  title = m.error_title(),
 }: {
   error: unknown
   reset: () => void
@@ -40,21 +41,21 @@ export function ErrorNotice({
       <h1 className="font-serif text-3xl italic">{title}</h1>
       <p className="max-w-sm text-sm text-muted-foreground">
         {offline && missingCode.test(message)
-          ? 'This part of Oriel has not been downloaded to this device yet. It opens once you are back online. '
-          : 'Your notes are safe on this device. '}
+          ? m.error_missing_code()
+          : m.error_safe()}{' '}
         <Button onPress={retry} className={linkButton}>
-          Try again
+          {m.error_try_again()}
         </Button>{' '}
-        or{' '}
+        {m.error_or()}{' '}
         <a href="/app" className="text-foreground underline underline-offset-4">
-          reload Oriel
+          {m.error_reload()}
         </a>
         .
       </p>
       {message && (
         <details className="max-w-sm text-xs text-muted-foreground">
           <summary className="w-fit cursor-pointer py-2 hover:text-foreground">
-            Details
+            {m.error_details()}
           </summary>
           <p className="font-mono break-words">{message}</p>
         </details>
@@ -75,7 +76,7 @@ export function Pending() {
       className="flex min-h-dvh animate-[fade-in_300ms_600ms_both] flex-col items-center justify-center gap-4 pb-24 font-serif text-xl text-muted-foreground italic"
     >
       <Logo className="size-10 text-primary" />
-      Opening your notebook…
+      {m.pending()}
     </div>
   )
 }

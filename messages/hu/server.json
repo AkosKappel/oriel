@@ -1,0 +1,40 @@
+{
+  "err_sign_in_first": "Előbb jelentkezz be.",
+  "err_not_shared": "Ez az elem nincs megosztva veled.",
+  "err_push_off": "Ezen a szerveren ki vannak kapcsolva az értesítések.",
+  "err_space_name": "Adj meg nevet",
+  "err_email": "Ellenőrizd az e-mail-címet",
+  "err_owner_only": "Ezt csak a tér egyik tulajdonosa teheti meg.",
+  "err_personal_delete": "A személyes tered nem törölhető.",
+  "err_too_many_invites": "Ez sok meghívó egy napra. Oszd meg inkább a linket, vagy próbáld újra holnap.",
+  "err_personal_private": "A személyes tered privát marad. Ossz meg inkább egy külön teret.",
+  "err_not_member": "Nem vagy tagja ennek a térnek.",
+  "err_invite_invalid": "Ez a meghívó link érvénytelen.",
+  "err_invite_used": "Ezt a meghívó linket már felhasználták.",
+  "err_invite_expired": "Ez a meghívó link lejárt. Kérj újat.",
+  "err_not_a_member": "Ez a személy nem tag.",
+  "err_needs_owner": "Egy térnek kell tulajdonos. Előbb tegyél meg valaki mást tulajdonosnak.",
+  "err_needs_owner_or_delete": "Egy térnek kell tulajdonos. Előbb tegyél meg valaki mást tulajdonosnak, vagy töröld a teret.",
+  "err_personal_leave": "Személyes térből senki sem léphet ki.",
+  "err_spaces_need_owner": "Előbb új tulajdonos kell ide: {spaces}. Tegyél meg valakit tulajdonosnak a Terek között, vagy töröld a teret.",
+  "invite_subject": "{inviter} meghív a(z) {space} térbe",
+  "invite_intro": "{inviter} meghív a(z) {space} térbe az Orielben, hogy közösen használjatok jegyzeteket, listákat és feladatokat.",
+  "invite_action": "Csatlakozás: {space}",
+  "invite_outro": "A link egyszer használható, és 7 nap múlva lejár. Ha nem számítottál rá, hagyd figyelmen kívül ezt az e-mailt.",
+  "reset_subject": "Oriel-jelszó visszaállítása",
+  "reset_intro": "Valaki az Oriel-fiókod jelszavának visszaállítását kérte.",
+  "reset_action": "Új jelszó megadása",
+  "reset_outro": "A link egyszer használható, és egy óra múlva lejár. Ha nem te voltál, hagyd figyelmen kívül ezt az e-mailt; a jelszavad nem változik.",
+  "push_tasks_title": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Egy feladat mára",
+        "countPlural=other": "{count} feladat mára"
+      }
+    }
+  ],
+  "push_changes_title": "{count} változás a tereidben",
+  "push_and_more": "{text}, és még {count}"
+}

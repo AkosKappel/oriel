@@ -1,0 +1,573 @@
+{
+  "type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka",
+        "type=list": "Zoznam",
+        "type=*": "Úloha"
+      }
+    }
+  ],
+  "type_plural": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámky",
+        "type=list": "Zoznamy",
+        "type=*": "Úlohy"
+      }
+    }
+  ],
+  "priority_label": [
+    {
+      "declarations": ["input priority"],
+      "selectors": ["priority"],
+      "match": {
+        "priority=1": "Nízka",
+        "priority=2": "Stredná",
+        "priority=3": "Vysoká",
+        "priority=*": "Žiadna"
+      }
+    }
+  ],
+  "priority_detail": [
+    {
+      "declarations": ["input priority"],
+      "selectors": ["priority"],
+      "match": {
+        "priority=1": "Nízka priorita",
+        "priority=2": "Stredná priorita",
+        "priority=*": "Vysoká priorita"
+      }
+    }
+  ],
+  "status_label": [
+    {
+      "declarations": ["input status"],
+      "selectors": ["status"],
+      "match": {
+        "status=in_progress": "Rozpracovaná",
+        "status=waiting": "Čaká",
+        "status=*": "Na vybavenie"
+      }
+    }
+  ],
+  "repeat_label": [
+    {
+      "declarations": ["input repeat"],
+      "selectors": ["repeat"],
+      "match": {
+        "repeat=daily": "Denne",
+        "repeat=weekly": "Týždenne",
+        "repeat=monthly": "Mesačne",
+        "repeat=*": "Nikdy"
+      }
+    }
+  ],
+  "repeat_detail": [
+    {
+      "declarations": ["input repeat"],
+      "selectors": ["repeat"],
+      "match": {
+        "repeat=daily": "Opakuje sa denne",
+        "repeat=weekly": "Opakuje sa týždenne",
+        "repeat=*": "Opakuje sa mesačne"
+      }
+    }
+  ],
+  "nav_notebook": "Zápisník",
+  "nav_spaces": "Priestory",
+  "nav_settings": "Nastavenia",
+  "nav_account": "Účet",
+  "nav_everything": "Všetko",
+  "nav_main": "Hlavná",
+  "nav_back": "Späť",
+  "nav_find": "Nájdi alebo spusti čokoľvek",
+  "nav_sign_in": "Prihlásiť sa",
+  "nav_sign_in_to_sync": "Prihlás sa na synchronizáciu",
+  "offline_banner": "Offline. Zmeny sa ukladajú v tomto zariadení.",
+  "search": "Hľadať",
+  "filter_show": "Zobraziť",
+  "filter_all_tasks": "Všetky úlohy",
+  "filter_for_me": "Pre mňa",
+  "filter_today": "Dnes",
+  "filter_upcoming": "Nadchádzajúce",
+  "filter_tasks": "Úlohy",
+  "filter_space": "Priestor",
+  "filter_all_spaces": "Všetky priestory",
+  "empty_all": "Poznámky, zoznamy a úlohy, ktoré si zapíšeš, sa zobrazia tu.",
+  "empty_type": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámky, ktoré si zapíšeš, sa zobrazia tu.",
+        "type=list": "Zoznamy, ktoré začneš, sa zobrazia tu.",
+        "type=*": "Úlohy, ktoré si zapíšeš, sa zobrazia tu."
+      }
+    }
+  ],
+  "empty_blank": "Prázdna stránka.",
+  "empty_mine": "Teraz pre teba nič nie je.",
+  "empty_due_today": "Na dnes nič nie je.",
+  "empty_due_later": "Na neskôr nič nie je.",
+  "empty_search": "Nič tu nespomína „{query}“.",
+  "section_pinned": "Pripnuté",
+  "section_everything_else": "Všetko ostatné",
+  "section_all_items": "Poznámky, zoznamy a úlohy",
+  "show_completed": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Zobraziť {count} hotovú",
+        "countPlural=few": "Zobraziť {count} hotové",
+        "countPlural=other": "Zobraziť {count} hotových"
+      }
+    }
+  ],
+  "hide_completed": "Skryť hotové",
+  "show_more": "Zobraziť ďalších {count}",
+  "view_snoozed": "Odložené",
+  "view_archive": "Archív",
+  "view_trash": "Kôš",
+  "view_put_away": "Odložené bokom",
+  "empty_snoozed": "Odlož položku, aby zmizla až do dňa, ktorý si vyberieš.",
+  "empty_archive": "Archivuj hotové zoznamy a staré poznámky, aby ti neprekážali.",
+  "empty_trash": "Kôš je prázdny.",
+  "trash_note": "Vymazané položky tu zostanú {days} dní.",
+  "trash_empty_button": "Vyprázdniť kôš",
+  "trash_emptied": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} položka natrvalo vymazaná",
+        "countPlural=few": "{count} položky natrvalo vymazané",
+        "countPlural=other": "{count} položiek natrvalo vymazaných"
+      }
+    }
+  ],
+  "close": "Zavrieť",
+  "undo": "Späť",
+  "row_deleted": "Vymazané {date}",
+  "row_archived": "Archivované {date}",
+  "row_back": "Vráti sa {date}",
+  "row_for": "Pre: {name}",
+  "row_for_you": "Pre teba",
+  "row_by": "od {name}",
+  "toast_reopened": "Znova otvorené: {title}",
+  "toast_done": "Hotovo: {title}",
+  "toast_archived": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka archivovaná",
+        "type=list": "Zoznam archivovaný",
+        "type=*": "Úloha archivovaná"
+      }
+    }
+  ],
+  "toast_unarchived": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka vrátená z archívu",
+        "type=list": "Zoznam vrátený z archívu",
+        "type=*": "Úloha vrátená z archívu"
+      }
+    }
+  ],
+  "toast_trashed": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka presunutá do koša",
+        "type=list": "Zoznam presunutý do koša",
+        "type=*": "Úloha presunutá do koša"
+      }
+    }
+  ],
+  "swipe_archive": "Archivovať",
+  "swipe_reopen": "Znova otvoriť",
+  "swipe_done": "Hotovo",
+  "swipe_delete": "Vymazať",
+  "check_task": "Hotovo: {title}",
+  "list_empty": "Prázdny zoznam",
+  "list_all_done": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} hotová",
+        "countPlural=few": "Všetky {count} hotové",
+        "countPlural=other": "Všetkých {count} hotových"
+      }
+    }
+  ],
+  "list_left": "zostáva {count}",
+  "space_not_here_yet": "Tento priestor ešte nie je v tomto zariadení. Objaví sa po synchronizácii.",
+  "space_view_only": "Priestor {space} môžeš prezerať; pridávať doň môžu len jeho editori.",
+  "storage_title": "Oriel nevie otvoriť svoj zápisník.",
+  "storage_text": "Oriel uchováva všetko v úložisku tohto prehliadača a prehliadač to nepovolil. Obvyklou príčinou je súkromné alebo inkognito okno, plný disk alebo zablokované údaje stránok. Skús bežné okno, uvoľni miesto alebo povoľ úložisko pre túto stránku a potom",
+  "storage_reload": "načítaj znova",
+  "next_due": "{title}: ďalší termín {date}",
+  "sync_paused": "Synchronizácia pozastavená",
+  "syncing": "Synchronizuje sa",
+  "synced": "Synchronizované",
+  "member_added": "{name} pridal(a) {title}",
+  "member_finished": "{name} dokončil(a) {title}",
+  "member_changes_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} zmena od iných",
+        "countPlural=few": "{count} zmeny od iných",
+        "countPlural=other": "{count} zmien od iných"
+      }
+    }
+  ],
+  "error_title": "Niečo sa pokazilo.",
+  "error_missing_code": "Táto časť Orielu ešte nie je stiahnutá do tohto zariadenia. Otvorí sa, keď budeš znova online.",
+  "error_safe": "Tvoje poznámky sú v tomto zariadení v bezpečí.",
+  "error_try_again": "Skús znova",
+  "error_or": "alebo",
+  "error_reload": "načítaj Oriel znova",
+  "error_details": "Podrobnosti",
+  "pending": "Otvára sa tvoj zápisník…",
+  "dictate": "Diktovať",
+  "dictate_stop": "Zastaviť diktovanie",
+  "dictate_no_mic": "Prehliadač nepovolil mikrofón",
+  "dictate_network": "Diktovanie potrebuje pripojenie",
+  "dictate_no_speech": "Nič som nepočul",
+  "dictate_stopped": "Diktovanie sa zastavilo",
+  "greeting_morning": "Dobré ráno",
+  "greeting_afternoon": "Dobrý deň",
+  "greeting_evening": "Dobrý večer",
+  "due_today": "Termín dnes",
+  "due_tomorrow": "Termín zajtra",
+  "due_on": "Termín {date}",
+  "overdue_since": "Po termíne od {date}",
+  "capture": "Zápis",
+  "capture_type": "Typ",
+  "capture_new": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Nová poznámka",
+        "type=list": "Nový zoznam",
+        "type=*": "Nová úloha"
+      }
+    }
+  ],
+  "capture_placeholder": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Napíš niečo",
+        "type=list": "Nákup: mlieko, vajcia, chlieb",
+        "type=*": "Zavolať veterinárovi"
+      }
+    }
+  ],
+  "capture_add": "Pridať",
+  "capture_saved": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka uložená",
+        "type=list": "Zoznam uložený",
+        "type=*": "Úloha uložená"
+      }
+    }
+  ],
+  "capture_save_failed": "Nepodarilo sa uložiť. Skús znova.",
+  "append_no_list": "Žiadny zoznam sa takto nezačína",
+  "append_no_list_yet": "Zatiaľ sa žiadny zoznam takto nezačína",
+  "append_type_what": "Napíš, čo pridať do zoznamu {list}",
+  "append_adding": "Pridávanie do zoznamu {list}",
+  "append_add_count": "Pridať {count} do zoznamu {list}",
+  "append_added": "Pridané do zoznamu {list}: {count}",
+  "append_too_long": "Nepodarilo sa pridať. Každá položka musí mať menej ako 500 znakov.",
+  "draft_list_items": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{title} · {count} položka",
+        "countPlural=few": "{title} · {count} položky",
+        "countPlural=other": "{title} · {count} položiek"
+      }
+    }
+  ],
+  "item_error_title": "Túto stránku sa nepodarilo zobraziť.",
+  "nothing_open": "Otvor poznámku, zoznam alebo úlohu a prečítaj si ju tu.",
+  "invalid_title_missing": "Pridaj názov",
+  "invalid_title_long": "Názov musí mať menej ako 200 znakov",
+  "invalid_text_missing": "Napíš nejaký text",
+  "cmd_show_everything": "Zobraziť všetko",
+  "cmd_show_notes": "Zobraziť poznámky",
+  "cmd_show_lists": "Zobraziť zoznamy",
+  "cmd_show_tasks": "Zobraziť úlohy",
+  "cmd_due_today": "Úlohy s termínom dnes",
+  "cmd_upcoming": "Nadchádzajúce úlohy",
+  "cmd_find": "Nájdi položku alebo príkaz",
+  "cmd_results": "Výsledky",
+  "cmd_recent": "Nedávno zmenené",
+  "cmd_commands": "Príkazy",
+  "cmd_nothing": "Nič nezodpovedá „{query}“.",
+  "torn_title": "Túto stránku niekto vytrhol.",
+  "torn_text": "Bola vymazaná, tu alebo v inom zariadení.",
+  "back_to_everything": "Späť na všetko",
+  "failed_generic": "To sa nepodarilo.",
+  "version_restored": "Staršia verzia obnovená",
+  "moved_to": "Presunuté do priestoru {space}",
+  "snoozed_until_toast": [
+    {
+      "declarations": ["input type", "input date"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka odložená do {date}",
+        "type=list": "Zoznam odložený do {date}",
+        "type=*": "Úloha odložená do {date}"
+      }
+    }
+  ],
+  "duplicated": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka zduplikovaná",
+        "type=list": "Zoznam zduplikovaný",
+        "type=*": "Úloha zduplikovaná"
+      }
+    }
+  ],
+  "converted": [
+    {
+      "declarations": ["input to"],
+      "selectors": ["to"],
+      "match": {
+        "to=list": "Poznámka zmenená na zoznam",
+        "to=*": "Zoznam zmenený na poznámku"
+      }
+    }
+  ],
+  "convert_too_long": "Toto je príliš dlhé na zmenu",
+  "convert_to_list": "Zmeniť na zoznam",
+  "convert_to_note": "Zmeniť na poznámku",
+  "copied_text": "Skopírované ako text",
+  "copy_blocked": "Nepodarilo sa skopírovať. Prehliadač to nepovolil.",
+  "deleted_forever": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Poznámka natrvalo vymazaná",
+        "type=list": "Zoznam natrvalo vymazaný",
+        "type=*": "Úloha natrvalo vymazaná"
+      }
+    }
+  ],
+  "share": "Zdieľať",
+  "copy_as_text": "Kopírovať ako text",
+  "duplicate": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Duplikovať poznámku",
+        "type=list": "Duplikovať zoznam",
+        "type=*": "Duplikovať úlohu"
+      }
+    }
+  ],
+  "archive": "Archivovať",
+  "pin": "Pripnúť navrch",
+  "snooze": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Odložiť poznámku",
+        "type=list": "Odložiť zoznam",
+        "type=*": "Odložiť úlohu"
+      }
+    }
+  ],
+  "snooze_until": "Odložiť do",
+  "snooze_tomorrow": "Zajtra",
+  "snooze_next_week": "Budúci týždeň",
+  "snooze_next_month": "O mesiac",
+  "trash": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Presunúť poznámku do koša",
+        "type=list": "Presunúť zoznam do koša",
+        "type=*": "Presunúť úlohu do koša"
+      }
+    }
+  ],
+  "snoozed_until": "Odložené do {date}.",
+  "bring_back": "Vrátiť hneď",
+  "in_trash_since": "V koši od {date}.",
+  "in_trash_since_by": "V koši od {date}, vymazal(a) {name}.",
+  "restore": "Obnoviť",
+  "delete_forever": "Vymazať natrvalo",
+  "meta_by": "od {name}",
+  "meta_done_by": "dokončil(a) {name}",
+  "meta_pinned": "Pripnuté",
+  "meta_archived": "Archivované",
+  "meta_view_only": "Len na čítanie",
+  "done": "Hotovo",
+  "field_priority": "Priorita",
+  "field_status": "Stav",
+  "field_due": "Termín",
+  "no_date": "Bez dátumu",
+  "field_for": "Pre",
+  "for_anyone": "Hocikoho",
+  "for_me": "Mňa",
+  "field_repeats": "Opakovanie",
+  "field_space": "Priestor",
+  "share_with_someone": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Zdieľať túto poznámku s niekým",
+        "type=list": "Zdieľať tento zoznam s niekým",
+        "type=*": "Zdieľať túto úlohu s niekým"
+      }
+    }
+  ],
+  "field_title": "Názov",
+  "field_note": "Poznámka",
+  "field_details": "Podrobnosti",
+  "edit_note": "Upraviť poznámku",
+  "edit_details": "Upraviť podrobnosti",
+  "write_something": "Napíš niečo",
+  "add_details": "Pridať podrobnosti",
+  "markdown_hint": "Funguje Markdown: **tučné**, *kurzíva*, # nadpis, - zoznam, [odkaz](url).",
+  "entries_none": "Zatiaľ žiadne položky",
+  "entries_all_done": "Všetko hotové",
+  "entries_left": "Zostáva {open} z {total}",
+  "entries_uncheck_all": "Odznačiť všetko",
+  "entries_clear_checked": "Vymazať označené",
+  "entries_cleared": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Vymazaná {count} označená",
+        "countPlural=few": "Vymazané {count} označené",
+        "countPlural=other": "Vymazaných {count} označených"
+      }
+    }
+  ],
+  "entries_unchecked": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Odznačená {count}",
+        "countPlural=few": "Odznačené {count}",
+        "countPlural=other": "Odznačených {count}"
+      }
+    }
+  ],
+  "entries_moved": "{text}, {position} z {total}",
+  "entries_removed": "Odstránené: {text}",
+  "entries_label": "Položky",
+  "entry_check": "Označiť {text}",
+  "entry_text": "Text položky",
+  "entry_remove": "Odstrániť {text}",
+  "entry_move": "Presunúť {text}",
+  "entry_add": "Pridať položku",
+  "history": "História",
+  "history_title": "Staršie verzie",
+  "history_loading": "Načítava sa…",
+  "history_offline": "Staršie verzie sa zobrazia, keď budeš online.",
+  "history_none": "Zatiaľ žiadne staršie verzie. Každá úprava sa uchováva 90 dní.",
+  "history_empty_text": "Prázdne",
+  "someone_who_left": "Niekto, kto odišiel",
+  "you": "ty",
+  "scan": "Naskenovať čiarový kód",
+  "scan_unknown": "Produkt {code} nie je v Open Food Facts. Napíš jeho názov.",
+  "scan_no_camera": "Prehliadač nepovolil kameru",
+  "scan_camera_view": "Obraz z kamery",
+  "cancel": "Zrušiť",
+  "presence_here": [
+    {
+      "declarations": [
+        "input count",
+        "input names",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{names} je tu tiež",
+        "countPlural=other": "{names} sú tu tiež"
+      }
+    }
+  ],
+  "activity_entry_before": [
+    {
+      "declarations": ["input action", "input who", "input entries"],
+      "selectors": ["action"],
+      "match": {
+        "action=added": "{who} pridal(a) {entries} do zoznamu",
+        "action=completed": "{who} označil(a) {entries} v zozname",
+        "action=reopened": "{who} odznačil(a) {entries} v zozname",
+        "action=*": "{who} zmenil(a) {entries} v zozname"
+      }
+    }
+  ],
+  "activity_entry_after": [
+    {
+      "declarations": ["input action", "input entries"],
+      "selectors": ["action"],
+      "match": {
+        "action=*": ""
+      }
+    }
+  ],
+  "activity_item_before": [
+    {
+      "declarations": ["input action", "input who"],
+      "selectors": ["action"],
+      "match": {
+        "action=added": "{who} pridal(a)",
+        "action=edited": "{who} upravil(a)",
+        "action=completed": "{who} dokončil(a)",
+        "action=reopened": "{who} znova otvoril(a)",
+        "action=archived": "{who} archivoval(a)",
+        "action=unarchived": "{who} vrátil(a) z archívu",
+        "action=trashed": "{who} presunul(a) do koša",
+        "action=*": "{who} obnovil(a)"
+      }
+    }
+  ],
+  "activity_item_after": [
+    {
+      "declarations": ["input action"],
+      "selectors": ["action"],
+      "match": {
+        "action=*": ""
+      }
+    }
+  ],
+  "activity_more": "{list} a ďalšie {count}"
+}

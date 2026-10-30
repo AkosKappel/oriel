@@ -2,6 +2,8 @@ import { createServerFn } from '@tanstack/react-start'
 import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { env } from '#/env'
+import { m } from '#/paraglide/messages.js'
+import { getLocale } from '#/paraglide/runtime.js'
 import { db } from '#/server/db'
 import { pushSubscription } from '#/server/db/schema'
 import { localClock } from '#/server/notification-rules'
@@ -53,7 +55,7 @@ export const saveSubscription = createServerFn({ method: 'POST' })
   )
   .handler(async ({ context, data }) => {
     if (!env.VAPID_PUBLIC_KEY) {
-      throw new Error('Notifications are off on this server.')
+      throw new Error(m.err_push_off())
     }
     const values = {
       userId: context.userId,
@@ -61,6 +63,8 @@ export const saveSubscription = createServerFn({ method: 'POST' })
       p256dh: data.keys.p256dh,
       auth: data.keys.auth,
       timeZone: data.timeZone,
+      // The language this request runs in, which is the one the device shows.
+      locale: getLocale(),
       reminders: data.reminders,
       changes: data.changes,
     }
@@ -78,8 +82,11 @@ export const saveSubscription = createServerFn({ method: 'POST' })
       })
   })
 
-/** Moves the morning reminder to the zone the device is in now (after travel). */
-export const updateTimeZone = createServerFn({ method: 'POST' })
+/**
+ * Keeps notifications in step with the device: the morning reminder in the zone it is in now
+ * (after travel), and the language it shows now.
+ */
+export const updateDevice = createServerFn({ method: 'POST' })
   .middleware([signedIn])
   .validator(
     z.object({
@@ -93,7 +100,7 @@ export const updateTimeZone = createServerFn({ method: 'POST' })
   .handler(async ({ context, data }) => {
     await db
       .update(pushSubscription)
-      .set({ timeZone: data.timeZone })
+      .set({ timeZone: data.timeZone, locale: getLocale() })
       .where(
         and(
           eq(pushSubscription.userId, context.userId),

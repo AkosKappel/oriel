@@ -6,6 +6,7 @@ import {
   Button,
   Input,
 } from 'react-aria-components'
+import { m } from '#/paraglide/messages.js'
 
 /**
  * Searches everything on this device as you type, so it works offline. The query lives in the URL
@@ -26,7 +27,7 @@ export function SearchField({ query = '' }: { query?: string }) {
 
   return (
     <AriaSearchField
-      aria-label="Search"
+      aria-label={m.search()}
       value={text}
       onChange={change}
       className="group relative flex items-center"
@@ -36,7 +37,7 @@ export function SearchField({ query = '' }: { query?: string }) {
         className="absolute -left-[1.875rem] size-4 text-muted-foreground"
       />
       <Input
-        placeholder="Search"
+        placeholder={m.search()}
         className="h-11 min-w-0 flex-1 bg-transparent font-serif text-lg outline-none placeholder:text-faint [&::-webkit-search-cancel-button]:hidden"
       />
       <Button className="-mr-3 grid size-11 place-items-center rounded-sm text-muted-foreground group-data-empty:hidden hover:text-foreground data-focus-visible:outline-2">

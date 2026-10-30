@@ -278,6 +278,8 @@ export const pushSubscription = pgTable(
     auth: text().notNull(),
     // The device's IANA time zone, so the reminder comes in its morning.
     timeZone: text().notNull(),
+    // The device's language: notifications are worded outside any request.
+    locale: text().default('en').notNull(),
     // The device's day the last reminder went out, so restarts never send twice.
     remindedOn: date({ mode: 'string' }),
     // What the device asked for: the morning reminder, and changes other members make.

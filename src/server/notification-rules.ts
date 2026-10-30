@@ -1,4 +1,7 @@
 import type { ActivitySentence } from '#/lib/activity'
+import { formatLocale } from '#/lib/locale'
+import { m } from '#/paraglide/messages.js'
+import type { Locale } from '#/paraglide/runtime.js'
 
 // What notifications say and when it is morning: pure, so it is tested without a server.
 
@@ -27,21 +30,18 @@ export function localClock(now: Date, timeZone: string) {
 }
 
 /** The notification for these task titles, soonest first; null when there is nothing. */
-export function reminderMessage(titles: string[]) {
+export function reminderMessage(titles: string[], locale: Locale = 'en') {
   if (titles.length === 0) return null
   const shown = titles.slice(0, 3)
   const more = titles.length - shown.length
   const body =
     more > 0
-      ? `${shown.join(', ')} and ${more} more`
-      : shown.length > 1
-        ? `${shown.slice(0, -1).join(', ')} and ${shown.at(-1)}`
-        : shown[0]
+      ? m.activity_more({ list: shown.join(', '), count: more }, { locale })
+      : new Intl.ListFormat(formatLocale(locale), {
+          type: 'conjunction',
+        }).format(shown)
   return {
-    title:
-      titles.length === 1
-        ? 'A task for today'
-        : `${titles.length} tasks for today`,
+    title: m.push_tasks_title({ count: titles.length }, { locale }),
     body,
     url: '/app?type=task&due=today',
   }
@@ -57,7 +57,10 @@ const sentence = ({ before, title, after }: ActivitySentence) =>
  * The notification for other members' changes, newest first ("Anna added Milk and Eggs to
  * Groceries"); null when there is nothing. One change opens its item, several open the notebook.
  */
-export function changesMessage(sentences: ActivitySentence[]) {
+export function changesMessage(
+  sentences: ActivitySentence[],
+  locale: Locale = 'en',
+) {
   const [first] = sentences
   if (!first) return null
   if (sentences.length === 1) {
@@ -68,9 +71,10 @@ export function changesMessage(sentences: ActivitySentence[]) {
     }
   }
   const more = sentences.length - 2
+  const shown = sentences.slice(0, 2).map(sentence).join('. ')
   return {
-    title: `${sentences.length} changes in your spaces`,
-    body: `${sentences.slice(0, 2).map(sentence).join('. ')}${more > 0 ? `, and ${more} more` : ''}.`,
+    title: m.push_changes_title({ count: sentences.length }, { locale }),
+    body: `${more > 0 ? m.push_and_more({ text: shown, count: more }, { locale }) : shown}.`,
     url: '/app',
   }
 }

@@ -1,3 +1,4 @@
+import { m } from '#/paraglide/messages.js'
 import type { Item } from './schema'
 
 /**
@@ -17,10 +18,10 @@ export function describeMemberChanges(
     const previous = before.get(item.id)
     if (!previous) {
       const name = item.created_by !== me && nameOf(item, item.created_by)
-      if (name) messages.push(`${name} added ${item.title}`)
+      if (name) messages.push(m.member_added({ name, title: item.title }))
     } else if (item.completed_at && !previous.completed_at) {
       const name = item.completed_by !== me && nameOf(item, item.completed_by)
-      if (name) messages.push(`${name} finished ${item.title}`)
+      if (name) messages.push(m.member_finished({ name, title: item.title }))
     }
   }
   return messages
@@ -28,6 +29,7 @@ export function describeMemberChanges(
 
 /** One announcement: a few changes by name, a large batch (such as a first sync) as a count. */
 export function announce(messages: string[]) {
-  if (messages.length > 3) return `${messages.length} changes from others`
+  if (messages.length > 3)
+    return m.member_changes_count({ count: messages.length })
   return messages.join('. ')
 }

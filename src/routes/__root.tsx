@@ -19,6 +19,7 @@ import { contentSecurityPolicy } from '#/lib/security-headers'
 import { pageMeta } from '#/lib/seo'
 import { registerServiceWorker } from '#/lib/service-worker'
 import { themeScript, useTheme } from '#/lib/theme'
+import { getLocale } from '#/paraglide/runtime.js'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -70,7 +71,7 @@ function RootDocument({ children }: { children: ReactNode }) {
 
   return (
     // The theme script sets `data-theme` before React hydrates.
-    <html lang="en" suppressHydrationWarning>
+    <html lang={getLocale()} suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* Here rather than in `head`, which keeps only one meta per name. */}

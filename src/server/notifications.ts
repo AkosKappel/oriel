@@ -14,6 +14,8 @@ import { alias } from 'drizzle-orm/pg-core'
 import webpush from 'web-push'
 import { env } from '#/env'
 import { describeActivity } from '#/lib/activity'
+import { isLocale } from '#/lib/locale'
+import type { Locale } from '#/paraglide/runtime.js'
 import { db } from '#/server/db'
 import {
   activity,
@@ -110,6 +112,8 @@ export async function changesFor(userId: string, after: Date, until: Date) {
   return rows.map(({ at, ...row }) => ({ ...row, at: at.toISOString() }))
 }
 
+const localeOf = (value: string): Locale => (isLocale(value) ? value : 'en')
+
 let running = false
 
 export async function runNotifications(now = new Date()) {
@@ -131,6 +135,7 @@ export async function runNotifications(now = new Date()) {
         continue
       const message = reminderMessage(
         await dueTasks(subscription.userId, clock.day),
+        localeOf(subscription.locale),
       )
       if (message)
         await send(subscription, { ...message, tag: `due-${clock.day}` })
@@ -158,10 +163,13 @@ async function noticeChanges(
 ) {
   const until = new Date(now.getTime() - settleMs)
   if (until <= subscription.changesSince) return
+  const locale = localeOf(subscription.locale)
   const message = changesMessage(
     describeActivity(
       await changesFor(subscription.userId, subscription.changesSince, until),
+      locale,
     ),
+    locale,
   )
   // One tag: a newer summary replaces an unread one instead of piling up.
   if (message) await send(subscription, { ...message, tag: 'changes' })

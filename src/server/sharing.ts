@@ -11,6 +11,7 @@ import {
   lt,
 } from 'drizzle-orm'
 import { z } from 'zod'
+import { m } from '#/paraglide/messages.js'
 import { db } from '#/server/db'
 import {
   activity,
@@ -29,9 +30,15 @@ import {
 //   viewer  read only
 // A personal space is never shared, and a space always keeps at least one owner.
 
-export const spaceNameSchema = z.string().trim().min(1, 'Add a name').max(60)
+export const spaceNameSchema = z
+  .string()
+  .trim()
+  .min(1, { error: () => m.err_space_name() })
+  .max(60)
 export const inviteRoleSchema = z.enum(['editor', 'viewer'])
-export const inviteEmailSchema = z.email('Check the email address').max(254)
+export const inviteEmailSchema = z
+  .email({ error: () => m.err_email() })
+  .max(254)
 export type MemberRole = 'owner' | 'editor' | 'viewer'
 
 const inviteLifetimeDays = 7
@@ -59,7 +66,7 @@ async function roleOf(tx: Tx, spaceId: string, userId: string) {
 
 async function requireOwner(tx: Tx, spaceId: string, actorId: string) {
   if ((await roleOf(tx, spaceId, actorId)) !== 'owner') {
-    throw new SharingError('Only an owner of this space can do that.')
+    throw new SharingError(m.err_owner_only())
   }
 }
 
@@ -117,7 +124,7 @@ export async function deleteSpace(actorId: string, spaceId: string) {
       .from(space)
       .where(eq(space.id, spaceId))
     if (found.personalOwnerId) {
-      throw new SharingError('Your personal space cannot be deleted.')
+      throw new SharingError(m.err_personal_delete())
     }
     await tx.delete(space).where(eq(space.id, spaceId))
   })
@@ -150,9 +157,7 @@ export async function createInvite(
           ),
         )
       if (sent >= emailedInvitesPerDay) {
-        throw new SharingError(
-          'That is a lot of invites for one day. Share the link instead, or try again tomorrow.',
-        )
+        throw new SharingError(m.err_too_many_invites())
       }
     }
     const [found] = await tx
@@ -160,9 +165,7 @@ export async function createInvite(
       .from(space)
       .where(eq(space.id, spaceId))
     if (found.personalOwnerId) {
-      throw new SharingError(
-        'Your personal space stays private. Share a separate space instead.',
-      )
+      throw new SharingError(m.err_personal_private())
     }
     const token = randomBytes(32).toString('base64url')
     await tx.insert(invite).values({
@@ -204,7 +207,7 @@ export async function listInvites(actorId: string, spaceId: string) {
 export async function listActivity(actorId: string, spaceId: string) {
   return db.transaction(async (tx) => {
     if (!(await roleOf(tx, spaceId, actorId))) {
-      throw new SharingError('You are not a member of this space.')
+      throw new SharingError(m.err_not_member())
     }
     const cutoff = new Date(Date.now() - activityDays * 24 * 60 * 60 * 1000)
     await tx
@@ -289,13 +292,13 @@ export async function describeInvite(token: string) {
 export async function acceptInvite(actorId: string, token: string) {
   return db.transaction(async (tx) => {
     const found = await findInvite(tx, token)
-    if (!found) throw new SharingError('This invite link is not valid.')
+    if (!found) throw new SharingError(m.err_invite_invalid())
     if (await roleOf(tx, found.spaceId, actorId)) return found.spaceId
     if (found.acceptedBy) {
-      throw new SharingError('This invite link has already been used.')
+      throw new SharingError(m.err_invite_used())
     }
     if (found.expiresAt <= new Date()) {
-      throw new SharingError('This invite link has expired. Ask for a new one.')
+      throw new SharingError(m.err_invite_expired())
     }
     // Claimed with a condition, so two people opening the same link cannot both join.
     const [claimed] = await tx
@@ -304,7 +307,7 @@ export async function acceptInvite(actorId: string, token: string) {
       .where(and(eq(invite.id, found.id), isNull(invite.acceptedBy)))
       .returning({ id: invite.id })
     if (!claimed) {
-      throw new SharingError('This invite link has already been used.')
+      throw new SharingError(m.err_invite_used())
     }
     await tx.insert(spaceMember).values({
       spaceId: found.spaceId,
@@ -326,15 +329,13 @@ export async function setMemberRole(
   await db.transaction(async (tx) => {
     await requireOwner(tx, spaceId, actorId)
     const current = await roleOf(tx, spaceId, memberId)
-    if (!current) throw new SharingError('That person is not a member.')
+    if (!current) throw new SharingError(m.err_not_a_member())
     if (
       current === 'owner' &&
       parsedRole !== 'owner' &&
       (await ownerCount(tx, spaceId)) === 1
     ) {
-      throw new SharingError(
-        'A space needs an owner. Make someone else owner first.',
-      )
+      throw new SharingError(m.err_needs_owner())
     }
     await tx
       .update(spaceMember)
@@ -358,14 +359,12 @@ export async function removeMember(
       .from(space)
       .where(eq(space.id, spaceId))
     if (!found || found.personalOwnerId) {
-      throw new SharingError('Nobody can leave a personal space.')
+      throw new SharingError(m.err_personal_leave())
     }
     const current = await roleOf(tx, spaceId, memberId)
     if (!current) return
     if (current === 'owner' && (await ownerCount(tx, spaceId)) === 1) {
-      throw new SharingError(
-        'A space needs an owner. Make someone else owner first, or delete the space.',
-      )
+      throw new SharingError(m.err_needs_owner_or_delete())
     }
     await tx
       .delete(spaceMember)
@@ -411,7 +410,10 @@ export async function releaseSpaces(userId: string) {
 
     if (needOwner.length > 0) {
       throw new SharingError(
-        `${needOwner.join(', ')} ${needOwner.length === 1 ? 'needs' : 'need'} another owner first. Make someone owner in Spaces, or delete the space.`,
+        m.err_spaces_need_owner({
+          spaces: needOwner.join(', '),
+          count: needOwner.length,
+        }),
       )
     }
     if (alone.length > 0) await tx.delete(space).where(inArray(space.id, alone))

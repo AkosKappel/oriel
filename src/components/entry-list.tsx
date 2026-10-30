@@ -25,6 +25,7 @@ import { type Entry, entryTextSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
+import { m } from '#/paraglide/messages.js'
 
 const listAction =
   'rounded-sm px-2 py-2 hover:text-foreground data-focus-visible:outline-2'
@@ -71,7 +72,13 @@ export function EntryList({
       entry.id,
       positionForMove(openEntries, from, to),
     )
-    setAnnouncement(`${entry.text}, ${to + 1} of ${openEntries.length}`)
+    setAnnouncement(
+      m.entries_moved({
+        text: entry.text,
+        position: to + 1,
+        total: openEntries.length,
+      }),
+    )
     // Moving the row in the DOM can drop focus; keep it on the handle for the next key press.
     requestAnimationFrame(() =>
       document
@@ -82,38 +89,38 @@ export function EntryList({
 
   async function clearChecked() {
     const snapshot = await store.clearCompletedEntries(itemId)
-    toast(`Cleared ${snapshot.entries.length} checked`, {
-      action: { label: 'Undo', onClick: () => void store.restore(snapshot) },
+    toast(m.entries_cleared({ count: snapshot.entries.length }), {
+      action: { label: m.undo(), onClick: () => void store.restore(snapshot) },
     })
   }
 
   async function uncheckAll() {
     const previous = await store.uncheckAllEntries(itemId)
-    toast(`Unchecked ${previous.length}`, {
+    toast(m.entries_unchecked({ count: previous.length }), {
       action: {
-        label: 'Undo',
+        label: m.undo(),
         onClick: () => void store.restoreChecks(previous),
       },
     })
   }
 
   return (
-    <section aria-label="Items" className="flex flex-col">
+    <section aria-label={m.entries_label()} className="flex flex-col">
       <div className="flex min-h-9 items-center justify-between text-xs text-muted-foreground">
         <p aria-live="polite">
           {total === 0
-            ? 'No items yet'
+            ? m.entries_none()
             : open === 0
-              ? 'All done'
-              : `${open} of ${total} left`}
+              ? m.entries_all_done()
+              : m.entries_left({ open, total })}
         </p>
         {checked > 0 && !readOnly && (
           <div className="-mr-2 flex print:hidden">
             <Button onPress={() => void uncheckAll()} className={listAction}>
-              Uncheck all
+              {m.entries_uncheck_all()}
             </Button>
             <Button onPress={() => void clearChecked()} className={listAction}>
-              Clear checked
+              {m.entries_clear_checked()}
             </Button>
           </div>
         )}
@@ -166,9 +173,9 @@ function EntryRow({
 
   async function remove() {
     await store.deleteEntry(entry.id)
-    toast(`Removed ${entry.text}`, {
+    toast(m.entries_removed({ text: entry.text }), {
       action: {
-        label: 'Undo',
+        label: m.undo(),
         onClick: () => void store.restore({ items: [], entries: [entry] }),
       },
     })
@@ -198,13 +205,13 @@ function EntryRow({
         onChange={(selected) =>
           void store.setEntryCompleted(entry.id, selected)
         }
-        aria-label={`Check ${entry.text}`}
+        aria-label={m.entry_check({ text: entry.text })}
       />
       <input
         dir="auto"
         defaultValue={entry.text}
         readOnly={readOnly}
-        aria-label="Item text"
+        aria-label={m.entry_text()}
         maxLength={500}
         enterKeyHint="done"
         onBlur={(event) => saveText(event.target.value)}
@@ -231,7 +238,7 @@ function EntryRow({
       {!readOnly && (
         <Button
           onPress={() => void remove()}
-          aria-label={`Remove ${entry.text}`}
+          aria-label={m.entry_remove({ text: entry.text })}
           className="-mr-3 grid size-11 shrink-0 place-items-center rounded-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:data-focus-visible:opacity-100"
         >
           <X aria-hidden className="size-4" />
@@ -302,7 +309,7 @@ function MoveHandle({
     <button
       type="button"
       data-move-handle={entry.id}
-      aria-label={`Move ${entry.text}`}
+      aria-label={m.entry_move({ text: entry.text })}
       aria-description="Drag, or use the arrow keys"
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
@@ -360,8 +367,8 @@ function AddEntry({ store, itemId }: { store: Store; itemId: string }) {
         value={text}
         onChange={(event) => setText(event.target.value)}
         onPaste={paste}
-        placeholder="Add an item"
-        aria-label="Add an item"
+        placeholder={m.entry_add()}
+        aria-label={m.entry_add()}
         list={suggestionsId}
         autoComplete="off"
         maxLength={500}

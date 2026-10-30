@@ -1,0 +1,522 @@
+{
+  "type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet",
+        "type=list": "Lista",
+        "type=*": "Feladat"
+      }
+    }
+  ],
+  "type_plural": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzetek",
+        "type=list": "Listák",
+        "type=*": "Feladatok"
+      }
+    }
+  ],
+  "priority_label": [
+    {
+      "declarations": ["input priority"],
+      "selectors": ["priority"],
+      "match": {
+        "priority=1": "Alacsony",
+        "priority=2": "Közepes",
+        "priority=3": "Magas",
+        "priority=*": "Nincs"
+      }
+    }
+  ],
+  "priority_detail": [
+    {
+      "declarations": ["input priority"],
+      "selectors": ["priority"],
+      "match": {
+        "priority=1": "Alacsony prioritás",
+        "priority=2": "Közepes prioritás",
+        "priority=*": "Magas prioritás"
+      }
+    }
+  ],
+  "status_label": [
+    {
+      "declarations": ["input status"],
+      "selectors": ["status"],
+      "match": {
+        "status=in_progress": "Folyamatban",
+        "status=waiting": "Várakozik",
+        "status=*": "Teendő"
+      }
+    }
+  ],
+  "repeat_label": [
+    {
+      "declarations": ["input repeat"],
+      "selectors": ["repeat"],
+      "match": {
+        "repeat=daily": "Naponta",
+        "repeat=weekly": "Hetente",
+        "repeat=monthly": "Havonta",
+        "repeat=*": "Soha"
+      }
+    }
+  ],
+  "repeat_detail": [
+    {
+      "declarations": ["input repeat"],
+      "selectors": ["repeat"],
+      "match": {
+        "repeat=daily": "Naponta ismétlődik",
+        "repeat=weekly": "Hetente ismétlődik",
+        "repeat=*": "Havonta ismétlődik"
+      }
+    }
+  ],
+  "nav_notebook": "Jegyzetfüzet",
+  "nav_spaces": "Terek",
+  "nav_settings": "Beállítások",
+  "nav_account": "Fiók",
+  "nav_everything": "Minden",
+  "nav_main": "Fő",
+  "nav_back": "Vissza",
+  "nav_find": "Keress vagy indíts bármit",
+  "nav_sign_in": "Bejelentkezés",
+  "nav_sign_in_to_sync": "Jelentkezz be a szinkronizáláshoz",
+  "offline_banner": "Offline. A változások ezen az eszközön mentődnek.",
+  "search": "Keresés",
+  "filter_show": "Megjelenítés",
+  "filter_all_tasks": "Minden feladat",
+  "filter_for_me": "Nekem",
+  "filter_today": "Ma",
+  "filter_upcoming": "Közelgő",
+  "filter_tasks": "Feladatok",
+  "filter_space": "Tér",
+  "filter_all_spaces": "Minden tér",
+  "empty_all": "Az itt leírt jegyzetek, listák és feladatok itt jelennek meg.",
+  "empty_type": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "A leírt jegyzeteid itt jelennek meg.",
+        "type=list": "Az elkezdett listáid itt jelennek meg.",
+        "type=*": "A leírt feladataid itt jelennek meg."
+      }
+    }
+  ],
+  "empty_blank": "Üres lap.",
+  "empty_mine": "Most nincs semmi a te neveden.",
+  "empty_due_today": "Mára nincs semmi esedékes.",
+  "empty_due_later": "Későbbre nincs semmi esedékes.",
+  "empty_search": "Itt semmi nem említi ezt: „{query}”.",
+  "section_pinned": "Kitűzve",
+  "section_everything_else": "Minden más",
+  "section_all_items": "Jegyzetek, listák és feladatok",
+  "show_completed": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=other": "{count} kész mutatása"
+      }
+    }
+  ],
+  "hide_completed": "Készek elrejtése",
+  "show_more": "Még {count} mutatása",
+  "view_snoozed": "Elhalasztva",
+  "view_archive": "Archívum",
+  "view_trash": "Kuka",
+  "view_put_away": "Félretéve",
+  "empty_snoozed": "Halassz el valamit, hogy egy általad választott napig félre legyen téve.",
+  "empty_archive": "Archiváld a kész listákat és a régi jegyzeteket, hogy ne legyenek útban.",
+  "empty_trash": "A kuka üres.",
+  "trash_note": "A törölt elemek {days} napig maradnak itt.",
+  "trash_empty_button": "Kuka ürítése",
+  "trash_emptied": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=other": "{count} elem véglegesen törölve"
+      }
+    }
+  ],
+  "close": "Bezárás",
+  "undo": "Visszavonás",
+  "row_deleted": "Törölve: {date}",
+  "row_archived": "Archiválva: {date}",
+  "row_back": "Visszatér: {date}",
+  "row_for": "{name} feladata",
+  "row_for_you": "A te feladatod",
+  "row_by": "{name} írta",
+  "toast_reopened": "Újra nyitva: {title}",
+  "toast_done": "Kész: {title}",
+  "toast_archived": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet archiválva",
+        "type=list": "Lista archiválva",
+        "type=*": "Feladat archiválva"
+      }
+    }
+  ],
+  "toast_unarchived": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet visszahozva az archívumból",
+        "type=list": "Lista visszahozva az archívumból",
+        "type=*": "Feladat visszahozva az archívumból"
+      }
+    }
+  ],
+  "toast_trashed": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet a kukába került",
+        "type=list": "Lista a kukába került",
+        "type=*": "Feladat a kukába került"
+      }
+    }
+  ],
+  "swipe_archive": "Archiválás",
+  "swipe_reopen": "Újranyitás",
+  "swipe_done": "Kész",
+  "swipe_delete": "Törlés",
+  "check_task": "Kész: {title}",
+  "list_empty": "Üres lista",
+  "list_all_done": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=other": "Mind a(z) {count} kész"
+      }
+    }
+  ],
+  "list_left": "{count} maradt",
+  "space_not_here_yet": "Ez a tér még nincs ezen az eszközön. Szinkronizálás után megjelenik.",
+  "space_view_only": "A(z) {space} teret megtekintheted; hozzáadni csak a szerkesztői tudnak.",
+  "storage_title": "Az Oriel nem tudja megnyitni a jegyzetfüzetét.",
+  "storage_text": "Az Oriel mindent ennek a böngészőnek a tárhelyén tart, és a böngésző ezt nem engedte. Általában privát vagy inkognitó ablak, megtelt lemez vagy letiltott webhelyadatok okozzák. Próbálj normál ablakot, szabadíts fel helyet, vagy engedélyezd a tárolást ennek az oldalnak, majd",
+  "storage_reload": "töltsd újra",
+  "next_due": "{title}: legközelebb {date}",
+  "sync_paused": "Szinkronizálás szünetel",
+  "syncing": "Szinkronizálás",
+  "synced": "Szinkronizálva",
+  "member_added": "{name} hozzáadta: {title}",
+  "member_finished": "{name} befejezte: {title}",
+  "member_changes_count": "{count} változás másoktól",
+  "error_title": "Valami hiba történt.",
+  "error_missing_code": "Az Oriel ezen része még nincs letöltve erre az eszközre. Akkor nyílik meg, amikor újra online leszel.",
+  "error_safe": "A jegyzeteid biztonságban vannak ezen az eszközön.",
+  "error_try_again": "Próbáld újra",
+  "error_or": "vagy",
+  "error_reload": "töltsd újra az Orielt",
+  "error_details": "Részletek",
+  "pending": "A jegyzetfüzet megnyitása…",
+  "dictate": "Diktálás",
+  "dictate_stop": "Diktálás leállítása",
+  "dictate_no_mic": "A böngésző nem engedélyezte a mikrofont",
+  "dictate_network": "A diktáláshoz internetkapcsolat kell",
+  "dictate_no_speech": "Nem hallottam semmit",
+  "dictate_stopped": "A diktálás leállt",
+  "greeting_morning": "Jó reggelt",
+  "greeting_afternoon": "Szép délutánt",
+  "greeting_evening": "Jó estét",
+  "due_today": "Ma esedékes",
+  "due_tomorrow": "Holnap esedékes",
+  "due_on": "Esedékes: {date}",
+  "overdue_since": "Lejárt {date} óta",
+  "capture": "Rögzítés",
+  "capture_type": "Típus",
+  "capture_new": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Új jegyzet",
+        "type=list": "Új lista",
+        "type=*": "Új feladat"
+      }
+    }
+  ],
+  "capture_placeholder": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Írj valamit",
+        "type=list": "Bevásárlás: tej, tojás, kenyér",
+        "type=*": "Felhívni az állatorvost"
+      }
+    }
+  ],
+  "capture_add": "Hozzáadás",
+  "capture_saved": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet mentve",
+        "type=list": "Lista mentve",
+        "type=*": "Feladat mentve"
+      }
+    }
+  ],
+  "capture_save_failed": "Nem sikerült menteni. Próbáld újra.",
+  "append_no_list": "Nincs ilyen nevű lista",
+  "append_no_list_yet": "Még nincs ilyen nevű lista",
+  "append_type_what": "Írd be, mit adsz hozzá ehhez: {list}",
+  "append_adding": "Hozzáadás ehhez: {list}",
+  "append_add_count": "{count} hozzáadása ehhez: {list}",
+  "append_added": "{count} hozzáadva ehhez: {list}",
+  "append_too_long": "Nem sikerült hozzáadni. Minden tétel legyen 500 karakternél rövidebb.",
+  "draft_list_items": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=other": "{title} · {count} tétel"
+      }
+    }
+  ],
+  "item_error_title": "Ezt az oldalt nem sikerült megjeleníteni.",
+  "nothing_open": "Nyiss meg egy jegyzetet, listát vagy feladatot, hogy itt olvashasd.",
+  "invalid_title_missing": "Adj meg címet",
+  "invalid_title_long": "A cím legyen 200 karakternél rövidebb",
+  "invalid_text_missing": "Írj be valamit",
+  "cmd_show_everything": "Minden mutatása",
+  "cmd_show_notes": "Jegyzetek mutatása",
+  "cmd_show_lists": "Listák mutatása",
+  "cmd_show_tasks": "Feladatok mutatása",
+  "cmd_due_today": "Ma esedékes feladatok",
+  "cmd_upcoming": "Közelgő feladatok",
+  "cmd_find": "Keress egy elemet vagy parancsot",
+  "cmd_results": "Találatok",
+  "cmd_recent": "Nemrég módosítva",
+  "cmd_commands": "Parancsok",
+  "cmd_nothing": "Semmi sem egyezik ezzel: „{query}”.",
+  "torn_title": "Ezt a lapot kitépték.",
+  "torn_text": "Törölték, itt vagy egy másik eszközön.",
+  "back_to_everything": "Vissza mindenhez",
+  "failed_generic": "Ez nem sikerült.",
+  "version_restored": "Korábbi változat visszaállítva",
+  "moved_to": "Áthelyezve ide: {space}",
+  "snoozed_until_toast": [
+    {
+      "declarations": ["input type", "input date"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet elhalasztva eddig: {date}",
+        "type=list": "Lista elhalasztva eddig: {date}",
+        "type=*": "Feladat elhalasztva eddig: {date}"
+      }
+    }
+  ],
+  "duplicated": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet megkettőzve",
+        "type=list": "Lista megkettőzve",
+        "type=*": "Feladat megkettőzve"
+      }
+    }
+  ],
+  "converted": [
+    {
+      "declarations": ["input to"],
+      "selectors": ["to"],
+      "match": {
+        "to=list": "A jegyzet listává alakult",
+        "to=*": "A lista jegyzetté alakult"
+      }
+    }
+  ],
+  "convert_too_long": "Ez túl hosszú az átalakításhoz",
+  "convert_to_list": "Átalakítás listává",
+  "convert_to_note": "Átalakítás jegyzetté",
+  "copied_text": "Szövegként kimásolva",
+  "copy_blocked": "Nem sikerült másolni. A böngésző nem engedte.",
+  "deleted_forever": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet véglegesen törölve",
+        "type=list": "Lista véglegesen törölve",
+        "type=*": "Feladat véglegesen törölve"
+      }
+    }
+  ],
+  "share": "Megosztás",
+  "copy_as_text": "Másolás szövegként",
+  "duplicate": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet megkettőzése",
+        "type=list": "Lista megkettőzése",
+        "type=*": "Feladat megkettőzése"
+      }
+    }
+  ],
+  "archive": "Archiválás",
+  "pin": "Kitűzés felülre",
+  "snooze": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet elhalasztása",
+        "type=list": "Lista elhalasztása",
+        "type=*": "Feladat elhalasztása"
+      }
+    }
+  ],
+  "snooze_until": "Elhalasztás eddig",
+  "snooze_tomorrow": "Holnap",
+  "snooze_next_week": "Jövő héten",
+  "snooze_next_month": "Egy hónap múlva",
+  "trash": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet áthelyezése a kukába",
+        "type=list": "Lista áthelyezése a kukába",
+        "type=*": "Feladat áthelyezése a kukába"
+      }
+    }
+  ],
+  "snoozed_until": "Elhalasztva eddig: {date}.",
+  "bring_back": "Visszahozás most",
+  "in_trash_since": "A kukában {date} óta.",
+  "in_trash_since_by": "A kukában {date} óta, {name} törölte.",
+  "restore": "Visszaállítás",
+  "delete_forever": "Végleges törlés",
+  "meta_by": "írta: {name}",
+  "meta_done_by": "elvégezte: {name}",
+  "meta_pinned": "Kitűzve",
+  "meta_archived": "Archiválva",
+  "meta_view_only": "Csak megtekintés",
+  "done": "Kész",
+  "field_priority": "Prioritás",
+  "field_status": "Állapot",
+  "field_due": "Határidő",
+  "no_date": "Nincs dátum",
+  "field_for": "Kinek",
+  "for_anyone": "Bárkinek",
+  "for_me": "Nekem",
+  "field_repeats": "Ismétlődés",
+  "field_space": "Tér",
+  "share_with_someone": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Jegyzet megosztása valakivel",
+        "type=list": "Lista megosztása valakivel",
+        "type=*": "Feladat megosztása valakivel"
+      }
+    }
+  ],
+  "field_title": "Cím",
+  "field_note": "Jegyzet",
+  "field_details": "Részletek",
+  "edit_note": "Jegyzet szerkesztése",
+  "edit_details": "Részletek szerkesztése",
+  "write_something": "Írj valamit",
+  "add_details": "Részletek hozzáadása",
+  "markdown_hint": "Markdown működik: **félkövér**, *dőlt*, # címsor, - lista, [hivatkozás](url).",
+  "entries_none": "Még nincs tétel",
+  "entries_all_done": "Minden kész",
+  "entries_left": "{total}-ből {open} maradt",
+  "entries_uncheck_all": "Minden pipa levétele",
+  "entries_clear_checked": "Kipipáltak törlése",
+  "entries_cleared": "{count} kipipált törölve",
+  "entries_unchecked": "{count} pipa levéve",
+  "entries_moved": "{text}, {position}. / {total}",
+  "entries_removed": "Törölve: {text}",
+  "entries_label": "Tételek",
+  "entry_check": "{text} kipipálása",
+  "entry_text": "Tétel szövege",
+  "entry_remove": "{text} törlése",
+  "entry_move": "{text} áthelyezése",
+  "entry_add": "Tétel hozzáadása",
+  "history": "Előzmények",
+  "history_title": "Korábbi változatok",
+  "history_loading": "Betöltés…",
+  "history_offline": "A korábbi változatok online állapotban látszanak.",
+  "history_none": "Még nincs korábbi változat. Minden szerkesztés 90 napig megmarad.",
+  "history_empty_text": "Üres",
+  "someone_who_left": "Valaki, aki kilépett",
+  "you": "te",
+  "scan": "Vonalkód beolvasása",
+  "scan_unknown": "A(z) {code} termék nincs benne az Open Food Factsben. Írd be a nevét.",
+  "scan_no_camera": "A böngésző nem engedélyezte a kamerát",
+  "scan_camera_view": "Kamerakép",
+  "cancel": "Mégse",
+  "presence_here": "{names} is itt van",
+  "activity_entry_before": [
+    {
+      "declarations": ["input action", "input who", "input entries"],
+      "selectors": ["action"],
+      "match": {
+        "action=added": "{who} hozzáadott ehhez:",
+        "action=completed": "{who} kipipált itt:",
+        "action=reopened": "{who} visszavette a pipát itt:",
+        "action=*": "{who} módosított itt:"
+      }
+    }
+  ],
+  "activity_entry_after": [
+    {
+      "declarations": ["input action", "input entries"],
+      "selectors": ["action"],
+      "match": {
+        "action=*": "– {entries}"
+      }
+    }
+  ],
+  "activity_item_before": [
+    {
+      "declarations": ["input action", "input who"],
+      "selectors": ["action"],
+      "match": {
+        "action=added": "{who} hozzáadta:",
+        "action=edited": "{who} szerkesztette:",
+        "action=completed": "{who} befejezte:",
+        "action=reopened": "{who} újranyitotta:",
+        "action=archived": "{who} archiválta:",
+        "action=unarchived": "{who} visszahozta az archívumból:",
+        "action=trashed": "{who} a kukába tette:",
+        "action=*": "{who} visszaállította:"
+      }
+    }
+  ],
+  "activity_item_after": [
+    {
+      "declarations": ["input action"],
+      "selectors": ["action"],
+      "match": {
+        "action=*": ""
+      }
+    }
+  ],
+  "activity_more": "{list} és még {count}"
+}

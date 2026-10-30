@@ -1,0 +1,541 @@
+{
+  "type_label": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note",
+        "type=list": "List",
+        "type=*": "Task"
+      }
+    }
+  ],
+  "type_plural": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Notes",
+        "type=list": "Lists",
+        "type=*": "Tasks"
+      }
+    }
+  ],
+  "priority_label": [
+    {
+      "declarations": ["input priority"],
+      "selectors": ["priority"],
+      "match": {
+        "priority=1": "Low",
+        "priority=2": "Medium",
+        "priority=3": "High",
+        "priority=*": "None"
+      }
+    }
+  ],
+  "priority_detail": [
+    {
+      "declarations": ["input priority"],
+      "selectors": ["priority"],
+      "match": {
+        "priority=1": "Low priority",
+        "priority=2": "Medium priority",
+        "priority=*": "High priority"
+      }
+    }
+  ],
+  "status_label": [
+    {
+      "declarations": ["input status"],
+      "selectors": ["status"],
+      "match": {
+        "status=in_progress": "In progress",
+        "status=waiting": "Waiting",
+        "status=*": "To do"
+      }
+    }
+  ],
+  "repeat_label": [
+    {
+      "declarations": ["input repeat"],
+      "selectors": ["repeat"],
+      "match": {
+        "repeat=daily": "Daily",
+        "repeat=weekly": "Weekly",
+        "repeat=monthly": "Monthly",
+        "repeat=*": "Never"
+      }
+    }
+  ],
+  "repeat_detail": [
+    {
+      "declarations": ["input repeat"],
+      "selectors": ["repeat"],
+      "match": {
+        "repeat=daily": "Repeats daily",
+        "repeat=weekly": "Repeats weekly",
+        "repeat=*": "Repeats monthly"
+      }
+    }
+  ],
+  "nav_notebook": "Notebook",
+  "nav_spaces": "Spaces",
+  "nav_settings": "Settings",
+  "nav_account": "Account",
+  "nav_everything": "Everything",
+  "nav_main": "Main",
+  "nav_back": "Back",
+  "nav_find": "Find or run anything",
+  "nav_sign_in": "Sign in",
+  "nav_sign_in_to_sync": "Sign in to sync",
+  "offline_banner": "Offline. Changes are saved on this device.",
+  "search": "Search",
+  "filter_show": "Show",
+  "filter_all_tasks": "All tasks",
+  "filter_for_me": "For me",
+  "filter_today": "Today",
+  "filter_upcoming": "Upcoming",
+  "filter_tasks": "Tasks",
+  "filter_space": "Space",
+  "filter_all_spaces": "All spaces",
+  "empty_all": "Notes, lists and tasks you write down will show up here.",
+  "empty_type": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Notes you write down will show up here.",
+        "type=list": "Lists you start will show up here.",
+        "type=*": "Tasks you write down will show up here."
+      }
+    }
+  ],
+  "empty_blank": "A blank page.",
+  "empty_mine": "Nothing is for you right now.",
+  "empty_due_today": "Nothing due today.",
+  "empty_due_later": "Nothing due later.",
+  "empty_search": "Nothing here mentions “{query}”.",
+  "section_pinned": "Pinned",
+  "section_everything_else": "Everything else",
+  "section_all_items": "Notes, lists and tasks",
+  "show_completed": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Show {count} completed",
+        "countPlural=other": "Show {count} completed"
+      }
+    }
+  ],
+  "hide_completed": "Hide completed",
+  "show_more": "Show {count} more",
+  "view_snoozed": "Snoozed",
+  "view_archive": "Archive",
+  "view_trash": "Trash",
+  "view_put_away": "Put away",
+  "empty_snoozed": "Snooze an item to put it away until a day you choose.",
+  "empty_archive": "Archive finished lists and old notes to keep them out of the way.",
+  "empty_trash": "The trash is empty.",
+  "trash_note": "Deleted items stay here for {days} days.",
+  "trash_empty_button": "Empty trash",
+  "trash_emptied": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Deleted {count} item for good",
+        "countPlural=other": "Deleted {count} items for good"
+      }
+    }
+  ],
+  "close": "Close",
+  "undo": "Undo",
+  "row_deleted": "Deleted {date}",
+  "row_archived": "Archived {date}",
+  "row_back": "Back {date}",
+  "row_for": "For {name}",
+  "row_for_you": "For you",
+  "row_by": "by {name}",
+  "toast_reopened": "{title} reopened",
+  "toast_done": "{title} done",
+  "toast_archived": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note archived",
+        "type=list": "List archived",
+        "type=*": "Task archived"
+      }
+    }
+  ],
+  "toast_unarchived": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note back from the archive",
+        "type=list": "List back from the archive",
+        "type=*": "Task back from the archive"
+      }
+    }
+  ],
+  "toast_trashed": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note moved to the trash",
+        "type=list": "List moved to the trash",
+        "type=*": "Task moved to the trash"
+      }
+    }
+  ],
+  "swipe_archive": "Archive",
+  "swipe_reopen": "Reopen",
+  "swipe_done": "Done",
+  "swipe_delete": "Delete",
+  "check_task": "Done: {title}",
+  "list_empty": "Empty list",
+  "list_all_done": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "All {count} done",
+        "countPlural=other": "All {count} done"
+      }
+    }
+  ],
+  "list_left": "{count} left",
+  "space_not_here_yet": "This space is not on this device yet. It appears once it syncs.",
+  "space_view_only": "You can view {space}; only its editors can add to it.",
+  "storage_title": "Oriel cannot open its notebook.",
+  "storage_text": "Oriel keeps everything in this browser's storage, and the browser said no. Private or incognito windows, a full disk, or blocked site data are the usual causes. Try a normal window, free some space, or allow storage for this site, then",
+  "storage_reload": "reload",
+  "next_due": "{title}: next due {date}",
+  "sync_paused": "Sync paused",
+  "syncing": "Syncing",
+  "synced": "Synced",
+  "member_added": "{name} added {title}",
+  "member_finished": "{name} finished {title}",
+  "member_changes_count": "{count} changes from others",
+  "error_title": "Something went wrong.",
+  "error_missing_code": "This part of Oriel has not been downloaded to this device yet. It opens once you are back online.",
+  "error_safe": "Your notes are safe on this device.",
+  "error_try_again": "Try again",
+  "error_or": "or",
+  "error_reload": "reload Oriel",
+  "error_details": "Details",
+  "pending": "Opening your notebook…",
+  "dictate": "Dictate",
+  "dictate_stop": "Stop dictation",
+  "dictate_no_mic": "The browser did not allow the microphone",
+  "dictate_network": "Dictation needs a connection",
+  "dictate_no_speech": "Did not hear anything",
+  "dictate_stopped": "Dictation stopped",
+  "greeting_morning": "Good morning",
+  "greeting_afternoon": "Good afternoon",
+  "greeting_evening": "Good evening",
+  "due_today": "Due today",
+  "due_tomorrow": "Due tomorrow",
+  "due_on": "Due {date}",
+  "overdue_since": "Overdue since {date}",
+  "capture": "Capture",
+  "capture_type": "Type",
+  "capture_new": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "New note",
+        "type=list": "New list",
+        "type=*": "New task"
+      }
+    }
+  ],
+  "capture_placeholder": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Write something",
+        "type=list": "Groceries: milk, eggs, bread",
+        "type=*": "Call the vet"
+      }
+    }
+  ],
+  "capture_add": "Add",
+  "capture_saved": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note saved",
+        "type=list": "List saved",
+        "type=*": "Task saved"
+      }
+    }
+  ],
+  "capture_save_failed": "Could not save. Try again.",
+  "append_no_list": "No list starts with that name",
+  "append_no_list_yet": "No list starts with that name yet",
+  "append_type_what": "Type what to add to {list}",
+  "append_adding": "Adding to {list}",
+  "append_add_count": "Add {count} to {list}",
+  "append_added": "Added {count} to {list}",
+  "append_too_long": "Could not add. Keep each entry under 500 characters.",
+  "draft_list_items": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{title} · {count} item",
+        "countPlural=other": "{title} · {count} items"
+      }
+    }
+  ],
+  "item_error_title": "This page could not be shown.",
+  "nothing_open": "Open a note, list or task to read it here.",
+  "invalid_title_missing": "Add a title",
+  "invalid_title_long": "Keep the title under 200 characters",
+  "invalid_text_missing": "Add some text",
+  "cmd_show_everything": "Show everything",
+  "cmd_show_notes": "Show notes",
+  "cmd_show_lists": "Show lists",
+  "cmd_show_tasks": "Show tasks",
+  "cmd_due_today": "Tasks due today",
+  "cmd_upcoming": "Upcoming tasks",
+  "cmd_find": "Find an item or a command",
+  "cmd_results": "Results",
+  "cmd_recent": "Recently changed",
+  "cmd_commands": "Commands",
+  "cmd_nothing": "Nothing matches “{query}”.",
+  "torn_title": "This page was torn out.",
+  "torn_text": "It was deleted, here or on another device.",
+  "back_to_everything": "Back to everything",
+  "failed_generic": "That did not work.",
+  "version_restored": "Earlier version restored",
+  "moved_to": "Moved to {space}",
+  "snoozed_until_toast": [
+    {
+      "declarations": ["input type", "input date"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note snoozed until {date}",
+        "type=list": "List snoozed until {date}",
+        "type=*": "Task snoozed until {date}"
+      }
+    }
+  ],
+  "duplicated": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note duplicated",
+        "type=list": "List duplicated",
+        "type=*": "Task duplicated"
+      }
+    }
+  ],
+  "converted": [
+    {
+      "declarations": ["input to"],
+      "selectors": ["to"],
+      "match": {
+        "to=list": "Note turned into a list",
+        "to=*": "List turned into a note"
+      }
+    }
+  ],
+  "convert_too_long": "This is too long to convert",
+  "convert_to_list": "Turn into a list",
+  "convert_to_note": "Turn into a note",
+  "copied_text": "Copied as text",
+  "copy_blocked": "Could not copy. The browser did not allow it.",
+  "deleted_forever": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Note deleted for good",
+        "type=list": "List deleted for good",
+        "type=*": "Task deleted for good"
+      }
+    }
+  ],
+  "share": "Share",
+  "copy_as_text": "Copy as text",
+  "duplicate": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Duplicate note",
+        "type=list": "Duplicate list",
+        "type=*": "Duplicate task"
+      }
+    }
+  ],
+  "archive": "Archive",
+  "pin": "Pin to the top",
+  "snooze": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Snooze note",
+        "type=list": "Snooze list",
+        "type=*": "Snooze task"
+      }
+    }
+  ],
+  "snooze_until": "Snooze until",
+  "snooze_tomorrow": "Tomorrow",
+  "snooze_next_week": "Next week",
+  "snooze_next_month": "In a month",
+  "trash": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Move note to the trash",
+        "type=list": "Move list to the trash",
+        "type=*": "Move task to the trash"
+      }
+    }
+  ],
+  "snoozed_until": "Snoozed until {date}.",
+  "bring_back": "Bring back now",
+  "in_trash_since": "In the trash since {date}.",
+  "in_trash_since_by": "In the trash since {date}, deleted by {name}.",
+  "restore": "Restore",
+  "delete_forever": "Delete forever",
+  "meta_by": "by {name}",
+  "meta_done_by": "done by {name}",
+  "meta_pinned": "Pinned",
+  "meta_archived": "Archived",
+  "meta_view_only": "View only",
+  "done": "Done",
+  "field_priority": "Priority",
+  "field_status": "Status",
+  "field_due": "Due",
+  "no_date": "No date",
+  "field_for": "For",
+  "for_anyone": "Anyone",
+  "for_me": "Me",
+  "field_repeats": "Repeats",
+  "field_space": "Space",
+  "share_with_someone": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=note": "Share this note with someone",
+        "type=list": "Share this list with someone",
+        "type=*": "Share this task with someone"
+      }
+    }
+  ],
+  "field_title": "Title",
+  "field_note": "Note",
+  "field_details": "Details",
+  "edit_note": "Edit note",
+  "edit_details": "Edit details",
+  "write_something": "Write something",
+  "add_details": "Add details",
+  "markdown_hint": "Markdown works: **bold**, *italic*, # heading, - list, [link](url).",
+  "entries_none": "No items yet",
+  "entries_all_done": "All done",
+  "entries_left": "{open} of {total} left",
+  "entries_uncheck_all": "Uncheck all",
+  "entries_clear_checked": "Clear checked",
+  "entries_cleared": "Cleared {count} checked",
+  "entries_unchecked": "Unchecked {count}",
+  "entries_moved": "{text}, {position} of {total}",
+  "entries_removed": "Removed {text}",
+  "entries_label": "Items",
+  "entry_check": "Check {text}",
+  "entry_text": "Item text",
+  "entry_remove": "Remove {text}",
+  "entry_move": "Move {text}",
+  "entry_add": "Add an item",
+  "history": "History",
+  "history_title": "Earlier versions",
+  "history_loading": "Loading…",
+  "history_offline": "Earlier versions show when you are online.",
+  "history_none": "No earlier versions yet. Each editing session is kept for 90 days.",
+  "history_empty_text": "Empty",
+  "someone_who_left": "Someone who left",
+  "you": "you",
+  "scan": "Scan a barcode",
+  "scan_unknown": "Product {code} is not in Open Food Facts. Type its name.",
+  "scan_no_camera": "The browser did not allow the camera",
+  "scan_camera_view": "Camera view",
+  "cancel": "Cancel",
+  "presence_here": [
+    {
+      "declarations": [
+        "input count",
+        "input names",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{names} is here too",
+        "countPlural=other": "{names} are here too"
+      }
+    }
+  ],
+  "activity_entry_before": [
+    {
+      "declarations": ["input action", "input who", "input entries"],
+      "selectors": ["action"],
+      "match": {
+        "action=added": "{who} added {entries} to",
+        "action=completed": "{who} checked {entries} in",
+        "action=reopened": "{who} unchecked {entries} in",
+        "action=*": "{who} changed {entries} in"
+      }
+    }
+  ],
+  "activity_entry_after": [
+    {
+      "declarations": ["input action", "input entries"],
+      "selectors": ["action"],
+      "match": {
+        "action=*": ""
+      }
+    }
+  ],
+  "activity_item_before": [
+    {
+      "declarations": ["input action", "input who"],
+      "selectors": ["action"],
+      "match": {
+        "action=added": "{who} added",
+        "action=edited": "{who} edited",
+        "action=completed": "{who} finished",
+        "action=reopened": "{who} reopened",
+        "action=archived": "{who} archived",
+        "action=unarchived": "{who} took",
+        "action=trashed": "{who} moved",
+        "action=*": "{who} restored"
+      }
+    }
+  ],
+  "activity_item_after": [
+    {
+      "declarations": ["input action"],
+      "selectors": ["action"],
+      "match": {
+        "action=unarchived": "out of the archive",
+        "action=trashed": "to the trash",
+        "action=*": ""
+      }
+    }
+  ],
+  "activity_more": "{list} and {count} more"
+}

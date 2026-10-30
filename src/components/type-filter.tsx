@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { itemsLabel, statusLabel } from '#/components/item-labels'
 import type { DueFilter } from '#/data/organize'
 import {
   type ItemType,
@@ -7,16 +8,11 @@ import {
   taskStatuses,
 } from '#/data/schema'
 import type { SpaceView } from '#/lib/spaces'
+import { m } from '#/paraglide/messages.js'
 
-const labels: Record<ItemType, string> = {
-  note: 'Notes',
-  list: 'Lists',
-  task: 'Tasks',
-}
-
-const typeOptions = [
-  { type: undefined, label: 'Everything' },
-  ...itemTypes.map((type) => ({ type, label: labels[type] })),
+const typeOptions = () => [
+  { type: undefined, label: m.nav_everything() },
+  ...itemTypes.map((type) => ({ type, label: itemsLabel(type) })),
 ]
 
 // The router marks a link active when its search is part of the current one, and a filter set to
@@ -29,8 +25,8 @@ const linkClass =
 /** Filters live in the URL, so they survive reloads and the back button; each keeps the other. */
 export function TypeFilter({ active }: { active?: ItemType }) {
   return (
-    <nav aria-label="Show" className="flex gap-x-4 text-sm">
-      {typeOptions.map(({ type, label }) => (
+    <nav aria-label={m.filter_show()} className="flex gap-x-4 text-sm">
+      {typeOptions().map(({ type, label }) => (
         <Link
           key={label}
           to="/app"
@@ -53,17 +49,20 @@ export function TypeFilter({ active }: { active?: ItemType }) {
   )
 }
 
-const taskOptions: {
+const taskOptions = (): {
   status?: TaskStatus
   due?: DueFilter
   mine?: true
   label: string
-}[] = [
-  { label: 'All tasks' },
-  { mine: true, label: 'For me' },
-  { due: 'today', label: 'Today' },
-  { due: 'upcoming', label: 'Upcoming' },
-  ...taskStatuses.map(({ value, label }) => ({ status: value, label })),
+}[] => [
+  { label: m.filter_all_tasks() },
+  { mine: true, label: m.filter_for_me() },
+  { due: 'today', label: m.filter_today() },
+  { due: 'upcoming', label: m.filter_upcoming() },
+  ...taskStatuses.map(({ value }) => ({
+    status: value,
+    label: statusLabel(value),
+  })),
 ]
 
 /**
@@ -83,10 +82,10 @@ export function TaskFilter({
 }) {
   return (
     <nav
-      aria-label="Tasks"
+      aria-label={m.filter_tasks()}
       className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
     >
-      {taskOptions
+      {taskOptions()
         .filter((option) => showMine || !option.mine)
         .map((option) => (
           <Link
@@ -126,7 +125,7 @@ export function SpaceFilter({
 }) {
   return (
     <nav
-      aria-label="Space"
+      aria-label={m.filter_space()}
       className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
     >
       <Link
@@ -136,7 +135,7 @@ export function SpaceFilter({
         activeOptions={activeOptions}
         className={linkClass}
       >
-        All spaces
+        {m.filter_all_spaces()}
       </Link>
       {spaces.map((space) => (
         <Link

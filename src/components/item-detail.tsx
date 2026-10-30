@@ -21,7 +21,12 @@ import {
 import { toast } from 'sonner'
 import { completeTask } from '#/components/complete-task'
 import { EntryList } from '#/components/entry-list'
-import { itemLabels } from '#/components/item-labels'
+import {
+  itemLabel,
+  priorityLabel,
+  repeatLabel,
+  statusLabel,
+} from '#/components/item-labels'
 import { NoteHistory } from '#/components/note-history'
 import { Checkbox } from '#/components/ui/checkbox'
 import { ChoiceGroup } from '#/components/ui/choice-group'
@@ -31,7 +36,6 @@ import {
   type Priority,
   priorities,
   type Repeat,
-  repeatChoices,
   type TaskStatus,
   taskStatuses,
   titleSchema,
@@ -43,14 +47,15 @@ import { renderMarkdown } from '#/lib/markdown'
 import { presenceText, usePresence } from '#/lib/presence'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
+import { m } from '#/paraglide/messages.js'
 import { createSpace } from '#/server/sharing-functions'
 
 // No display or hover color here: each button sets its own, since `cn` adds classes and does not
 // override them.
 const snoozeChoices = {
-  tomorrow: 'Tomorrow',
-  nextWeek: 'Next week',
-  nextMonth: 'In a month',
+  tomorrow: m.snooze_tomorrow,
+  nextWeek: m.snooze_next_week,
+  nextMonth: m.snooze_next_month,
 }
 
 /** "Monday, 2 November" for a `YYYY-MM-DD` day. */
@@ -62,13 +67,23 @@ const iconButton =
 // Phones and Safari open the share sheet; elsewhere the text goes to the clipboard.
 const canShare = () => typeof navigator.share === 'function'
 
-const priorityChoices = priorities.map(({ value, label }) => ({
-  value: String(value),
-  label,
-}))
+const priorityChoices = () =>
+  priorities.map(({ value }) => ({
+    value: String(value),
+    label: priorityLabel(value),
+  }))
 
 // "To do" is no status at all, so a task that never needed one reads the same.
-const statusChoices = [{ value: 'to_do', label: 'To do' }, ...taskStatuses]
+const statusChoices = () => [
+  { value: 'to_do', label: statusLabel(null) },
+  ...taskStatuses.map(({ value }) => ({ value, label: statusLabel(value) })),
+]
+
+const repeatChoices = () =>
+  (['never', 'daily', 'weekly', 'monthly'] as const).map((value) => ({
+    value,
+    label: repeatLabel(value === 'never' ? null : value),
+  }))
 
 export function ItemDetail({
   store,
@@ -90,14 +105,14 @@ export function ItemDetail({
   if (!item) {
     return (
       <div className="flex flex-1 flex-col justify-center gap-2 pb-16 pl-10">
-        <p className="font-serif text-2xl italic">This page was torn out.</p>
+        <p className="font-serif text-2xl italic">{m.torn_title()}</p>
         <p className="text-sm text-muted-foreground">
-          It was deleted, here or on another device.{' '}
+          {m.torn_text()}{' '}
           <Link
             to="/app"
             className="text-foreground underline underline-offset-4"
           >
-            Back to everything
+            {m.back_to_everything()}
           </Link>
         </p>
       </div>
@@ -112,7 +127,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const navigate = useNavigate()
   const account = useAccount()
   const { spaces, byId } = useSpaces()
-  const label = itemLabels[item.type]
+  const label = itemLabel(item.type)
   const pinned = item.pinned_at !== null
   const space = item.space_id ? byId.get(item.space_id) : undefined
   // Viewers get a read-only page; the server refuses their writes anyway.
@@ -149,7 +164,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       await store.moveItem(item.id, spaceId)
       await navigate({ to: '/spaces/$spaceId', params: { spaceId } })
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'That did not work.')
+      toast(error instanceof Error ? error.message : m.failed_generic())
     }
   }
 
@@ -158,9 +173,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     const before = store.items.get(item.id)?.body ?? item.body
     await store.updateItem(item.id, { body })
     setBodyVersion((version) => version + 1)
-    toast('Earlier version restored', {
+    toast(m.version_restored(), {
       action: {
-        label: 'Undo',
+        label: m.undo(),
         onClick: () =>
           void store
             .updateItem(item.id, { body: before })
@@ -171,14 +186,17 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
 
   async function move(spaceId: string) {
     await store.moveItem(item.id, spaceId)
-    toast(`Moved to ${byId.get(spaceId)?.name}`)
+    toast(m.moved_to({ space: byId.get(spaceId)?.name ?? '' }))
   }
 
   async function trash() {
     await navigate({ to: '/app', search: true })
     await store.trashItem(item.id)
-    toast(`${label} moved to the trash`, {
-      action: { label: 'Undo', onClick: () => void store.restoreItem(item.id) },
+    toast(m.toast_trashed({ type: item.type }), {
+      action: {
+        label: m.undo(),
+        onClick: () => void store.restoreItem(item.id),
+      },
     })
   }
 
@@ -186,9 +204,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     const before = item.snoozed_until
     await navigate({ to: '/app', search: true })
     await store.setItemSnoozed(item.id, until)
-    toast(`${label} snoozed until ${dayName(until)}`, {
+    toast(m.snoozed_until_toast({ type: item.type, date: dayName(until) }), {
       action: {
-        label: 'Undo',
+        label: m.undo(),
         onClick: () => void store.setItemSnoozed(item.id, before),
       },
     })
@@ -201,16 +219,17 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       params: { itemId: id },
       search: true,
     })
-    toast(`${label} duplicated`, {
-      action: { label: 'Undo', onClick: () => void store.deleteItem(id) },
+    toast(m.duplicated({ type: item.type }), {
+      action: { label: m.undo(), onClick: () => void store.deleteItem(id) },
     })
   }
 
   async function archive(next: boolean) {
     await store.setItemArchived(item.id, next)
-    toast(next ? `${label} archived` : `${label} back from the archive`, {
+    const message = next ? m.toast_archived : m.toast_unarchived
+    toast(message({ type: item.type }), {
       action: {
-        label: 'Undo',
+        label: m.undo(),
         onClick: () => void store.setItemArchived(item.id, !next),
       },
     })
@@ -222,15 +241,15 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     await saveBody.current?.()
     try {
       const snapshot = await store.convertItem(item.id, to)
-      toast(`${label} turned into a ${to}`, {
+      toast(m.converted({ to }), {
         action: {
-          label: 'Undo',
+          label: m.undo(),
           onClick: () => void store.undoConversion(snapshot),
         },
       })
     } catch (error) {
       console.error('Could not convert the item', error)
-      toast(`This ${label.toLowerCase()} is too long to turn into a ${to}`)
+      toast(m.convert_too_long())
     }
   }
 
@@ -247,17 +266,17 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     }
     try {
       await navigator.clipboard.writeText(text)
-      toast('Copied as text')
+      toast(m.copied_text())
     } catch {
-      toast('Could not copy. The browser did not allow it.')
+      toast(m.copy_blocked())
     }
   }
 
   async function deleteForever() {
     await navigate({ to: '/app', search: true })
     const snapshot = await store.deleteItem(item.id)
-    toast(`${label} deleted for good`, {
-      action: { label: 'Undo', onClick: () => void store.restore(snapshot) },
+    toast(m.deleted_forever({ type: item.type }), {
+      action: { label: m.undo(), onClick: () => void store.restore(snapshot) },
     })
   }
 
@@ -271,19 +290,19 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           className="flex h-11 items-center gap-2 rounded-sm px-3 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2 lg:invisible"
         >
           <ArrowLeft aria-hidden className="size-4" />
-          Everything
+          {m.nav_everything()}
         </Link>
         <div className="-mr-3 flex">
           <Button
             onPress={() => void share()}
-            aria-label={canShare() ? 'Share' : 'Copy as text'}
+            aria-label={canShare() ? m.share() : m.copy_as_text()}
             className={cn(iconButton, 'grid hover:text-foreground')}
           >
             <Share aria-hidden className="size-[1.125rem]" />
           </Button>
           <Button
             onPress={() => void duplicate()}
-            aria-label={`Duplicate ${label.toLowerCase()}`}
+            aria-label={m.duplicate({ type: item.type })}
             className={cn(
               iconButton,
               'hover:text-foreground',
@@ -295,7 +314,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           <ToggleButton
             isSelected={archived}
             onChange={(selected) => void archive(selected)}
-            aria-label="Archive"
+            aria-label={m.archive()}
             className={cn(
               iconButton,
               'hover:text-foreground data-selected:text-foreground',
@@ -307,7 +326,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           <ToggleButton
             isSelected={pinned}
             onChange={(selected) => void store.setItemPinned(item.id, selected)}
-            aria-label="Pin to the top"
+            aria-label={m.pin()}
             className={cn(
               iconButton,
               'hover:text-foreground data-selected:text-foreground',
@@ -323,7 +342,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           </ToggleButton>
           <MenuTrigger>
             <Button
-              aria-label={`Snooze ${label.toLowerCase()}`}
+              aria-label={m.snooze({ type: item.type })}
               className={cn(
                 iconButton,
                 'hover:text-foreground',
@@ -334,21 +353,21 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             </Button>
             <Popover className="min-w-48 rounded-sm bg-background p-1 shadow-lg ring-1 ring-rule">
               <Menu
-                aria-label="Snooze until"
+                aria-label={m.snooze_until()}
                 onAction={(key) => void snooze(String(key))}
                 className="outline-none"
               >
-                {Object.entries(snoozeChoices).map(([key, text]) => {
+                {Object.entries(snoozeChoices).map(([key, message]) => {
                   const day =
                     snoozeDays(today)[key as keyof typeof snoozeChoices]
                   return (
                     <MenuItem
                       key={key}
                       id={day}
-                      textValue={text}
+                      textValue={message()}
                       className="flex min-h-11 cursor-default items-center justify-between gap-4 rounded-sm px-3 text-sm outline-none data-focused:bg-wash"
                     >
-                      <span>{text}</span>
+                      <span>{message()}</span>
                       <span className="text-xs text-muted-foreground">
                         {formatShortDate(`${day}T12:00:00`)}
                       </span>
@@ -360,7 +379,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           </MenuTrigger>
           <Button
             onPress={() => void trash()}
-            aria-label={`Move ${label.toLowerCase()} to the trash`}
+            aria-label={m.trash({ type: item.type })}
             className={cn(
               iconButton,
               'hover:text-destructive',
@@ -375,13 +394,13 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
       <div className="pl-10">
         {snoozedUntil && !item.deleted_at && (
           <div className="mb-6 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-            <p>Snoozed until {dayName(snoozedUntil)}.</p>
+            <p>{m.snoozed_until({ date: dayName(snoozedUntil) })}</p>
             {editable && (
               <Button
                 onPress={() => void store.setItemSnoozed(item.id, null)}
                 className="rounded-sm py-2 text-foreground underline underline-offset-4 data-focus-visible:outline-2"
               >
-                Bring back now
+                {m.bring_back()}
               </Button>
             )}
           </div>
@@ -389,8 +408,12 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         {item.deleted_at && (
           <div className="mb-6 flex flex-col gap-1 text-sm text-muted-foreground">
             <p>
-              In the trash since {formatShortDate(item.deleted_at)}
-              {deletedBy && `, deleted by ${deletedBy}`}.
+              {deletedBy
+                ? m.in_trash_since_by({
+                    date: formatShortDate(item.deleted_at),
+                    name: deletedBy,
+                  })
+                : m.in_trash_since({ date: formatShortDate(item.deleted_at) })}
             </p>
             {canChange && (
               <div className="-ml-2 flex gap-2">
@@ -398,13 +421,13 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
                   onPress={() => void store.restoreItem(item.id)}
                   className="rounded-sm px-2 py-2 text-foreground underline underline-offset-4 data-focus-visible:outline-2"
                 >
-                  Restore
+                  {m.restore()}
                 </Button>
                 <Button
                   onPress={() => void deleteForever()}
                   className="rounded-sm px-2 py-2 hover:text-destructive data-focus-visible:outline-2"
                 >
-                  Delete forever
+                  {m.delete_forever()}
                 </Button>
               </div>
             )}
@@ -415,11 +438,11 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         <p className="text-xs text-muted-foreground">
           {label} · {formatShortDate(item.created_at)}
           {space && !space.personal && ` · ${space.name}`}
-          {author && ` · by ${author}`}
-          {doneBy && ` · done by ${doneBy}`}
-          {pinned && ' · Pinned'}
-          {archived && ' · Archived'}
-          {!canChange && ' · View only'}
+          {author && ` · ${m.meta_by({ name: author })}`}
+          {doneBy && ` · ${m.meta_done_by({ name: doneBy })}`}
+          {pinned && ` · ${m.meta_pinned()}`}
+          {archived && ` · ${m.meta_archived()}`}
+          {!canChange && ` · ${m.meta_view_only()}`}
           {/* Always there, so screen readers hear who arrives. */}
           <span role="status">{here && ` · ${here}`}</span>
         </p>
@@ -430,7 +453,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
               isSelected={item.completed_at !== null}
               isDisabled={!editable}
               onChange={(selected) => void completeTask(store, item, selected)}
-              aria-label="Done"
+              aria-label={m.done()}
             />
           )}
           <TitleField store={store} item={item} readOnly={!editable} />
@@ -438,9 +461,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
 
         {item.type === 'task' && (
           <ChoiceGroup
-            label="Priority"
+            label={m.field_priority()}
             showLabel
-            choices={priorityChoices}
+            choices={priorityChoices()}
             value={String(item.priority)}
             isDisabled={!editable}
             onChange={(value) =>
@@ -452,9 +475,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
 
         {item.type === 'task' && !item.completed_at && (
           <ChoiceGroup
-            label="Status"
+            label={m.field_status()}
             showLabel
-            choices={statusChoices}
+            choices={statusChoices()}
             value={item.status ?? 'to_do'}
             isDisabled={!editable}
             onChange={(value) =>
@@ -470,7 +493,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
         {item.type === 'task' && !item.completed_at && (
           <div className="mb-2 flex min-h-11 items-center gap-4 text-sm">
             <label htmlFor={dueId} className="text-muted-foreground">
-              Due
+              {m.field_due()}
             </label>
             {/* The browser's own date picker: a calendar on phones, typed on desktop. */}
             <input
@@ -488,7 +511,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
                 onPress={() => void store.setItemDue(item.id, null)}
                 className="rounded-sm py-2 text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
               >
-                No date
+                {m.no_date()}
               </Button>
             )}
           </div>
@@ -499,15 +522,15 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           space &&
           !space.personal && (
             <ChoiceGroup
-              label="For"
+              label={m.field_for()}
               showLabel
               choices={[
-                { value: 'anyone', label: 'Anyone' },
+                { value: 'anyone', label: m.for_anyone() },
                 ...space.members.map((member) => ({
                   value: member.user_id,
                   label:
                     member.user_id === account?.userId
-                      ? 'Me'
+                      ? m.for_me()
                       : member.member_name,
                 })),
               ]}
@@ -525,9 +548,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
 
         {item.type === 'task' && !item.completed_at && (
           <ChoiceGroup
-            label="Repeats"
+            label={m.field_repeats()}
             showLabel
-            choices={repeatChoices}
+            choices={repeatChoices()}
             value={item.repeat ?? 'never'}
             isDisabled={!editable}
             onChange={(value) =>
@@ -563,7 +586,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             onPress={() => void convert()}
             className="mt-6 -ml-2 block rounded-sm px-2 py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
           >
-            {item.type === 'note' ? 'Turn into a list' : 'Turn into a note'}
+            {item.type === 'note' ? m.convert_to_list() : m.convert_to_note()}
           </Button>
         )}
 
@@ -573,7 +596,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             currentBody={item.body}
             canRestore={editable}
             nameOf={(userId) =>
-              userId === account.userId ? 'you' : otherName(userId)
+              userId === account.userId ? m.you() : otherName(userId)
             }
             onRestore={(body) => void restoreBody(body)}
           />
@@ -581,7 +604,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
 
         {editable && item.space_id && moveTargets.length > 1 && (
           <ChoiceGroup
-            label="Space"
+            label={m.field_space()}
             showLabel
             choices={moveTargets.map((target) => ({
               value: target.id,
@@ -598,7 +621,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             onPress={() => void shareWithSomeone()}
             className="mt-2 w-fit rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
           >
-            Share this {label.toLowerCase()} with someone
+            {m.share_with_someone({ type: item.type })}
           </Button>
         )}
       </div>
@@ -632,7 +655,7 @@ function TitleField({
       defaultValue={item.title}
       dir="auto"
       readOnly={readOnly}
-      aria-label="Title"
+      aria-label={m.field_title()}
       rows={1}
       maxLength={200}
       enterKeyHint="done"
@@ -706,7 +729,7 @@ function BodyField({
   useEffect(() => {
     if (editing) textarea.current?.focus()
   }, [editing])
-  const label = item.type === 'note' ? 'Note' : 'Details'
+  const label = item.type === 'note' ? m.field_note() : m.field_details()
 
   // Written text reads as formatted Markdown; tapping it (or Edit) shows the source to change.
   if (!editing && body.trim()) {
@@ -728,7 +751,7 @@ function BodyField({
             onPress={() => setEditing(true)}
             className="rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
           >
-            Edit {label.toLowerCase()}
+            {item.type === 'note' ? m.edit_note() : m.edit_details()}
           </Button>
         )}
       </div>
@@ -746,7 +769,9 @@ function BodyField({
         // Typing into an empty note must not switch it to the formatted view after one letter.
         onFocus={() => setEditing(true)}
         onBlur={() => setEditing(false)}
-        placeholder={item.type === 'note' ? 'Write something' : 'Add details'}
+        placeholder={
+          item.type === 'note' ? m.write_something() : m.add_details()
+        }
         aria-label={label}
         aria-describedby={readOnly ? undefined : hintId}
         maxLength={20_000}
@@ -754,7 +779,7 @@ function BodyField({
       />
       {!readOnly && (
         <p id={hintId} className="text-xs text-muted-foreground">
-          Markdown works: **bold**, *italic*, # heading, - list, [link](url).
+          {m.markdown_hint()}
         </p>
       )}
     </div>

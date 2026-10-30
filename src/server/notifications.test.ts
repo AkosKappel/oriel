@@ -38,6 +38,23 @@ describe('reminderMessage', () => {
   })
 })
 
+describe('in the device language', () => {
+  it('words reminders in Hungarian and Slovak, with each plural form', () => {
+    expect(reminderMessage(['Tej', 'Kenyér'], 'hu')).toMatchObject({
+      title: '2 feladat mára',
+      body: 'Tej és Kenyér',
+    })
+    expect(reminderMessage(['A', 'B', 'C'], 'sk')).toMatchObject({
+      title: '3 úlohy na dnes',
+      body: 'A, B a C',
+    })
+    expect(reminderMessage(['A', 'B', 'C', 'D', 'E'], 'sk')).toMatchObject({
+      title: '5 úloh na dnes',
+      body: 'A, B, C a ďalšie 2',
+    })
+  })
+})
+
 describe('changesMessage', () => {
   const sentence = (before: string, title: string, after = '') => ({
     key: title,

@@ -4,6 +4,7 @@ import { Button } from 'react-aria-components'
 import { AccountLink } from '#/components/account-link'
 import { Logo } from '#/components/logo'
 import { useAccount } from '#/lib/account'
+import { m } from '#/paraglide/messages.js'
 
 /** Asks the notebook's command palette to open, as Ctrl+K does. */
 export const openCommandPalette = () =>
@@ -43,18 +44,18 @@ export function AppHeader({
           <Logo className="size-6 text-primary" />
           <span className="font-serif text-xl tracking-tight">Oriel</span>
         </Link>
-        <nav aria-label="Main" className="flex items-center gap-2">
+        <nav aria-label={m.nav_main()} className="flex items-center gap-2">
           <Link
             to="/app"
             activeOptions={{ includeSearch: false }}
             className={itemOpen ? `${navLink} ${activeLink}` : navLink}
             aria-current={itemOpen ? 'page' : undefined}
           >
-            Notebook
+            {m.nav_notebook()}
           </Link>
           {account && (
             <Link to="/spaces" className={navLink}>
-              Spaces
+              {m.nav_spaces()}
             </Link>
           )}
         </nav>
@@ -65,12 +66,12 @@ export function AppHeader({
               className="flex h-9 w-64 items-center gap-2 rounded-sm bg-wash px-3 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2"
             >
               <Search aria-hidden className="size-4" />
-              Find or run anything
+              {m.nav_find()}
               <kbd className="ml-auto font-sans text-xs">Ctrl K</kbd>
             </Button>
           )}
           <Link to="/settings" className={navLink}>
-            Settings
+            {m.nav_settings()}
           </Link>
           <AccountLink sync={sync} />
         </div>
