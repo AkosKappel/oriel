@@ -188,6 +188,29 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     expect(await findItem(task.id)).toMatchObject({ dueOn: null })
   })
 
+  it('stores a snooze day and refuses a time instead of a day', async () => {
+    const note = put('items', itemRow(aliceSpace, { type: 'note' }))
+    await applyUpload(alice, [note])
+    const result = await applyUpload(alice, [
+      {
+        op: 'PATCH',
+        table: 'items',
+        id: note.id,
+        data: { snoozed_until: '2026-11-02T08:00:00Z' },
+      },
+      {
+        op: 'PATCH',
+        table: 'items',
+        id: note.id,
+        data: { snoozed_until: '2026-11-02' },
+      },
+    ])
+    expect(result.rejected).toMatchObject([{ reason: 'invalid' }])
+    expect(await findItem(note.id)).toMatchObject({
+      snoozedUntil: '2026-11-02',
+    })
+  })
+
   it('stores how a task repeats and refuses an unknown repeat', async () => {
     const task = put('items', itemRow(aliceSpace, { repeat: 'weekly' }))
     await applyUpload(alice, [task])
