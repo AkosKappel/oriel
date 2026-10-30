@@ -143,7 +143,7 @@ export function CommandPalette({
       className="fixed inset-0 z-50 bg-foreground/20 p-4"
     >
       <Modal className="mx-auto mt-[12vh] w-full max-w-lg rounded-md bg-background shadow-lg">
-        <Dialog aria-label="Go to or run" className="outline-none">
+        <Dialog aria-label={m.cmd_dialog()} className="outline-none">
           <Autocomplete inputValue={query} onInputChange={setQuery}>
             <SearchField
               aria-label={m.cmd_find()}

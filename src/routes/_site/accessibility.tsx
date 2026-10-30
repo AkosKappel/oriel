@@ -19,6 +19,7 @@ function Accessibility() {
       title="Accessibility"
       lead="Oriel should work for everyone, with a mouse, a keyboard, a touch screen or a screen reader. The goal is the WCAG 2.2 AA level."
       updated="30 October 2026"
+      englishOnly
     >
       <TextSection title="What is in place">
         <ul>

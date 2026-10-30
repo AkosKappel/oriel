@@ -21,6 +21,7 @@ function Privacy() {
       title="Privacy policy"
       lead="Oriel is built to keep your notes on your device. This page explains what is stored where, who else is involved, and what you can do about it."
       updated="30 October 2026"
+      englishOnly
     >
       <TextSection title="In short">
         <ul>
@@ -103,7 +104,8 @@ function Privacy() {
           The app and its sync service (PowerSync, run by me, not by the company
           that makes it) run on a server I operate myself. When you are signed
           in, a cookie keeps you signed in; it is needed for the service and is
-          not used for anything else.
+          not used for anything else. If you choose a language, another cookie
+          remembers it on that device.
         </p>
       </TextSection>
 

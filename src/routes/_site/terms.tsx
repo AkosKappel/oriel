@@ -19,6 +19,7 @@ function Terms() {
       title="Terms of use"
       lead="Oriel is a free personal project. These terms keep it fair for everyone who uses it."
       updated="30 October 2026"
+      englishOnly
     >
       <TextSection title="The service">
         <p>

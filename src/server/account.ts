@@ -1,6 +1,7 @@
 import { createMiddleware, createServerFn } from '@tanstack/react-start'
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { z } from 'zod'
+import { m } from '#/paraglide/messages.js'
 import { auth } from '#/server/auth'
 import { listDevices, signOutDevice } from '#/server/sessions'
 import { ensurePersonalSpace } from '#/server/spaces'
@@ -26,7 +27,7 @@ export const getAccount = createServerFn({ method: 'GET' }).handler(
 const signedIn = createMiddleware({ type: 'function' }).server(
   async ({ next }) => {
     const session = await auth.api.getSession({ headers: getRequestHeaders() })
-    if (!session) throw new Error('Sign in again to see your devices.')
+    if (!session) throw new Error(m.err_devices_sign_in())
     return next({
       context: { userId: session.user.id, sessionId: session.session.id },
     })
@@ -44,7 +45,7 @@ export const signOutOtherDevice = createServerFn({ method: 'POST' })
   .validator(z.object({ sessionId: z.string().min(1).max(100) }))
   .handler(async ({ data, context }) => {
     if (data.sessionId === context.sessionId) {
-      throw new Error('Use Sign out for this device.')
+      throw new Error(m.err_this_device())
     }
     await signOutDevice(context.userId, data.sessionId)
   })

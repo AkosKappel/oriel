@@ -19,6 +19,7 @@ import { contentSecurityPolicy } from '#/lib/security-headers'
 import { pageMeta } from '#/lib/seo'
 import { registerServiceWorker } from '#/lib/service-worker'
 import { themeScript, useTheme } from '#/lib/theme'
+import { m } from '#/paraglide/messages.js'
 import { getLocale } from '#/paraglide/runtime.js'
 import appCss from '../styles.css?url'
 
@@ -32,7 +33,7 @@ export const Route = createRootRoute({
         content:
           'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
       },
-      ...pageMeta('Oriel', 'One calm place for notes, lists and tasks.'),
+      ...pageMeta('Oriel', m.site_default_description()),
       { property: 'og:site_name', content: 'Oriel' },
       { property: 'og:type', content: 'website' },
       { name: 'twitter:card', content: 'summary' },
@@ -132,16 +133,13 @@ function RootDocument({ children }: { children: ReactNode }) {
 function NotFound() {
   return (
     <SiteShell>
-      <TextPage
-        title="No such page."
-        lead="The link may be mistyped, or the page was moved."
-      >
+      <TextPage title={m.not_found_title()} lead={m.not_found_lead()}>
         <p className="flex gap-6 text-sm">
           <Link to="/app" className="underline underline-offset-4">
-            Open your notebook
+            {m.not_found_notebook()}
           </Link>
           <Link to="/" className="underline underline-offset-4">
-            Go to the home page
+            {m.not_found_home()}
           </Link>
         </p>
       </TextPage>

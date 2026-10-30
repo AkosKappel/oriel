@@ -1,6 +1,9 @@
 import { Link } from '@tanstack/react-router'
-import type { ReactNode } from 'react'
+import { type ReactNode, useId } from 'react'
 import { Logo } from '#/components/logo'
+import { languages } from '#/lib/locale'
+import { m } from '#/paraglide/messages.js'
+import { getLocale, type Locale, setLocale } from '#/paraglide/runtime.js'
 
 export const contactEmail = 'kappelakos@gmail.com'
 export const repositoryUrl = 'https://github.com/AkosKappel/oriel'
@@ -32,18 +35,21 @@ function SiteHeader() {
         <Logo className="size-7 text-primary" />
         <span className="font-serif text-2xl tracking-tight">Oriel</span>
       </Link>
-      <nav aria-label="Main" className="flex items-center gap-1 sm:gap-3">
+      <nav
+        aria-label={m.site_nav_main()}
+        className="flex items-center gap-1 sm:gap-3"
+      >
         <Link to="/about" className={`${navLink} hidden sm:block`}>
-          About
+          {m.site_about()}
         </Link>
         <Link to="/faq" className={`${navLink} hidden sm:block`}>
-          FAQ
+          {m.site_faq()}
         </Link>
         <Link to="/sign-in" className={navLink}>
-          Sign in
+          {m.site_sign_in()}
         </Link>
         <Link to="/app" className={`${primaryButton} ml-1 h-10 px-4`}>
-          Open Oriel
+          {m.site_open()}
         </Link>
       </nav>
     </header>
@@ -66,44 +72,67 @@ function SiteFooter() {
             <span className="font-serif text-xl">Oriel</span>
           </Link>
           <p className="max-w-xs text-sm text-muted-foreground">
-            One calm place for notes, lists and tasks. Made by Ákos Kappel.
+            {m.site_tagline()}
           </p>
+          <LanguageChoice />
         </div>
         <FooterColumn title="Oriel">
           <Link to="/app" className={footerLink}>
-            Open the app
+            {m.site_open_app()}
           </Link>
           <Link to="/about" className={footerLink}>
-            About
+            {m.site_about()}
           </Link>
           <Link to="/faq" className={footerLink}>
-            FAQ
+            {m.site_faq()}
           </Link>
           <Link to="/sign-in" className={footerLink}>
-            Sign in
+            {m.site_sign_in()}
           </Link>
         </FooterColumn>
-        <FooterColumn title="Legal">
+        <FooterColumn title={m.site_legal()}>
           <Link to="/privacy" className={footerLink}>
-            Privacy
+            {m.site_privacy()}
           </Link>
           <Link to="/terms" className={footerLink}>
-            Terms
+            {m.site_terms()}
           </Link>
           <Link to="/accessibility" className={footerLink}>
-            Accessibility
+            {m.site_accessibility()}
           </Link>
         </FooterColumn>
-        <FooterColumn title="Contact">
+        <FooterColumn title={m.site_contact()}>
           <a href={`mailto:${contactEmail}`} className={footerLink}>
-            Email
+            {m.site_email()}
           </a>
           <a href={repositoryUrl} className={footerLink}>
-            Source on GitHub
+            {m.site_source()}
           </a>
         </FooterColumn>
       </div>
     </footer>
+  )
+}
+
+/** The language of every page; setLocale keeps it in a cookie and reloads. */
+function LanguageChoice() {
+  const id = useId()
+  return (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <label htmlFor={id}>{m.site_language()}</label>
+      <select
+        id={id}
+        value={getLocale()}
+        onChange={(event) => setLocale(event.target.value as Locale)}
+        className="min-h-11 rounded-sm bg-transparent text-foreground focus-visible:outline-2"
+      >
+        {languages.map(({ locale, name }) => (
+          <option key={locale} value={locale}>
+            {name}
+          </option>
+        ))}
+      </select>
+    </div>
   )
 }
 
@@ -127,16 +156,31 @@ export function TextPage({
   title,
   lead,
   updated,
+  englishOnly = false,
   children,
 }: {
   title: string
   lead?: string
   /** For legal pages: when the text last changed, as `30 October 2026`. */
   updated?: string
+  /** Legal texts are in English only; other languages get a note, and readers the right voice. */
+  englishOnly?: boolean
   children: ReactNode
 }) {
+  const note = englishOnly && getLocale() !== 'en' ? m.site_english_only() : ''
   return (
-    <article className="mx-auto flex max-w-3xl flex-col gap-10 px-4 pt-10 sm:px-8 sm:pt-16">
+    <article
+      lang={englishOnly ? 'en' : undefined}
+      className="mx-auto flex max-w-3xl flex-col gap-10 px-4 pt-10 sm:px-8 sm:pt-16"
+    >
+      {note && (
+        <p
+          lang={getLocale()}
+          className="rounded-sm bg-wash px-4 py-3 text-sm text-muted-foreground"
+        >
+          {note}
+        </p>
+      )}
       <header className="flex flex-col gap-4">
         <h1 className="font-serif text-4xl tracking-tight sm:text-5xl">
           {title}
@@ -148,7 +192,9 @@ export function TextPage({
         )}
         {updated && (
           <p className="text-sm text-muted-foreground">
-            Last updated {updated}
+            {englishOnly
+              ? `Last updated ${updated}`
+              : m.site_updated({ date: updated })}
           </p>
         )}
       </header>
