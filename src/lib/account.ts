@@ -142,9 +142,31 @@ export async function signOut() {
   while ((await pendingChanges()) > 0 && Date.now() < deadline) {
     await new Promise((resolve) => setTimeout(resolve, 250))
   }
+  await stopNotifications()
   await (await loadAuth()).signOut()
   write(null)
   await (await loadClient()).database.disconnectAndClear()
+}
+
+/**
+ * The device's notifications belong to the account: without this, the next person on the device
+ * would get the previous one's reminders. Best effort; signing out goes on regardless.
+ */
+async function stopNotifications() {
+  try {
+    const registration = await navigator.serviceWorker?.getRegistration()
+    const subscription = await registration?.pushManager?.getSubscription()
+    if (!subscription) return
+    // The browser first: even offline the device stops receiving, and the server drops its copy
+    // when the push service says the subscription is gone.
+    await subscription.unsubscribe()
+    const { removeSubscription } = await import(
+      '#/server/notification-functions'
+    )
+    await removeSubscription({ data: { endpoint: subscription.endpoint } })
+  } catch (error) {
+    console.error('Could not turn off notifications', error)
+  }
 }
 
 /**

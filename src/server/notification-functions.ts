@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { env } from '#/env'
 import { db } from '#/server/db'
@@ -64,13 +64,17 @@ export const saveSubscription = createServerFn({ method: 'POST' })
       reminders: data.reminders,
       changes: data.changes,
     }
-    // Changes count from now: turning them on does not send what happened before.
+    // Changes count from when they are turned on, so what happened before is not sent; changing
+    // the other setting leaves pending changes alone.
     await db
       .insert(pushSubscription)
       .values(values)
       .onConflictDoUpdate({
         target: pushSubscription.endpoint,
-        set: { ...values, changesSince: new Date() },
+        set: {
+          ...values,
+          changesSince: sql`case when ${pushSubscription.changes} then ${pushSubscription.changesSince} else now() end`,
+        },
       })
   })
 

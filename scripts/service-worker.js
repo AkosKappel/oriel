@@ -75,7 +75,13 @@ self.addEventListener('fetch', (event) => {
 // Notifications (src/server/notifications.ts): the server sends title, body, a page to open and a
 // tag, so a later reminder replaces an unread one instead of piling up.
 self.addEventListener('push', (event) => {
-  const message = event.data?.json() ?? {}
+  let message = {}
+  try {
+    message = event.data?.json() ?? {}
+  } catch {
+    // Not from Oriel's server: show the plain text, if any.
+    message = { body: event.data?.text() }
+  }
   event.waitUntil(
     self.registration.showNotification(message.title ?? 'Oriel', {
       body: message.body,
@@ -99,7 +105,12 @@ self.addEventListener('notificationclick', (event) => {
         const open = windows.find(
           (client) => new URL(client.url).origin === url.origin,
         )
-        if (open) return open.focus().then(() => open.navigate(url.href))
+        // A window the worker does not control cannot be navigated; open a new one then.
+        if (open)
+          return open
+            .focus()
+            .then(() => open.navigate(url.href))
+            .catch(() => self.clients.openWindow(url.href))
         return self.clients.openWindow(url.href)
       }),
   )

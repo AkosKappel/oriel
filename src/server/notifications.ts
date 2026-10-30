@@ -182,7 +182,8 @@ async function send(
         keys: { p256dh: subscription.p256dh, auth: subscription.auth },
       },
       JSON.stringify(message),
-      { TTL: 12 * 3600 },
+      // One stalled push service must not hold up the job (and everyone after it) for good.
+      { TTL: 12 * 3600, timeout: 10_000 },
     )
   } catch (error) {
     const status = (error as { statusCode?: number }).statusCode
