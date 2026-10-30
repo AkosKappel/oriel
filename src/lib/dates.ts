@@ -58,7 +58,9 @@ export function describeDue(due: string, today: string) {
 /**
  * The next due day of a repeating task finished on `today`: a step on from its due day (or from
  * today without one), and further until it is after today, so a late finish never leaves it
- * overdue. Monthly keeps the day of the month, or the month's last day when it is shorter.
+ * overdue. Monthly keeps the day of the month, or takes the month's last day when it is shorter;
+ * from then on it follows that day (31 January, 28 February, 28 March), as the original is not
+ * stored.
  */
 export function nextDue(
   due: string | null,

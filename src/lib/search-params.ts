@@ -7,7 +7,7 @@ export const oneOf = <T extends string>(
   value: unknown,
 ): T | undefined => (allowed.includes(value as T) ? (value as T) : undefined)
 
-export const text = (value: unknown, max = 2000) =>
+export const text = (value: unknown, max = Number.POSITIVE_INFINITY) =>
   typeof value === 'string' && value.length <= max ? value : undefined
 
 const uuidPattern =
