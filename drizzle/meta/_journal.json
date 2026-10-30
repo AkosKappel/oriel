@@ -85,6 +85,13 @@
       "when": 1793364864283,
       "tag": "0011_assign_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793366254118,
+      "tag": "0012_note_history",
+      "breakpoints": true
     }
   ]
 }

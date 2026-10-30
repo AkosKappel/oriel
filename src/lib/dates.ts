@@ -23,6 +23,12 @@ const timeFormat = new Intl.DateTimeFormat('en-GB', {
   minute: '2-digit',
 })
 
+/** "30 October, 14:05" */
+export function formatDateTime(iso: string) {
+  const date = new Date(iso)
+  return `${shortFormat.format(date)}, ${timeFormat.format(date)}`
+}
+
 /** "14:05" today, "27 October" before. */
 export function formatWhen(iso: string, now = new Date()) {
   const date = new Date(iso)

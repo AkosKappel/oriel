@@ -81,6 +81,10 @@ function Privacy() {
             the spaces you belong to, your role in each, and open invites.
           </li>
           <li>
+            earlier versions of the text of your notes and tasks, one per
+            editing session, so you can restore them;
+          </li>
+          <li>
             in shared spaces, a log of who added, changed, checked or deleted
             what and when, shown to the space's members.
           </li>
@@ -154,6 +158,10 @@ function Privacy() {
           <li>
             Database backups: one per day, each kept for 14 days, so deleted
             data disappears from backups within 14 days.
+          </li>
+          <li>
+            Earlier versions of a text: 90 days, and they go with the note or
+            task.
           </li>
           <li>
             The log of changes in a shared space: 90 days, and it goes with the

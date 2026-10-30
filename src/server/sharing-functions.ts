@@ -1,27 +1,12 @@
-import { createMiddleware, createServerFn } from '@tanstack/react-start'
-import { getRequestHeaders } from '@tanstack/react-start/server'
+import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { env } from '#/env'
-import { auth } from '#/server/auth'
 import { sendInviteEmail } from '#/server/email'
 import * as sharing from '#/server/sharing'
+import { signedIn } from '#/server/signed-in'
 
 // Sharing actions need a connection; content inside a shared space still works offline through
 // the upload queue. Errors carry messages meant for the user.
-
-const signedIn = createMiddleware({ type: 'function' }).server(
-  async ({ next }) => {
-    const session = await auth.api.getSession({ headers: getRequestHeaders() })
-    if (!session) throw new Error('Sign in to share spaces.')
-    return next({
-      context: {
-        userId: session.user.id,
-        name: session.user.name,
-        email: session.user.email,
-      },
-    })
-  },
-)
 
 const spaceInput = z.object({ spaceId: z.uuid() })
 

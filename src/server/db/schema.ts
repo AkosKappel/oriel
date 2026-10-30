@@ -247,3 +247,19 @@ export const activity = pgTable(
     index().on(t.entryId),
   ],
 )
+
+// Earlier texts of an item, one per editing session, for restoring. Written by the upload
+// endpoint, removed with the item, never replicated.
+export const noteVersion = pgTable(
+  'note_version',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    itemId: uuid()
+      .notNull()
+      .references(() => items.id, { onDelete: 'cascade' }),
+    body: text().notNull(),
+    savedBy: text().references(() => user.id, { onDelete: 'set null' }),
+    savedAt: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index().on(t.itemId, t.savedAt)],
+)

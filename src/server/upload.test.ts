@@ -434,4 +434,44 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
       await db.delete(space).where(eq(space.id, home))
     }
   })
+
+  it('keeps one version of the text per editing session, for members only', async () => {
+    const { listVersions } = await import('#/server/history')
+    const note = put(
+      'items',
+      itemRow(aliceSpace, { type: 'note', body: 'Draft' }),
+    )
+    const edit = (body: string): Operation => ({
+      op: 'PATCH',
+      table: 'items',
+      id: note.id,
+      data: { body },
+    })
+    await applyUpload(alice, [
+      note,
+      edit('Draft, longer'),
+      edit('Draft, longer'),
+    ])
+    await db.insert(spaceMember).values({
+      spaceId: aliceSpace,
+      userId: bob,
+      role: 'editor',
+      memberName: 'Bob',
+    })
+    try {
+      await applyUpload(bob, [edit('Edited by Bob')])
+      const versions = await listVersions(alice, note.id)
+      expect(versions.map(({ body, savedBy }) => ({ body, savedBy }))).toEqual([
+        { body: 'Edited by Bob', savedBy: bob },
+        { body: 'Draft, longer', savedBy: alice },
+      ])
+    } finally {
+      await db
+        .delete(spaceMember)
+        .where(
+          and(eq(spaceMember.spaceId, aliceSpace), eq(spaceMember.userId, bob)),
+        )
+    }
+    await expect(listVersions(bob, note.id)).rejects.toThrow()
+  })
 })

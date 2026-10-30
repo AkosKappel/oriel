@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { completeTask } from '#/components/complete-task'
 import { EntryList } from '#/components/entry-list'
 import { itemLabels } from '#/components/item-labels'
+import { NoteHistory } from '#/components/note-history'
 import { Checkbox } from '#/components/ui/checkbox'
 import { ChoiceGroup } from '#/components/ui/choice-group'
 import { itemToText } from '#/data/export'
@@ -131,6 +132,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const deletedBy = item.deleted_at ? otherName(item.deleted_by) : undefined
   const moveTargets = spaces.filter((target) => canEdit(target.role))
   const saveBody = useRef<(() => Promise<void>) | null>(null)
+  const [bodyVersion, setBodyVersion] = useState(0)
   const dueId = useId()
 
   // One step for "share this list": a shared space of its own, with the item moved in, then the
@@ -145,6 +147,22 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     } catch (error) {
       toast(error instanceof Error ? error.message : 'That did not work.')
     }
+  }
+
+  async function restoreBody(body: string) {
+    await saveBody.current?.()
+    const before = store.items.get(item.id)?.body ?? item.body
+    await store.updateItem(item.id, { body })
+    setBodyVersion((version) => version + 1)
+    toast('Earlier version restored', {
+      action: {
+        label: 'Undo',
+        onClick: () =>
+          void store
+            .updateItem(item.id, { body: before })
+            .then(() => setBodyVersion((version) => version + 1)),
+      },
+    })
   }
 
   async function move(spaceId: string) {
@@ -525,6 +543,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           />
         ) : (
           <BodyField
+            // The field keeps its own text while typing; a restored version starts it afresh.
+            key={bodyVersion}
             store={store}
             item={item}
             readOnly={!editable}
@@ -539,6 +559,18 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           >
             {item.type === 'note' ? 'Turn into a list' : 'Turn into a note'}
           </Button>
+        )}
+
+        {item.type !== 'list' && item.space_id && account && (
+          <NoteHistory
+            itemId={item.id}
+            currentBody={item.body}
+            canRestore={editable}
+            nameOf={(userId) =>
+              userId === account.userId ? 'you' : otherName(userId)
+            }
+            onRestore={(body) => void restoreBody(body)}
+          />
         )}
 
         {editable && item.space_id && moveTargets.length > 1 && (

@@ -16,6 +16,7 @@ import {
   activity,
   entries,
   items,
+  noteVersion,
   space,
   spaceMember,
 } from '#/server/db/schema'
@@ -268,6 +269,41 @@ const isConstraintViolation = (error: unknown) => {
 const hasValues = (values: Record<string, unknown>) =>
   Object.values(values).some((value) => value !== undefined)
 
+/**
+ * Keeps the text as a version to restore. Saves by the same member within `foldWithin` replace
+ * their last version, so one editing session (saved every few seconds) is one version.
+ */
+async function recordVersion(
+  tx: Tx,
+  itemId: string,
+  body: string | undefined,
+  userId: string,
+) {
+  if (body === undefined) return
+  const [last] = await tx
+    .select()
+    .from(noteVersion)
+    .where(eq(noteVersion.itemId, itemId))
+    .orderBy(desc(noteVersion.savedAt))
+    .limit(1)
+  if (last ? last.body === body : !body) return
+  const now = new Date()
+  if (
+    last &&
+    last.savedBy === userId &&
+    now.getTime() - last.savedAt.getTime() < foldWithin
+  ) {
+    await tx
+      .update(noteVersion)
+      .set({ body, savedAt: now })
+      .where(eq(noteVersion.id, last.id))
+  } else {
+    await tx
+      .insert(noteVersion)
+      .values({ itemId, body, savedBy: userId, savedAt: now })
+  }
+}
+
 /** A task can be for any member of its space, and nobody else. */
 async function requireAssignable(
   tx: Tx,
@@ -328,6 +364,7 @@ async function applyOperation(
         .values({ id, createdBy: userId, ...values })
         .onConflictDoUpdate({ target: items.id, set: values })
       if (!existing) await log(row.space_id, id, null, 'added')
+      await recordVersion(tx, id, row.body, userId)
       return 'applied'
     }
 
@@ -363,6 +400,7 @@ async function applyOperation(
     if (!hasValues(values)) return 'skipped'
     await tx.update(items).set(values).where(eq(items.id, id))
     await log(existing.spaceId, id, null, itemAction(patch))
+    await recordVersion(tx, id, patch.body, userId)
     return 'applied'
   }
 
