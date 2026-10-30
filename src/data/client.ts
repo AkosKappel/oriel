@@ -55,6 +55,13 @@ function followAccount() {
 followAccount()
 subscribeAccount(followAccount)
 
+// A reload in the few milliseconds before a write is stored would drop it.
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', (event) => {
+    if (store.hasPendingWrites()) event.preventDefault()
+  })
+}
+
 // Pages that open the database also sync it; pages that do not (sign-in, settings) never load
 // PowerSync at all.
 if (typeof window !== 'undefined' && currentAccount()) startSync()

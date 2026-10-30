@@ -119,13 +119,27 @@ export function createStore(database: CommonPowerSyncDatabase) {
 
   const transactor = new PowerSyncTransactor({ database })
 
+  // The screen updates before SQLite has stored a write; a reload in between loses it, so the
+  // page asks before unloading while this is above zero.
+  let pendingWrites = 0
+  async function saved(transaction: {
+    isPersisted: { promise: Promise<unknown> }
+  }) {
+    pendingWrites++
+    try {
+      await transaction.isPersisted.promise
+    } finally {
+      pendingWrites--
+    }
+  }
+
   /** Applies mutations across collections in one SQLite transaction: all are stored or none. */
   async function inTransaction(mutate: () => void) {
     const transaction = createTransaction({
       mutationFn: ({ transaction }) => transactor.applyTransaction(transaction),
     })
     transaction.mutate(mutate)
-    await transaction.isPersisted.promise
+    await saved(transaction)
   }
 
   /** Adds entries to the end of a list in one transaction, in the given order. */
@@ -146,6 +160,9 @@ export function createStore(database: CommonPowerSyncDatabase) {
     entries,
     spaces,
     members,
+
+    /** Whether a write is shown on screen but not yet stored in SQLite. */
+    hasPendingWrites: () => pendingWrites > 0,
 
     /** Sets who new items belong to: the signed-in user's personal space, or nobody. */
     setOwner(next: Owner | null) {
@@ -354,79 +371,97 @@ export function createStore(database: CommonPowerSyncDatabase) {
           : titleSchema.parse(changes.title)
       const body =
         changes.body === undefined ? undefined : bodySchema.parse(changes.body)
-      await items.update(id, (draft) => {
-        if (title !== undefined) draft.title = title
-        if (body !== undefined) draft.body = body
-        draft.updated_at = now()
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          if (title !== undefined) draft.title = title
+          if (body !== undefined) draft.body = body
+          draft.updated_at = now()
+        }),
+      )
     },
 
     async setItemCompleted(id: string, completed: boolean) {
       const timestamp = now()
-      await items.update(id, (draft) => {
-        draft.completed_at = completed ? timestamp : null
-        draft.completed_by = completed ? (owner?.userId ?? null) : null
-        draft.updated_at = timestamp
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.completed_at = completed ? timestamp : null
+          draft.completed_by = completed ? (owner?.userId ?? null) : null
+          draft.updated_at = timestamp
+        }),
+      )
     },
 
     async setItemPinned(id: string, pinned: boolean) {
       const timestamp = now()
-      await items.update(id, (draft) => {
-        draft.pinned_at = pinned ? timestamp : null
-        draft.updated_at = timestamp
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.pinned_at = pinned ? timestamp : null
+          draft.updated_at = timestamp
+        }),
+      )
     },
 
     async setItemPriority(id: string, priority: Priority) {
       const parsed = prioritySchema.parse(priority)
-      await items.update(id, (draft) => {
-        draft.priority = parsed
-        draft.updated_at = now()
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.priority = parsed
+          draft.updated_at = now()
+        }),
+      )
     },
 
     async setItemStatus(id: string, status: TaskStatus | null) {
       const parsed = statusSchema.parse(status)
-      await items.update(id, (draft) => {
-        draft.status = parsed
-        draft.updated_at = now()
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.status = parsed
+          draft.updated_at = now()
+        }),
+      )
     },
 
     async setItemDue(id: string, due: string | null) {
       const parsed = dueSchema.parse(due)
-      await items.update(id, (draft) => {
-        draft.due_on = parsed
-        draft.updated_at = now()
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.due_on = parsed
+          draft.updated_at = now()
+        }),
+      )
     },
 
     async setItemArchived(id: string, archived: boolean) {
       const timestamp = now()
-      await items.update(id, (draft) => {
-        draft.archived_at = archived ? timestamp : null
-        draft.updated_at = timestamp
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.archived_at = archived ? timestamp : null
+          draft.updated_at = timestamp
+        }),
+      )
     },
 
     /** Moves an item to the trash, on every device; its entries stay with it. */
     async trashItem(id: string) {
       const timestamp = now()
-      await items.update(id, (draft) => {
-        draft.deleted_at = timestamp
-        draft.deleted_by = owner?.userId ?? null
-        draft.updated_at = timestamp
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.deleted_at = timestamp
+          draft.deleted_by = owner?.userId ?? null
+          draft.updated_at = timestamp
+        }),
+      )
     },
 
     /** Takes an item out of the trash, for Undo and the trash view. */
     async restoreItem(id: string) {
-      await items.update(id, (draft) => {
-        draft.deleted_at = null
-        draft.deleted_by = null
-        draft.updated_at = now()
-      }).isPersisted.promise
+      await saved(
+        items.update(id, (draft) => {
+          draft.deleted_at = null
+          draft.deleted_by = null
+          draft.updated_at = now()
+        }),
+      )
     },
 
     /**
@@ -559,30 +594,36 @@ export function createStore(database: CommonPowerSyncDatabase) {
 
     async updateEntryText(id: string, text: string) {
       const parsed = entryTextSchema.parse(text)
-      await entries.update(id, (draft) => {
-        draft.text = parsed
-        draft.updated_at = now()
-      }).isPersisted.promise
+      await saved(
+        entries.update(id, (draft) => {
+          draft.text = parsed
+          draft.updated_at = now()
+        }),
+      )
     },
 
     async setEntryPosition(id: string, position: number) {
-      await entries.update(id, (draft) => {
-        draft.position = position
-        draft.updated_at = now()
-      }).isPersisted.promise
+      await saved(
+        entries.update(id, (draft) => {
+          draft.position = position
+          draft.updated_at = now()
+        }),
+      )
     },
 
     async setEntryCompleted(id: string, completed: boolean) {
       const timestamp = now()
-      await entries.update(id, (draft) => {
-        draft.completed_at = completed ? timestamp : null
-        draft.completed_by = completed ? (owner?.userId ?? null) : null
-        draft.updated_at = timestamp
-      }).isPersisted.promise
+      await saved(
+        entries.update(id, (draft) => {
+          draft.completed_at = completed ? timestamp : null
+          draft.completed_by = completed ? (owner?.userId ?? null) : null
+          draft.updated_at = timestamp
+        }),
+      )
     },
 
     async deleteEntry(id: string) {
-      await entries.delete(id).isPersisted.promise
+      await saved(entries.delete(id))
     },
 
     /** Removes the checked entries of a list. Returns them, for `restore`. */

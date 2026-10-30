@@ -50,6 +50,16 @@ describe('items', () => {
     expect(store.items.get(id)?.title).toBe('Call the vet')
   })
 
+  it('reports a write as pending until SQLite has stored it', async () => {
+    const id = await store.createItem({ type: 'task', title: 'Call the vet' })
+    expect(store.hasPendingWrites()).toBe(false)
+
+    const pinning = store.setItemPinned(id, true)
+    expect(store.hasPendingWrites()).toBe(true)
+    await pinning
+    expect(store.hasPendingWrites()).toBe(false)
+  })
+
   it('rejects an empty title or an unknown type without writing', async () => {
     await expect(
       store.createItem({ type: 'note', title: '   ' }),
