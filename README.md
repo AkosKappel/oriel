@@ -60,7 +60,7 @@ Deleting the account (with the password) removes it, the personal space and ever
 
 ## Sharing
 
-- **Spaces:** your personal space is only yours. Create a shared space (a household, a trip), invite people, and move notes and lists into it. Members see changes from each other within a second.
+- **Spaces:** your personal space is only yours. Create a shared space (a household, a trip), invite people, and move notes and lists into it, or share one list or note directly ("Share this list with someone" makes a space for it). Members see changes from each other within a second.
 - **Invites:** an owner creates a link that one person can use within 7 days; only a hash of it is stored. With an email address, Oriel also sends the link (through Resend; without `RESEND_API_KEY` the email is printed in the server output during development). Someone without an account is asked to create one when opening it, and anything already on their device comes along.
 - **Roles:** owners manage the space and its members, editors change content, viewers only read (their screens are read-only, and the server refuses their writes). A space always keeps an owner.
 - **Who did what:** items another member added show "by Anna", and checked entries and done tasks show who checked them.

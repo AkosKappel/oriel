@@ -41,6 +41,7 @@ import { formatDay, formatShortDate, localDay, snoozeDays } from '#/lib/dates'
 import { renderMarkdown } from '#/lib/markdown'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
+import { createSpace } from '#/server/sharing-functions'
 
 // No display or hover color here: each button sets its own, since `cn` adds classes and does not
 // override them.
@@ -131,6 +132,20 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   const moveTargets = spaces.filter((target) => canEdit(target.role))
   const saveBody = useRef<(() => Promise<void>) | null>(null)
   const dueId = useId()
+
+  // One step for "share this list": a shared space of its own, with the item moved in, then the
+  // invite page. The space reaches this device by sync, so the page waits for it there.
+  async function shareWithSomeone() {
+    try {
+      const spaceId = await createSpace({
+        data: { name: item.title.slice(0, 60) },
+      })
+      await store.moveItem(item.id, spaceId)
+      await navigate({ to: '/spaces/$spaceId', params: { spaceId } })
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'That did not work.')
+    }
+  }
 
   async function move(spaceId: string) {
     await store.moveItem(item.id, spaceId)
@@ -538,6 +553,15 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             onChange={(spaceId) => void move(spaceId)}
             className="mt-8 print:hidden"
           />
+        )}
+
+        {editable && item.type !== 'task' && space?.personal && (
+          <Button
+            onPress={() => void shareWithSomeone()}
+            className="mt-2 w-fit rounded-sm py-2 text-sm text-muted-foreground hover:text-foreground data-focus-visible:outline-2 print:hidden"
+          >
+            Share this {label.toLowerCase()} with someone
+          </Button>
         )}
       </div>
     </article>
