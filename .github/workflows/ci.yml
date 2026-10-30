@@ -106,6 +106,10 @@ jobs:
       - uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
         with:
           configPath: ./lighthouserc.json
+      # Lighthouse's default mobile emulation (slow 4G, 4x CPU), reported but not enforced yet.
+      - uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
+        with:
+          configPath: ./lighthouserc.mobile.json
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
