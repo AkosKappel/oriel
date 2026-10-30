@@ -1,19 +1,19 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
-import { z } from 'zod'
 import { store } from '#/data/client'
 import { sharedNote } from '#/data/share'
-
-const searchSchema = z.object({
-  title: z.string().optional().catch(undefined),
-  text: z.string().optional().catch(undefined),
-  url: z.string().optional().catch(undefined),
-})
+import { text } from '#/lib/search-params'
 
 /** Web Share Target from the PWA manifest: text or a link shared from another app becomes a note. */
 export const Route = createFileRoute('/share')({
   ssr: false,
-  validateSearch: searchSchema,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { title?: string; text?: string; url?: string } => ({
+    title: text(search.title),
+    text: text(search.text),
+    url: text(search.url),
+  }),
   component: Share,
 })
 

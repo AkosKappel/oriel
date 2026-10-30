@@ -6,7 +6,6 @@ import {
   useParams,
 } from '@tanstack/react-router'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { z } from 'zod'
 import { AccountLink } from '#/components/account-link'
 import { AppHeader } from '#/components/app-header'
 import { CaptureBar } from '#/components/capture-bar'
@@ -14,32 +13,51 @@ import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
 import { SpaceFilter, TaskFilter, TypeFilter } from '#/components/type-filter'
 import { database, store } from '#/data/client'
+import { itemTypes, taskStatuses } from '#/data/kinds'
 import { announce, describeMemberChanges } from '#/data/member-changes'
-import { dueFilters, itemsInView, trashDays, views } from '#/data/organize'
-import { type Item, itemTypes, statusSchema } from '#/data/schema'
+import {
+  type DueFilter,
+  dueFilters,
+  itemsInView,
+  trashDays,
+  type View,
+  views,
+} from '#/data/organize'
+import type { Item, ItemType, TaskStatus } from '#/data/schema'
 import { useAccount } from '#/lib/account'
 import { formatDay, greeting } from '#/lib/dates'
 import { useOnline } from '#/lib/online'
 import { reportError } from '#/lib/report-error'
+import { flag, oneOf, text, uuid } from '#/lib/search-params'
 import { canEdit, type SpaceView, useSpaces } from '#/lib/spaces'
 import { describeSync, useSyncStatus } from '#/lib/sync-status'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 
-const searchSchema = z.object({
-  type: z.enum(itemTypes).optional().catch(undefined),
-  status: statusSchema.unwrap().optional().catch(undefined),
-  due: z.enum(dueFilters).optional().catch(undefined),
-  mine: z.boolean().optional().catch(undefined),
-  space: z.uuid().optional().catch(undefined),
-  q: z.string().max(200).optional().catch(undefined),
-  view: z.enum(views).optional().catch(undefined),
-})
+const statuses = taskStatuses.map(({ value }) => value)
+
+type NotebookSearch = {
+  type?: ItemType
+  status?: TaskStatus
+  due?: DueFilter
+  mine?: boolean
+  space?: string
+  q?: string
+  view?: View
+}
 
 export const Route = createFileRoute('/_notebook')({
   // Data lives in the browser's SQLite database, so there is nothing to render on the server.
   ssr: false,
-  validateSearch: searchSchema,
+  validateSearch: (search: Record<string, unknown>): NotebookSearch => ({
+    type: oneOf(itemTypes, search.type),
+    status: oneOf(statuses, search.status),
+    due: oneOf(dueFilters, search.due),
+    mine: flag(search.mine),
+    space: uuid(search.space),
+    q: text(search.q, 200),
+    view: oneOf(views, search.view),
+  }),
   component: Notebook,
 })
 

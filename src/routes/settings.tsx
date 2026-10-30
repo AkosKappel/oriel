@@ -5,13 +5,7 @@ import { toast } from 'sonner'
 import { NotificationSettings } from '#/components/notification-settings'
 import { SubPage } from '#/components/sub-page'
 import { ChoiceGroup } from '#/components/ui/choice-group'
-import {
-  download,
-  parseExport,
-  toCalendar,
-  toJson,
-  toMarkdown,
-} from '#/data/export'
+import type { parseExport } from '#/data/export'
 import { useAccount } from '#/lib/account'
 import { setTheme, type Theme, useTheme } from '#/lib/theme'
 
@@ -133,8 +127,9 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 async function exportAs(format: 'json' | 'markdown' | 'calendar') {
   try {
-    // Settings never needs the local database otherwise, so it loads only for this.
-    const { store } = await import('#/data/client')
+    // Settings never needs the local database (or Zod) otherwise, so they load only for this.
+    const [{ store }, { download, toCalendar, toJson, toMarkdown }] =
+      await Promise.all([import('#/data/client'), import('#/data/export')])
     await Promise.all([store.items.preload(), store.entries.preload()])
     const items = store.items.toArray
     const entries = store.entries.toArray
@@ -160,6 +155,7 @@ async function exportAs(format: 'json' | 'markdown' | 'calendar') {
 async function importFrom(file: File) {
   let parsed: ReturnType<typeof parseExport>
   try {
+    const { parseExport } = await import('#/data/export')
     parsed = parseExport(await file.text())
   } catch {
     toast('That file is not an Oriel JSON export.')

@@ -1,5 +1,6 @@
 import { column, Schema, Table } from '@powersync/common'
 import { z } from 'zod'
+import { itemTypes, taskStatuses } from './kinds'
 
 // The page's Content-Security-Policy forbids eval, so Zod must not probe for it with `Function`
 // (the probe fails safely but is reported as a violation). The server keeps Zod's faster parsers.
@@ -72,7 +73,7 @@ const space_member = new Table(
 
 export const appSchema = new Schema({ items, entries, space, space_member })
 
-export const itemTypes = ['note', 'list', 'task'] as const
+export { itemTypes, taskStatuses }
 
 export type ItemType = (typeof itemTypes)[number]
 
@@ -94,10 +95,6 @@ export const prioritySchema = z.union([
 ])
 
 /** Where a task that takes a while stands. Null is "to do"; done is `completed_at`, not a status. */
-export const taskStatuses = [
-  { value: 'in_progress', label: 'In progress' },
-  { value: 'waiting', label: 'Waiting' },
-] as const
 
 export type TaskStatus = (typeof taskStatuses)[number]['value']
 

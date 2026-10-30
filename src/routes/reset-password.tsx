@@ -2,21 +2,22 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { Button, Form } from 'react-aria-components'
 import { toast } from 'sonner'
-import { z } from 'zod'
 import { SubPage } from '#/components/sub-page'
 import { TextField } from '#/components/ui/text-field'
 import { authClient } from '#/lib/auth-client'
+import { text } from '#/lib/search-params'
 
 // The emailed link goes through Better Auth, which comes back here with `token`, or with
 // `error=INVALID_TOKEN` when the link is expired or was used already.
-const searchSchema = z.object({
-  token: z.string().optional().catch(undefined),
-  error: z.string().optional().catch(undefined),
-})
 
 export const Route = createFileRoute('/reset-password')({
   ssr: false,
-  validateSearch: searchSchema,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { token?: string; error?: string } => ({
+    token: text(search.token),
+    error: text(search.error),
+  }),
   component: ResetPassword,
 })
 

@@ -2,22 +2,18 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { type FormEvent, useState } from 'react'
 import { Button, Form } from 'react-aria-components'
 import { toast } from 'sonner'
-import { z } from 'zod'
 import { SubPage } from '#/components/sub-page'
 import { TextField } from '#/components/ui/text-field'
 import { completeSignIn, DifferentAccountError } from '#/lib/account'
 import { authClient } from '#/lib/auth-client'
+import { oneOf, text } from '#/lib/search-params'
 import { pageMeta } from '#/lib/seo'
 
-const searchSchema = z.object({
-  mode: z.enum(['sign-in', 'create']).optional().catch(undefined),
-  // Where to continue after signing in; only paths inside the app.
-  redirect: z
-    .string()
-    .regex(/^\/(?!\/)/)
-    .optional()
-    .catch(undefined),
-})
+// Where to continue after signing in; only paths inside the app.
+const appPath = (value: unknown) => {
+  const path = text(value)
+  return path && /^\/(?!\/)/.test(path) ? path : undefined
+}
 
 export const Route = createFileRoute('/sign-in')({
   ssr: false,
@@ -28,7 +24,12 @@ export const Route = createFileRoute('/sign-in')({
       { indexed: true },
     ),
   }),
-  validateSearch: searchSchema,
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { mode?: 'sign-in' | 'create'; redirect?: string } => ({
+    mode: oneOf(['sign-in', 'create'] as const, search.mode),
+    redirect: appPath(search.redirect),
+  }),
   component: SignIn,
 })
 
