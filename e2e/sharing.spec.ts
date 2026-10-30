@@ -4,6 +4,8 @@ import { capture, expectNoAxeViolations, rows, signUp } from './helpers'
 test('a viewer joins a shared space by link and sees it read-only', async ({
   browser,
 }) => {
+  // Two people through joining, recent changes and an assigned task: longer than one page's test.
+  test.slow()
   const owner = await (await browser.newContext()).newPage()
   const viewer = await (await browser.newContext()).newPage()
   const spaceName = `Family ${Date.now()}`
@@ -68,23 +70,24 @@ test('a viewer joins a shared space by link and sees it read-only', async ({
   await expect(rows(viewer).first()).toContainText('For you')
   await expect(rows(viewer).first()).toContainText('Buy wine')
 
-  // Sharing one list from the personal space makes a space for it and opens the invite form.
-  await owner.goto('/app')
-  await capture(owner, 'List', 'Packing: tent')
-  await rows(owner).filter({ hasText: 'Packing' }).click()
-  await owner
+  await owner.context().close()
+  await viewer.context().close()
+})
+
+test('shares one list through a space of its own', async ({ page }) => {
+  await signUp(page, 'Anna')
+  await capture(page, 'List', 'Packing: tent')
+  await rows(page).filter({ hasText: 'Packing' }).click()
+  await page
     .getByRole('button', { name: 'Share this list with someone' })
     .click()
   await expect(
-    owner.getByRole('heading', { level: 1, name: 'Packing' }),
+    page.getByRole('heading', { level: 1, name: 'Packing' }),
   ).toBeVisible()
   await expect(
-    owner.getByRole('button', { name: 'Create invite link' }),
+    page.getByRole('button', { name: 'Create invite link' }),
   ).toBeVisible()
-  const packingSpace = owner.url().split('/spaces/')[1]
-  await owner.goto(`/app?space=${packingSpace}`)
-  await expect(rows(owner).filter({ hasText: 'Packing' })).toContainText('tent')
-
-  await owner.context().close()
-  await viewer.context().close()
+  const packingSpace = page.url().split('/spaces/')[1]
+  await page.goto(`/app?space=${packingSpace}`)
+  await expect(rows(page).filter({ hasText: 'Packing' })).toContainText('tent')
 })
