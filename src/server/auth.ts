@@ -1,3 +1,4 @@
+import { passkey } from '@better-auth/passkey'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { APIError } from 'better-auth/api'
@@ -33,6 +34,7 @@ export const auth = betterAuth({
     enabled: true,
     customRules: {
       '/sign-in/email': { window: 60, max: 5 },
+      '/passkey/verify-authentication': { window: 60, max: 10 },
       '/sign-up/email': { window: 3600, max: 10 },
       '/request-password-reset': { window: 3600, max: 5 },
       '/delete-user': { window: 60, max: 5 },
@@ -74,6 +76,15 @@ export const auth = betterAuth({
       },
     },
   },
-  // Must stay last: it sets the cookies of the responses above.
-  plugins: [tanstackStartCookies()],
+  plugins: [
+    // A passkey belongs to the host name, so one made on localhost never works in production.
+    // Adding one needs a session from the last day (Better Auth's `freshAge`).
+    passkey({
+      rpID: new URL(env.BETTER_AUTH_URL).hostname,
+      rpName: 'Oriel',
+      origin: new URL(env.BETTER_AUTH_URL).origin,
+    }),
+    // Must stay last: it sets the cookies of the responses above.
+    tanstackStartCookies(),
+  ],
 })

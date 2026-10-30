@@ -71,6 +71,11 @@ function Privacy() {
             the password itself);
           </li>
           <li>
+            for each passkey you add, its public key, a name for the device and
+            the date (the private key and your fingerprint or face never leave
+            your device);
+          </li>
+          <li>
             your sign-in sessions, each with its IP address, browser user agent
             and dates, so you can see and end them on the account page;
           </li>
@@ -206,8 +211,8 @@ function Privacy() {
             <Link to="/settings">Settings</Link>.
           </li>
           <li>
-            Change your name or password, end sessions on other devices, or
-            delete your account on the account page.
+            Change your name or password, add or remove passkeys, end sessions
+            on other devices, or delete your account on the account page.
           </li>
           <li>For anything else, or to change your email address: {mail}.</li>
         </ul>

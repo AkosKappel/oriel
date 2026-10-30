@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { Button, Form } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
@@ -8,6 +8,7 @@ import {
   authErrorMessage,
   completeSignIn,
   DifferentAccountError,
+  passkeyCancelled,
 } from '#/lib/account'
 import { authClient } from '#/lib/auth-client'
 import { oneOf, text } from '#/lib/search-params'
@@ -43,23 +44,26 @@ function SignIn() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    const email = String(form.get('email'))
-    const password = String(form.get('password'))
-    setError(null)
-    setBusy(true)
+  /**
+   * Runs one way of signing in, then finishes it. A quiet attempt (passkey autofill, which waits
+   * for the person to pick one) leaves the buttons usable.
+   */
+  async function signIn(
+    attempt: () => Promise<{
+      error: { code?: string; message?: string; status?: number } | null
+    }>,
+    quiet = false,
+  ) {
+    if (!quiet) {
+      setError(null)
+      setBusy(true)
+    }
     try {
-      const { error: authError } = creating
-        ? await authClient.signUp.email({
-            name: String(form.get('name')),
-            email,
-            password,
-          })
-        : await authClient.signIn.email({ email, password })
+      const { error: authError } = await attempt()
       if (authError) {
-        setError(authErrorMessage(authError, m.error_try_again()))
+        if (!passkeyCancelled(authError)) {
+          setError(authErrorMessage(authError, m.error_try_again()))
+        }
         return
       }
       const claimed = await completeSignIn()
@@ -79,9 +83,39 @@ function SignIn() {
             : m.signin_offline(),
       )
     } finally {
-      setBusy(false)
+      if (!quiet) setBusy(false)
     }
   }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = new FormData(event.currentTarget)
+    const email = String(form.get('email'))
+    const password = String(form.get('password'))
+    void signIn(() =>
+      creating
+        ? authClient.signUp.email({
+            name: String(form.get('name')),
+            email,
+            password,
+          })
+        : authClient.signIn.email({ email, password }),
+    )
+  }
+
+  // Offers saved passkeys in the email field's suggestions (conditional mediation). The request
+  // waits until one is picked; the passkey button or leaving the page cancels it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: start once per mode
+  useEffect(() => {
+    if (creating) return
+    void window.PublicKeyCredential?.isConditionalMediationAvailable?.().then(
+      (available) => {
+        if (available) {
+          void signIn(() => authClient.signIn.passkey({ autoFill: true }), true)
+        }
+      },
+    )
+  }, [creating])
 
   return (
     <SubPage>
@@ -111,7 +145,7 @@ function SignIn() {
           label={m.signin_email()}
           name="email"
           type="email"
-          autoComplete="email"
+          autoComplete={creating ? 'email' : 'email webauthn'}
           isRequired
         />
         <TextField
@@ -135,6 +169,16 @@ function SignIn() {
           {creating ? m.signin_create_button() : m.signin_button()}
         </Button>
       </Form>
+
+      {!creating && (
+        <Button
+          onPress={() => void signIn(() => authClient.signIn.passkey())}
+          isDisabled={busy}
+          className="-mt-4 h-11 w-fit text-sm underline underline-offset-4 data-disabled:opacity-60 data-focus-visible:outline-2"
+        >
+          {m.signin_passkey()}
+        </Button>
+      )}
 
       {!creating && (
         <Link

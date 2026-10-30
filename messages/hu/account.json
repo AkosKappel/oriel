@@ -79,6 +79,9 @@
   "auth_too_long": "Ez a jelszó túl hosszú.",
   "auth_bad_email": "Ellenőrizd az e-mail-címet.",
   "auth_too_many": "Túl sok próbálkozás. Várj egy percet, és próbáld újra.",
+  "auth_passkey_not_fresh": "Biztonsági okból azonosítókulcsot csak az elmúlt napon belüli bejelentkezés után adhatsz hozzá. Jelentkezz ki, majd be újra, és próbáld meg még egyszer.",
+  "auth_passkey_exists": "Ezen az eszközön már van azonosítókulcsod az Orielhez.",
+  "auth_passkey_unknown": "Ezt az azonosítókulcsot itt nem ismerjük. Jelentkezz be a jelszavaddal.",
   "device_unknown": "Ismeretlen eszköz",
   "device_on": "{browser}, {system}",
   "signin_explain": "Az Oriel fiók nélkül is működik. Hozz létre egyet, hogy a jegyzeteid minden eszközödön meglegyenek, és listákat oszthass meg; minden, ami már ezen az eszközön van, átkerül bele.",
@@ -206,5 +209,17 @@
   "invite_join": "Csatlakozás: {space}",
   "invite_needs_account": "Közös térhez csatlakozni fiókkal lehet.",
   "invite_create_or_sign_in": "Hozz létre egyet, vagy jelentkezz be",
-  "invite_comes_with_you": "; minden, amit már ezen az eszközön írtál, veled jön."
+  "invite_comes_with_you": "; minden, amit már ezen az eszközön írtál, veled jön.",
+  "signin_passkey": "Bejelentkezés azonosítókulccsal",
+  "acct_passkeys": "Azonosítókulcsok",
+  "acct_passkeys_explain": "Jelentkezz be ujjlenyomattal, arccal vagy a képernyőzárral a jelszavad helyett.",
+  "acct_passkeys_offline": "Csatlakozz, hogy lásd az azonosítókulcsaidat.",
+  "acct_passkey_add": "Azonosítókulcs hozzáadása",
+  "acct_passkey_added": "Azonosítókulcs hozzáadva. Legközelebb jelentkezz be vele.",
+  "acct_passkey_failed": "Nem sikerült hozzáadni az azonosítókulcsot.",
+  "acct_passkey_added_on": "Hozzáadva: {date}",
+  "acct_passkey_remove": "Eltávolítás",
+  "acct_passkey_remove_label": "A(z) {name} azonosítókulcs eltávolítása (hozzáadva: {date})",
+  "acct_passkey_removed": "A(z) {name} azonosítókulcs eltávolítva. Az eszköz jelszókezelőjéből is törölheted.",
+  "acct_passkey_remove_failed": "Nem sikerült eltávolítani az azonosítókulcsot."
 }

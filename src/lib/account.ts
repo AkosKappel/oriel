@@ -80,7 +80,24 @@ const authErrors: Record<string, () => string> = {
   PASSWORD_TOO_SHORT: m.auth_too_short,
   PASSWORD_TOO_LONG: m.auth_too_long,
   INVALID_EMAIL: m.auth_bad_email,
+  SESSION_NOT_FRESH: m.auth_passkey_not_fresh,
+  ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED: m.auth_passkey_exists,
+  PASSKEY_NOT_FOUND: m.auth_passkey_unknown,
+  AUTHENTICATION_FAILED: m.auth_passkey_unknown,
 }
+
+// The browser's passkey dialog was closed, timed out or replaced by another one: nothing to say.
+const passkeyCancellations = new Set([
+  'AUTH_CANCELLED',
+  'ERROR_CEREMONY_ABORTED',
+  'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY',
+])
+
+export const passkeyCancelled = (error: {
+  code?: string
+  message?: string
+  status?: number
+}) => passkeyCancellations.has(error.code ?? '')
 
 /** A message to show for an error from Better Auth, in the page's language where known. */
 export function authErrorMessage(

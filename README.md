@@ -55,7 +55,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 ## Accounts
 
-No account is needed: everything works on the device. Creating an account (email and password, with Better Auth) gives you a personal space on the server, and everything you made before signing up moves into it, so nothing is lost. Signing out removes the data from the device, so the next person to use it starts clean. A forgotten password is reset with a single-use link sent by email, which signs out every device. The account page changes the name (shared spaces show the new one) and the password (other devices are signed out), and lists the signed-in devices, each of which can be signed out from there.
+No account is needed: everything works on the device. Creating an account (email and password, with Better Auth) gives you a personal space on the server, and everything you made before signing up moves into it, so nothing is lost. Signing out removes the data from the device, so the next person to use it starts clean. A forgotten password is reset with a single-use link sent by email, which signs out every device. The account page changes the name (shared spaces show the new one) and the password (other devices are signed out), and lists the signed-in devices, each of which can be signed out from there. Passkeys (fingerprint, face or screen lock) can be added there too and used on the sign-in page instead of the password, also offered in the email field's autofill.
 
 Deleting the account (with the password) removes it, the personal space and every shared space nobody else uses, on the server and on the device. A shared space others still use must get another owner first, so it is never left without one.
 

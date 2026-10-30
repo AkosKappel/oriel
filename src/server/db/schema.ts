@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
 import {
+  bigint,
   boolean,
   check,
   date,
@@ -82,6 +83,27 @@ export const verification = pgTable(
     ...timestamps,
   },
   (t) => [index().on(t.identifier)],
+)
+
+// Better Auth's passkey plugin: one row per registered WebAuthn credential.
+export const passkey = pgTable(
+  'passkey',
+  {
+    id: text().primaryKey(),
+    name: text(),
+    publicKey: text().notNull(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    credentialID: text('credential_id').notNull().unique(),
+    counter: bigint({ mode: 'number' }).notNull(),
+    deviceType: text().notNull(),
+    backedUp: boolean().notNull(),
+    transports: text(),
+    createdAt: timestamp({ withTimezone: true }).defaultNow(),
+    aaguid: text(),
+  },
+  (t) => [index().on(t.userId)],
 )
 
 // Spaces own content. Every user has one personal space; shared spaces come with sharing

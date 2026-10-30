@@ -110,6 +110,9 @@
   "auth_too_long": "That password is too long.",
   "auth_bad_email": "Check the email address.",
   "auth_too_many": "Too many tries. Wait a minute and try again.",
+  "auth_passkey_not_fresh": "For safety, adding a passkey needs a sign-in from the last day. Sign out, sign in again and try once more.",
+  "auth_passkey_exists": "This device already has a passkey for Oriel.",
+  "auth_passkey_unknown": "This passkey is not known here. Sign in with your password instead.",
   "device_unknown": "Unknown device",
   "device_on": "{browser} on {system}",
   "signin_explain": "Oriel works without an account. Create one to keep your notes on all your devices and to share lists; everything already on this device moves into it.",
@@ -268,5 +271,17 @@
   "invite_join": "Join {space}",
   "invite_needs_account": "Joining a shared space needs an account.",
   "invite_create_or_sign_in": "Create one or sign in",
-  "invite_comes_with_you": "; anything you already wrote on this device comes with you."
+  "invite_comes_with_you": "; anything you already wrote on this device comes with you.",
+  "signin_passkey": "Sign in with a passkey",
+  "acct_passkeys": "Passkeys",
+  "acct_passkeys_explain": "Sign in with your fingerprint, face or screen lock instead of your password.",
+  "acct_passkeys_offline": "Connect to see your passkeys.",
+  "acct_passkey_add": "Add a passkey",
+  "acct_passkey_added": "Passkey added. Use it the next time you sign in.",
+  "acct_passkey_failed": "Could not add the passkey.",
+  "acct_passkey_added_on": "Added {date}",
+  "acct_passkey_remove": "Remove",
+  "acct_passkey_remove_label": "Remove the passkey {name}, added {date}",
+  "acct_passkey_removed": "Removed the passkey {name}. You can also delete it from the device's password manager.",
+  "acct_passkey_remove_failed": "Could not remove the passkey."
 }

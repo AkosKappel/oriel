@@ -113,6 +113,9 @@
   "auth_too_long": "Toto heslo je príliš dlhé.",
   "auth_bad_email": "Skontroluj e-mailovú adresu.",
   "auth_too_many": "Príliš veľa pokusov. Počkaj minútu a skús znova.",
+  "auth_passkey_not_fresh": "Z bezpečnostných dôvodov môžeš prístupový kľúč pridať len po prihlásení za posledný deň. Odhlás sa, znova sa prihlás a skús to ešte raz.",
+  "auth_passkey_exists": "Toto zariadenie už má prístupový kľúč pre Oriel.",
+  "auth_passkey_unknown": "Tento prístupový kľúč tu nepoznáme. Prihlás sa radšej heslom.",
   "device_unknown": "Neznáme zariadenie",
   "device_on": "{browser} na {system}",
   "signin_explain": "Oriel funguje aj bez účtu. Vytvor si ho, aby si mal poznámky na všetkých zariadeniach a mohol zdieľať zoznamy; všetko, čo už je v tomto zariadení, sa doň presunie.",
@@ -274,5 +277,17 @@
   "invite_join": "Pridať sa: {space}",
   "invite_needs_account": "Na pridanie do spoločného priestoru treba účet.",
   "invite_create_or_sign_in": "Vytvor si ho alebo sa prihlás",
-  "invite_comes_with_you": "; všetko, čo si už napísal v tomto zariadení, pôjde s tebou."
+  "invite_comes_with_you": "; všetko, čo si už napísal v tomto zariadení, pôjde s tebou.",
+  "signin_passkey": "Prihlásiť sa prístupovým kľúčom",
+  "acct_passkeys": "Prístupové kľúče",
+  "acct_passkeys_explain": "Prihlás sa odtlačkom prsta, tvárou alebo zámkou obrazovky namiesto hesla.",
+  "acct_passkeys_offline": "Pripoj sa, aby si videl svoje prístupové kľúče.",
+  "acct_passkey_add": "Pridať prístupový kľúč",
+  "acct_passkey_added": "Prístupový kľúč je pridaný. Použi ho pri ďalšom prihlásení.",
+  "acct_passkey_failed": "Prístupový kľúč sa nepodarilo pridať.",
+  "acct_passkey_added_on": "Pridaný {date}",
+  "acct_passkey_remove": "Odstrániť",
+  "acct_passkey_remove_label": "Odstrániť prístupový kľúč {name}, pridaný {date}",
+  "acct_passkey_removed": "Prístupový kľúč {name} je odstránený. Môžeš ho vymazať aj zo správcu hesiel v zariadení.",
+  "acct_passkey_remove_failed": "Prístupový kľúč sa nepodarilo odstrániť."
 }

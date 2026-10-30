@@ -19,13 +19,17 @@ import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { TextField } from '#/components/ui/text-field'
 import {
+  authErrorMessage,
   changeName,
   changePassword,
   deleteAccount,
+  passkeyCancelled,
   pendingChanges,
   signOut,
   useAccount,
 } from '#/lib/account'
+import { authClient } from '#/lib/auth-client'
+import { describeDevice } from '#/lib/devices'
 import { formatLocale } from '#/lib/locale'
 import { useOnline } from '#/lib/online'
 import { describeSync, useSyncStatus } from '#/lib/sync-status'
@@ -119,6 +123,7 @@ function AccountPage() {
       </Link>
 
       {!account.needsSignIn && <Devices />}
+      {!account.needsSignIn && <Passkeys />}
 
       <div className="flex flex-col">
         <ChangeName name={account.name} />
@@ -200,6 +205,87 @@ function Devices() {
             </li>
           ))}
         </ul>
+      )}
+    </section>
+  )
+}
+
+type Passkey = { id: string; name?: string | null; createdAt: Date }
+
+function Passkeys() {
+  const online = useOnline()
+  const { data: passkeys, isPending } = authClient.useListPasskeys()
+  const [adding, setAdding] = useState(false)
+
+  async function add() {
+    setAdding(true)
+    // Named after this browser, so the list tells a phone's passkey from a laptop's.
+    const { error } = await authClient.passkey.addPasskey({
+      name: describeDevice(navigator.userAgent),
+    })
+    setAdding(false)
+    if (!error) toast(m.acct_passkey_added())
+    else if (!passkeyCancelled(error)) {
+      toast(authErrorMessage(error, m.acct_passkey_failed()))
+    }
+  }
+
+  async function remove(passkey: Passkey) {
+    const name = passkey.name ?? m.device_unknown()
+    const { error } = await authClient.passkey.deletePasskey({ id: passkey.id })
+    toast(
+      error ? m.acct_passkey_remove_failed() : m.acct_passkey_removed({ name }),
+    )
+  }
+
+  return (
+    <section aria-labelledby="passkeys" className="flex flex-col gap-1">
+      <h2 id="passkeys" className="text-xs text-muted-foreground">
+        {m.acct_passkeys()}
+      </h2>
+      <p className="text-sm text-muted-foreground">
+        {m.acct_passkeys_explain()}
+      </p>
+      {!online ? (
+        <p className="text-sm text-muted-foreground">
+          {m.acct_passkeys_offline()}
+        </p>
+      ) : isPending ? null : (
+        <>
+          <ul className="flex flex-col gap-3">
+            {(passkeys ?? []).map((passkey) => {
+              const name = passkey.name ?? m.device_unknown()
+              const date = formatDate(new Date(passkey.createdAt))
+              return (
+                <li
+                  key={passkey.id}
+                  className="flex min-h-11 items-center justify-between gap-3"
+                >
+                  <span className="flex flex-col">
+                    <span className="font-serif text-lg">{name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {m.acct_passkey_added_on({ date })}
+                    </span>
+                  </span>
+                  <Button
+                    onPress={() => void remove(passkey)}
+                    aria-label={m.acct_passkey_remove_label({ name, date })}
+                    className={`${quietButton} -mr-4 text-muted-foreground hover:text-foreground`}
+                  >
+                    {m.acct_passkey_remove()}
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
+          <Button
+            onPress={() => void add()}
+            isPending={adding}
+            className={`${quietButton} -ml-4 w-fit underline underline-offset-4 data-pending:opacity-60`}
+          >
+            {m.acct_passkey_add()}
+          </Button>
+        </>
       )}
     </section>
   )
