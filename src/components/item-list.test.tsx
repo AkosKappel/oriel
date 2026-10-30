@@ -84,6 +84,7 @@ describe('ItemList pages', () => {
         priority: 0 as const,
         status: null,
         due_on: null,
+        repeat: null,
         archived_at: null,
         deleted_at: null,
         deleted_by: null,

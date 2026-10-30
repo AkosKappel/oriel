@@ -15,6 +15,7 @@ const item = (fields: Partial<Item>): Item => ({
   priority: 0,
   status: null,
   due_on: null,
+  repeat: null,
   archived_at: null,
   deleted_at: null,
   deleted_by: null,

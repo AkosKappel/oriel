@@ -6,6 +6,7 @@ import {
   entrySchema,
   type Item,
   itemSchema,
+  repeatSchema,
   statusSchema,
 } from './schema'
 
@@ -151,6 +152,7 @@ export function download(filename: string, content: string, type: string) {
 const importedItemSchema = itemSchema.extend({
   status: statusSchema.optional().default(null),
   due_on: dueSchema.optional().default(null),
+  repeat: repeatSchema.optional().default(null),
   archived_at: z.string().nullish().default(null),
   deleted_at: z.string().nullish().default(null),
   deleted_by: z.string().nullish().default(null),

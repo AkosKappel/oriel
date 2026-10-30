@@ -169,6 +169,26 @@ describe('organizing items', () => {
     await expect(store.setItemDue(id, '2026-11-01T10:00:00Z')).rejects.toThrow()
   })
 
+  it('moves a repeating task on instead of finishing it', async () => {
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-30T10:00:00') })
+    try {
+      const id = await store.createItem({ type: 'task', title: 'Water plants' })
+      await store.setItemDue(id, '2026-10-30')
+      await store.setItemRepeat(id, 'weekly')
+
+      expect(await store.setItemCompleted(id, true)).toBe('2026-11-06')
+      expect(
+        await database.get('SELECT due_on, repeat, completed_at FROM items'),
+      ).toEqual({ due_on: '2026-11-06', repeat: 'weekly', completed_at: null })
+
+      await store.setItemRepeat(id, null)
+      expect(await store.setItemCompleted(id, true)).toBeUndefined()
+      expect(store.items.get(id)?.completed_at).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('sets a task status and back to to do, rejecting unknown states', async () => {
     const id = await store.createItem({ type: 'task', title: 'Renew passport' })
     expect(store.items.get(id)?.status).toBeNull()

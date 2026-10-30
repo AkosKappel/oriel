@@ -24,6 +24,7 @@ const items = new Table(
     priority: column.integer,
     status: column.text,
     due_on: column.text,
+    repeat: column.text,
     archived_at: column.text,
     deleted_at: column.text,
     deleted_by: column.text,
@@ -103,6 +104,16 @@ export const statusSchema = z.enum(['in_progress', 'waiting']).nullable()
 /** A calendar day (`2026-10-30`), not a moment: due "on Friday" stays Friday in every time zone. */
 export const dueSchema = z.iso.date().nullable()
 
+export const repeatChoices = [
+  { value: 'never', label: 'Never' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+] as const
+
+export const repeatSchema = z.enum(['daily', 'weekly', 'monthly']).nullable()
+export type Repeat = NonNullable<z.infer<typeof repeatSchema>>
+
 export const statusLabel = (status: TaskStatus) =>
   taskStatuses.find(({ value }) => value === status)?.label
 
@@ -127,6 +138,8 @@ export const itemSchema = z.object({
   priority: prioritySchema.catch(0),
   status: statusSchema.catch(null),
   due_on: dueSchema.catch(null),
+  // A finished repeating task stays open with its due day moved on.
+  repeat: repeatSchema.catch(null),
   archived_at: z.string().nullable(),
   // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
   deleted_at: z.string().nullable(),

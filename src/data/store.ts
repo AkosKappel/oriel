@@ -4,6 +4,7 @@ import {
   powerSyncCollectionOptions,
 } from '@tanstack/powersync-db-collection'
 import { createCollection, createTransaction } from '@tanstack/react-db'
+import { localDay, nextDue } from '#/lib/dates'
 import { readEntryLine } from './capture'
 import type { ImportedItem } from './export'
 import { sortEntries } from './organize'
@@ -22,6 +23,8 @@ import {
   type Owner,
   type Priority,
   prioritySchema,
+  type Repeat,
+  repeatSchema,
   spaceSchema,
   statusSchema,
   type TaskStatus,
@@ -329,6 +332,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           priority: 0,
           status: null,
           due_on: null,
+          repeat: null,
           archived_at: null,
           deleted_at: null,
           deleted_by: null,
@@ -380,8 +384,30 @@ export function createStore(database: CommonPowerSyncDatabase) {
       )
     },
 
-    async setItemCompleted(id: string, completed: boolean) {
+    /**
+     * Finishes or reopens a task. A repeating task stays open with its due day moved on instead;
+     * the new day is returned, and undone with `setItemDue`.
+     */
+    async setItemCompleted(
+      id: string,
+      completed: boolean,
+    ): Promise<string | undefined> {
       const timestamp = now()
+      const repeat = items.get(id)?.repeat
+      if (completed && repeat) {
+        const next = nextDue(
+          items.get(id)?.due_on ?? null,
+          repeat,
+          localDay(new Date()),
+        )
+        await saved(
+          items.update(id, (draft) => {
+            draft.due_on = next
+            draft.updated_at = timestamp
+          }),
+        )
+        return next
+      }
       await saved(
         items.update(id, (draft) => {
           draft.completed_at = completed ? timestamp : null
@@ -426,6 +452,16 @@ export function createStore(database: CommonPowerSyncDatabase) {
       await saved(
         items.update(id, (draft) => {
           draft.due_on = parsed
+          draft.updated_at = now()
+        }),
+      )
+    },
+
+    async setItemRepeat(id: string, repeat: Repeat | null) {
+      const parsed = repeatSchema.parse(repeat)
+      await saved(
+        items.update(id, (draft) => {
+          draft.repeat = parsed
           draft.updated_at = now()
         }),
       )

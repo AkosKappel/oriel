@@ -188,6 +188,19 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     expect(await findItem(task.id)).toMatchObject({ dueOn: null })
   })
 
+  it('stores how a task repeats and refuses an unknown repeat', async () => {
+    const task = put('items', itemRow(aliceSpace, { repeat: 'weekly' }))
+    await applyUpload(alice, [task])
+    expect(await findItem(task.id)).toMatchObject({ repeat: 'weekly' })
+
+    const result = await applyUpload(alice, [
+      { op: 'PATCH', table: 'items', id: task.id, data: { repeat: 'hourly' } },
+      { op: 'PATCH', table: 'items', id: task.id, data: { repeat: null } },
+    ])
+    expect(result.rejected).toMatchObject([{ reason: 'invalid' }])
+    expect(await findItem(task.id)).toMatchObject({ repeat: null })
+  })
+
   it('does not let a viewer move a shared item to the trash', async () => {
     const note = put('items', itemRow(bobSpace, { type: 'note' }))
     await applyUpload(bob, [note])

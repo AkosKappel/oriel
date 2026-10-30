@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { type PointerEvent, type ReactNode, useRef, useState } from 'react'
 import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
+import { completeTask } from '#/components/complete-task'
 import { itemLabels } from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
 import {
@@ -335,7 +336,7 @@ function ItemRow({
   // Tasks are finished (or reopened) with a swipe right; notes and lists are archived.
   async function swipeRight() {
     if (item.type === 'task') {
-      await store.setItemCompleted(item.id, !done)
+      if (await completeTask(store, item, !done)) return
       toast(done ? `${item.title} reopened` : `${item.title} done`, {
         action: {
           label: 'Undo',
@@ -374,9 +375,7 @@ function ItemRow({
           className="absolute top-0.5 -left-[2.375rem]"
           isSelected={done}
           isDisabled={!editable}
-          onChange={(selected) =>
-            void store.setItemCompleted(item.id, selected)
-          }
+          onChange={(selected) => void completeTask(store, item, selected)}
           aria-label={`Done: ${item.title}`}
         />
       )}
@@ -542,6 +541,7 @@ function describeItem(item: Item, counts: EntryCounts) {
   if (item.type === 'task' && !item.completed_at) {
     return [
       item.due_on && describeDue(item.due_on, localDay(new Date())),
+      item.repeat && `Repeats ${item.repeat}`,
       item.status && statusLabel(item.status),
       item.priority > 0 && `${priorities[item.priority].label} priority`,
       firstLine,

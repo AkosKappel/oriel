@@ -4,6 +4,7 @@ import { Archive, ArrowLeft, Copy, Pin, Share, Trash2 } from 'lucide-react'
 import { type RefObject, useEffect, useId, useRef, useState } from 'react'
 import { Button, ToggleButton } from 'react-aria-components'
 import { toast } from 'sonner'
+import { completeTask } from '#/components/complete-task'
 import { EntryList } from '#/components/entry-list'
 import { itemLabels } from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
@@ -13,6 +14,8 @@ import {
   type Item,
   type Priority,
   priorities,
+  type Repeat,
+  repeatChoices,
   type TaskStatus,
   taskStatuses,
   titleSchema,
@@ -298,9 +301,7 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
               className="absolute top-1 -left-[2.375rem]"
               isSelected={item.completed_at !== null}
               isDisabled={!editable}
-              onChange={(selected) =>
-                void store.setItemCompleted(item.id, selected)
-              }
+              onChange={(selected) => void completeTask(store, item, selected)}
               aria-label="Done"
             />
           )}
@@ -363,6 +364,23 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
               </Button>
             )}
           </div>
+        )}
+
+        {item.type === 'task' && !item.completed_at && (
+          <ChoiceGroup
+            label="Repeats"
+            showLabel
+            choices={repeatChoices}
+            value={item.repeat ?? 'never'}
+            isDisabled={!editable}
+            onChange={(value) =>
+              void store.setItemRepeat(
+                item.id,
+                value === 'never' ? null : (value as Repeat),
+              )
+            }
+            className="mb-2"
+          />
         )}
 
         {item.type === 'list' ? (

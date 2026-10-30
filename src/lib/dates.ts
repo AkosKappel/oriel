@@ -1,3 +1,5 @@
+import type { Repeat } from '#/data/schema'
+
 const dayFormat = new Intl.DateTimeFormat('en-GB', {
   weekday: 'long',
   day: 'numeric',
@@ -45,6 +47,45 @@ export function describeDue(due: string, today: string) {
   if (due === localDay(tomorrow)) return 'Due tomorrow'
   const date = shortFormat.format(day)
   return due < today ? `Overdue since ${date}` : `Due ${date}`
+}
+
+/**
+ * The next due day of a repeating task finished on `today`: a step on from its due day (or from
+ * today without one), and further until it is after today, so a late finish never leaves it
+ * overdue. Monthly keeps the day of the month, or the month's last day when it is shorter.
+ */
+export function nextDue(
+  due: string | null,
+  repeat: Repeat,
+  today: string,
+): string {
+  const [year, month, day] = (due ?? today).split('-').map(Number)
+  for (let step = 1; ; step++) {
+    // Noon UTC, so no time zone or daylight saving change moves the day.
+    const next =
+      repeat === 'monthly'
+        ? new Date(
+            Date.UTC(
+              year,
+              month - 1 + step,
+              Math.min(
+                day,
+                new Date(Date.UTC(year, month + step, 0)).getUTCDate(),
+              ),
+              12,
+            ),
+          )
+        : new Date(
+            Date.UTC(
+              year,
+              month - 1,
+              day + step * (repeat === 'weekly' ? 7 : 1),
+              12,
+            ),
+          )
+    const value = next.toISOString().slice(0, 10)
+    if (value > today) return value
+  }
 }
 
 export function greeting(date: Date) {

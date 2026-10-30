@@ -14,6 +14,7 @@ type Sample = {
   status?: Item['status']
   /** Days from today. */
   due?: number
+  repeat?: Item['repeat']
   pinned?: boolean
   done?: boolean
   archived?: boolean
@@ -208,6 +209,7 @@ const samples: Sample[] = [
     status: 'in_progress',
   },
   { type: 'task', title: 'Due next year', due: 400 },
+  { type: 'task', title: 'Repeats every week', due: 2, repeat: 'weekly' },
   { type: 'task', title: 'Waiting for someone', status: 'waiting' },
   {
     type: 'task',
@@ -302,6 +304,7 @@ export function buildSamples(today: Date, extra = 0) {
           : new Date(today.getTime() + sample.due * day)
               .toISOString()
               .slice(0, 10),
+      repeat: sample.repeat ?? null,
       archived_at: sample.archived ? stamp : null,
       deleted_at: null,
       deleted_by: null,

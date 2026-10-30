@@ -107,6 +107,20 @@ describe('ItemDetail', () => {
     expect(item()?.completed_at).not.toBeNull()
   })
 
+  it('moves a repeating task to its next due day, with Undo', async () => {
+    const user = userEvent.setup()
+    const { id, item } = await openItem({ type: 'task', title: 'Water plants' })
+    await store.setItemDue(id, '2099-01-05')
+
+    await user.click(await screen.findByRole('radio', { name: 'Weekly' }))
+    await waitFor(() => expect(item()?.repeat).toBe('weekly'))
+    await user.click(screen.getByRole('checkbox', { name: 'Done' }))
+
+    await user.click(await findUndo('Water plants: next due 12 January'))
+    await waitFor(() => expect(item()?.due_on).toBe('2099-01-05'))
+    expect(item()?.completed_at).toBeNull()
+  })
+
   it('archives an item and moves it to the trash with Undo', async () => {
     const user = userEvent.setup()
     const { item } = await openItem({ type: 'list', title: 'Packing' })

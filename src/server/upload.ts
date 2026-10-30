@@ -6,6 +6,7 @@ import {
   entryTextSchema,
   itemTypes,
   prioritySchema,
+  repeatSchema,
   statusSchema,
   titleSchema,
 } from '#/data/schema'
@@ -59,6 +60,7 @@ const itemFields = z.object({
   priority: prioritySchema,
   status: statusSchema,
   due_on: dueSchema,
+  repeat: repeatSchema,
   archived_at: nullableDate,
   deleted_at: nullableDate,
   created_at: date,
@@ -73,6 +75,7 @@ const itemPut = itemFields.extend({
   priority: prioritySchema.default(0),
   status: statusSchema.default(null),
   due_on: dueSchema.default(null),
+  repeat: repeatSchema.default(null),
   archived_at: nullableDate.default(null),
   deleted_at: nullableDate.default(null),
 })
@@ -111,12 +114,14 @@ const toggled = (
 
 /** What a PATCH means to the other members; undefined for changes not worth a line (a pin). */
 function itemAction(patch: z.output<typeof itemPatch>) {
-  const { title, body, type, due_on, status, priority } = patch
+  const { title, body, type, due_on, repeat, status, priority } = patch
   return (
     toggled(patch.deleted_at, 'trashed', 'restored') ??
     toggled(patch.completed_at, 'completed', 'reopened') ??
     toggled(patch.archived_at, 'archived', 'unarchived') ??
-    ([title, body, type, due_on, status, priority].some((v) => v !== undefined)
+    ([title, body, type, due_on, repeat, status, priority].some(
+      (v) => v !== undefined,
+    )
       ? 'edited'
       : undefined)
   )
@@ -287,6 +292,7 @@ async function applyOperation(
         priority: row.priority,
         status: row.status,
         dueOn: row.due_on,
+        repeat: row.repeat,
         archivedAt: row.archived_at,
         deletedAt: row.deleted_at,
         deletedBy: markedBy(row.deleted_at, userId),
@@ -320,6 +326,7 @@ async function applyOperation(
       priority: patch.priority,
       status: patch.status,
       dueOn: patch.due_on,
+      repeat: patch.repeat,
       archivedAt: patch.archived_at,
       deletedAt: patch.deleted_at,
       deletedBy: markedBy(patch.deleted_at, userId),
