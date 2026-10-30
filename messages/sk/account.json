@@ -1,1 +1,278 @@
-{}
+{
+  "settings_title": "Nastavenia",
+  "settings_appearance": "Vzhľad",
+  "settings_theme": "Téma",
+  "theme_system": "Ako zariadenie",
+  "theme_light": "Svetlá",
+  "theme_dark": "Tmavá",
+  "settings_language": "Jazyk",
+  "settings_data": "Tvoje údaje",
+  "export_json": "Exportovať ako JSON",
+  "export_markdown": "Exportovať ako Markdown",
+  "export_calendar": "Pridať úlohy s termínom do kalendára",
+  "import_json": "Importovať JSON export",
+  "export_help": "Exporty obsahujú všetko v tomto zariadení vrátane spoločných priestorov. JSON zachová každý detail a dá sa znova importovať; Markdown otvoríš v akejkoľvek aplikácii na poznámky. Importované položky pribudnú do tvojho priestoru a tie, ktoré tu už sú, sa preskočia. Súbor kalendára obsahuje otvorené úlohy s termínom ako celodenné udalosti; import novšieho ich vo väčšine kalendárov aktualizuje.",
+  "export_failed": "Nepodarilo sa exportovať. Skús znova.",
+  "import_not_export": "Tento súbor nie je JSON export z Oriel.",
+  "import_failed": "Nepodarilo sa importovať. Nič sa nezmenilo.",
+  "import_done": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Importovaná {count} položka.",
+        "countPlural=few": "Importované {count} položky.",
+        "countPlural=other": "Importovaných {count} položiek."
+      }
+    }
+  ],
+  "import_done_with_notes": [
+    {
+      "declarations": [
+        "input count",
+        "input notes",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Importovaná {count} položka ({notes}).",
+        "countPlural=few": "Importované {count} položky ({notes}).",
+        "countPlural=other": "Importovaných {count} položiek ({notes})."
+      }
+    }
+  ],
+  "import_skipped": "{count} už tu alebo v koši",
+  "import_invalid": "{count} sa nedalo prečítať",
+  "storage_in_browser": "{size} v tomto prehliadači",
+  "storage_stored": "Uložené v tomto prehliadači",
+  "storage_kept": "V bezpečí: prehliadač to nevymaže, aby uvoľnil miesto.",
+  "storage_may_clear": "Prehliadač to môže vymazať, ak v zariadení dôjde miesto.",
+  "storage_ask": "Požiadať o zachovanie",
+  "storage_denied": "O tom rozhoduje prehliadač; neskôr to môže povoliť.",
+  "settings_notifications": "Upozornenia",
+  "settings_account": "Účet",
+  "settings_no_account": "Účet netreba. Prihlás sa, ak chceš synchronizovať medzi zariadeniami a zdieľať zoznamy.",
+  "settings_sign_in_or_create": "Prihlásiť sa alebo vytvoriť účet",
+  "settings_oriel": "Oriel",
+  "settings_about": "O Oriel a tvojich údajoch",
+  "notify_morning": "Ranná pripomienka",
+  "notify_changes": "Zmeny od iných",
+  "notify_off": "Vypnuté",
+  "notify_on": "Zapnuté",
+  "notify_at_eight": "O 8:00",
+  "notify_help": "V tomto zariadení: každé ráno tvoje otvorené úlohy s termínom v ten deň vrátane tých po termíne; a čo iní pridajú alebo označia v spoločných priestoroch, o pár minút neskôr a spolu v jednom upozornení.",
+  "notify_blocked": "Upozornenia sú pre Oriel zablokované v nastaveniach prehliadača.",
+  "notify_failed": "To sa nepodarilo. Skontroluj pripojenie a skús znova.",
+  "signin_meta_title": "Prihlásenie do Oriel",
+  "signin_meta_description": "Poznámky, zoznamy a úlohy, ktoré fungujú offline a synchronizujú sa medzi tvojimi zariadeniami. Vytvor si bezplatný účet alebo sa prihlás.",
+  "error_try_again": "To sa nepodarilo. Skús znova.",
+  "error_something": "Niečo sa pokazilo. Skús znova.",
+  "signin_offline": "Si offline. Prihlásenie potrebuje pripojenie.",
+  "signin_done": "Prihlásenie prebehlo.",
+  "signin_done_claimed": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Prihlásenie prebehlo. {count} položka z tohto zariadenia teraz patrí k tvojmu účtu.",
+        "countPlural=few": "Prihlásenie prebehlo. {count} položky z tohto zariadenia teraz patria k tvojmu účtu.",
+        "countPlural=other": "Prihlásenie prebehlo. {count} položiek z tohto zariadenia teraz patrí k tvojmu účtu."
+      }
+    }
+  ],
+  "signin_create_title": "Vytvoriť účet",
+  "signin_welcome": "Vitaj späť",
+  "signin_name": "Meno",
+  "signin_email": "E-mail",
+  "signin_password": "Heslo",
+  "signin_create_button": "Vytvoriť účet",
+  "signin_button": "Prihlásiť sa",
+  "signin_forgot": "Zabudol si heslo?",
+  "signin_have_account": "Už máš účet?",
+  "signin_new": "Si v Oriel nový?",
+  "reset_offline": "Si offline. Obnovenie hesla potrebuje pripojenie.",
+  "reset_title": "Obnoviť heslo",
+  "reset_expired_below": "Tento odkaz vypršal alebo už bol použitý. Nižšie si vyžiadaj nový.",
+  "reset_explain": "Zadaj e-mail svojho účtu a pošleme ti odkaz na výber nového hesla.",
+  "reset_send": "Poslať odkaz",
+  "reset_expired": "Tento odkaz vypršal alebo už bol použitý. Vyžiadaj si nový.",
+  "reset_changed": "Heslo je zmenené. Prihlás sa novým.",
+  "reset_choose": "Zvoľ nové heslo",
+  "reset_rules": "Aspoň 10 znakov. Na ostatných zariadeniach ťa odhlásime.",
+  "reset_new_password": "Nové heslo",
+  "reset_change": "Zmeniť heslo",
+  "account_other_owner": "V tomto zariadení sú poznámky iného účtu. Najprv sa z neho odhlás.",
+  "account_no_session": "Relácia sa nevytvorila. Skús znova.",
+  "account_name_failed": "Meno sa nepodarilo zmeniť. Skús znova.",
+  "account_wrong_password": "Aktuálne heslo nie je správne.",
+  "account_password_failed": "Heslo sa nepodarilo zmeniť. Skús znova.",
+  "account_delete_failed": "Účet sa nepodarilo vymazať. Skús znova.",
+  "auth_wrong_credentials": "E-mail alebo heslo nie je správne.",
+  "auth_exists": "Účet s týmto e-mailom už existuje. Radšej sa prihlás.",
+  "auth_too_short": "Heslo musí mať aspoň 10 znakov.",
+  "auth_too_long": "Toto heslo je príliš dlhé.",
+  "auth_bad_email": "Skontroluj e-mailovú adresu.",
+  "auth_too_many": "Príliš veľa pokusov. Počkaj minútu a skús znova.",
+  "device_unknown": "Neznáme zariadenie",
+  "device_on": "{browser} na {system}",
+  "signin_explain": "Oriel funguje aj bez účtu. Vytvor si ho, aby si mal poznámky na všetkých zariadeniach a mohol zdieľať zoznamy; všetko, čo už je v tomto zariadení, sa doň presunie.",
+  "reset_sent": "Ak má {email} účet, odkaz je na ceste. Funguje raz a o hodinu vyprší.",
+  "reset_remembered": "Spomenul si si?",
+  "acct_sync": "Synchronizácia",
+  "acct_signed_out_server": "Odhlásené na serveri",
+  "acct_connecting": "Pripája sa",
+  "acct_offline": "Offline",
+  "acct_last_synced": "Naposledy synchronizované {time}.",
+  "acct_pending": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} zmena čaká na odoslanie.",
+        "countPlural=few": "{count} zmeny čakajú na odoslanie.",
+        "countPlural=other": "{count} zmien čaká na odoslanie."
+      }
+    }
+  ],
+  "acct_all_saved": "Všetko v tomto zariadení je uložené v tvojom účte.",
+  "acct_sign_in_again": "Prihlás sa znova, aby synchronizácia pokračovala",
+  "acct_spaces_link": "Priestory a zdieľanie",
+  "acct_device_signed_out": "{device} je odhlásené. Do pár minút prestane synchronizovať.",
+  "acct_device_failed": "To zariadenie sa nepodarilo odhlásiť. Skús znova.",
+  "acct_devices": "Prihlásené zariadenia",
+  "acct_devices_offline": "Pripoj sa, aby si videl svoje zariadenia.",
+  "acct_this_device": "Toto zariadenie",
+  "acct_signed_in_on": "Prihlásené {date}",
+  "acct_sign_out_device": "Odhlásiť {device}, prihlásené {date}",
+  "acct_sign_out": "Odhlásiť sa",
+  "acct_check_connection": "To sa nepodarilo. Skontroluj pripojenie a skús znova.",
+  "acct_needs_connection": "Na toto treba pripojenie.",
+  "acct_change_name": "Zmeniť meno",
+  "acct_change_name_title": "Zmeň svoje meno",
+  "acct_name_changed": "Meno je zmenené. Spoločné priestory ho ukážu po synchronizácii.",
+  "acct_name_explain": "Členovia tvojich spoločných priestorov vidia toto meno.",
+  "acct_change_password": "Zmeniť heslo",
+  "acct_change_password_title": "Zmeň si heslo",
+  "acct_password_changed": "Heslo je zmenené. Ostatné zariadenia sú odhlásené.",
+  "acct_current_password": "Aktuálne heslo",
+  "acct_sign_out_failed": "Nepodarilo sa odhlásiť. Skontroluj pripojenie a skús znova.",
+  "acct_sign_out_title": "Odhlásiť sa z Oriel?",
+  "acct_sign_out_pending": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} zmena sa ešte nedostala do tvojho účtu. Oriel ju skúsi najprv odoslať; čo sa nedá odoslať, stratí sa.",
+        "countPlural=few": "{count} zmeny sa ešte nedostali do tvojho účtu. Oriel ich skúsi najprv odoslať; čo sa nedá odoslať, stratí sa.",
+        "countPlural=other": "{count} zmien sa ešte nedostalo do tvojho účtu. Oriel ich skúsi najprv odoslať; čo sa nedá odoslať, stratí sa."
+      }
+    }
+  ],
+  "acct_sign_out_saved": "Tvoje poznámky sú uložené v účte. Odhlásenie ich z tohto zariadenia odstráni; po opätovnom prihlásení sa vrátia.",
+  "acct_delete_failed_connection": "Účet sa nepodarilo vymazať. Skontroluj pripojenie a skús znova.",
+  "acct_delete": "Vymazať účet",
+  "acct_delete_title": "Vymazať tvoj účet?",
+  "acct_delete_explain": "Tvoj účet, osobný priestor a každý spoločný priestor, ktorý používaš len ty, sa natrvalo vymažú na serveri aj v tomto zariadení. Spoločné priestory, ktoré používajú iní, im zostanú. Ak si chceš ponechať kópiu, najprv ju exportuj v",
+  "acct_delete_explain_end": ".",
+  "acct_delete_needs_connection": "Na vymazanie účtu treba pripojenie.",
+  "acct_delete_for_good": "Vymazať natrvalo",
+  "acct_delete_settings_link": "Nastaveniach",
+  "acct_password_explain": "Na ostatných zariadeniach ťa odhlásime; na tomto zostaneš prihlásený.",
+  "role": [
+    {
+      "declarations": ["input role"],
+      "selectors": ["role"],
+      "match": {
+        "role=owner": "Vlastník",
+        "role=editor": "Editor",
+        "role=*": "Divák"
+      }
+    }
+  ],
+  "spaces_title": "Priestory",
+  "spaces_explain": "Tvoj osobný priestor je len tvoj. Vytvor spoločný priestor pre domácnosť, výlet alebo projekt, pozvi ľudí a presuň doň poznámky a zoznamy.",
+  "spaces_ready": "{name} je pripravený. Ľudí pozveš z jeho stránky.",
+  "spaces_create_failed": "Nepodarilo sa ho vytvoriť.",
+  "spaces_only_you": "Len ty",
+  "spaces_role_members": [
+    {
+      "declarations": [
+        "input count",
+        "input role",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{role} · {count} člen",
+        "countPlural=few": "{role} · {count} členovia",
+        "countPlural=other": "{role} · {count} členov"
+      }
+    }
+  ],
+  "spaces_new": "Nový spoločný priestor",
+  "spaces_create": "Vytvoriť",
+  "space_not_here": "Tento priestor tu nie je.",
+  "space_not_here_explain": "Možno si z neho odišiel alebo je ešte na ceste do tohto zariadenia.",
+  "space_personal_explain": "Tvoj osobný priestor je len tvoj. Ak chceš zdieľať, vytvor spoločný priestor a presuň doň poznámky a zoznamy.",
+  "space_name": "Názov priestoru",
+  "space_members": "Členovia",
+  "space_role_of": "Rola: {name}",
+  "space_remove": "Odstrániť",
+  "space_email_failed": "E-mail sa nepodarilo odoslať. Radšej zdieľaj odkaz.",
+  "space_share_title": "Pridaj sa ku mne v Oriel",
+  "space_link_copied": "Odkaz skopírovaný",
+  "space_invite": "Pozvať niekoho",
+  "space_they_can": "Môže",
+  "space_can_edit": "Upravovať",
+  "space_only_view": "Len prezerať",
+  "space_their_email": "Jeho e-mail (nepovinné)",
+  "space_send_invite": "Poslať pozvánku",
+  "space_create_link": "Vytvoriť odkaz na pozvánku",
+  "space_invite_sent": "Pozvánka odoslaná na {email}.",
+  "space_link_note": "S týmto odkazom sa môže do 7 dní pridať jeden človek. Zobrazí sa len teraz.",
+  "space_invite_link": "Odkaz na pozvánku",
+  "space_copy": "Kopírovať",
+  "space_open_link": "Otvorený odkaz",
+  "space_invite_line": [
+    {
+      "declarations": ["input who", "input role", "input date"],
+      "selectors": ["role"],
+      "match": {
+        "role=viewer": "{who} · len prezerať · do {date}",
+        "role=*": "{who} · môže upravovať · do {date}"
+      }
+    }
+  ],
+  "space_invite_revoked": "Odkaz na pozvánku zrušený",
+  "space_revoke": "Zrušiť",
+  "space_recent": "Nedávne zmeny",
+  "space_recent_offline": "Nedávne zmeny sa zobrazia, keď budeš online.",
+  "space_recent_none": "Zatiaľ sa tu nič nezmenilo.",
+  "space_deleted": "{space} bol vymazaný.",
+  "space_left": "Odišiel si z priestoru {space}.",
+  "space_delete": "Vymazať priestor",
+  "space_leave": "Opustiť priestor",
+  "space_delete_title": "Vymazať {space}?",
+  "space_leave_title": "Opustiť {space}?",
+  "space_delete_explain": "Všetko v ňom sa vymaže pre všetkých členov. Nedá sa to vrátiť.",
+  "space_leave_explain": "Jeho poznámky a zoznamy zmiznú z tvojich zariadení. Vlastník ťa môže pozvať znova.",
+  "space_delete_button": "Vymazať",
+  "space_leave_button": "Opustiť",
+  "invite_checking": "Kontroluje sa pozvánka…",
+  "invite_check_failed": "Túto pozvánku sa nepodarilo overiť.",
+  "invite_server": "Oriel sa nevedel spojiť so serverom.",
+  "invite_offline": "Otvorenie pozvánky potrebuje pripojenie a si offline.",
+  "invite_broken": "Tento odkaz na pozvánku nefunguje.",
+  "invite_already_used": "Tento odkaz na pozvánku už bol použitý.",
+  "invite_expired": "Platnosť tohto odkazu na pozvánku vypršala.",
+  "invite_ask_new": "Požiadaj o nový odkaz. Každý funguje raz, 7 dní.",
+  "invite_joined": "Pridal si sa do priestoru {space}. Jeho poznámky a zoznamy prídu o chvíľu.",
+  "invite_join_failed": "Nepodarilo sa pridať.",
+  "invite_invites_you": "{inviter} ťa pozýva do priestoru",
+  "invite_can_view": "Uvidíš jeho poznámky, zoznamy a úlohy.",
+  "invite_can_edit": "Uvidíš a budeš môcť meniť jeho poznámky, zoznamy a úlohy.",
+  "invite_join": "Pridať sa: {space}",
+  "invite_needs_account": "Na pridanie do spoločného priestoru treba účet.",
+  "invite_create_or_sign_in": "Vytvor si ho alebo sa prihlás",
+  "invite_comes_with_you": "; všetko, čo si už napísal v tomto zariadení, pôjde s tebou."
+}

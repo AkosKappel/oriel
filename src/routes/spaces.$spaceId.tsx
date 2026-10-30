@@ -18,6 +18,7 @@ import { useAccount } from '#/lib/account'
 import { type ActivitySentence, describeActivity } from '#/lib/activity'
 import { formatShortDate, formatWhen } from '#/lib/dates'
 import { type SpaceView, useSpaces } from '#/lib/spaces'
+import { m } from '#/paraglide/messages.js'
 import {
   createInvite,
   deleteSpace,
@@ -34,11 +35,11 @@ export const Route = createFileRoute('/spaces/$spaceId')({
   component: SpacePage,
 })
 
-const roleChoices = [
-  { value: 'owner', label: 'Owner' },
-  { value: 'editor', label: 'Editor' },
-  { value: 'viewer', label: 'Viewer' },
-] as const
+const roleChoices = () =>
+  (['owner', 'editor', 'viewer'] as const).map((role) => ({
+    value: role,
+    label: m.role({ role }),
+  }))
 
 const textButton =
   'rounded-sm py-2 text-sm text-muted-foreground transition-colors hover:text-foreground data-focus-visible:outline-2 motion-reduce:transition-none'
@@ -50,7 +51,7 @@ async function attempt(action: () => Promise<unknown>, done?: string) {
     if (done) toast(done)
     return true
   } catch (error) {
-    toast(error instanceof Error ? error.message : 'That did not work.')
+    toast(error instanceof Error ? error.message : m.failed_generic())
     return false
   }
 }
@@ -64,9 +65,9 @@ function SpacePage() {
   if (!space) {
     return (
       <SubPage back="/spaces">
-        <p className="font-serif text-2xl italic">This space is not here.</p>
+        <p className="font-serif text-2xl italic">{m.space_not_here()}</p>
         <p className="text-sm text-muted-foreground">
-          You may have left it, or it is still on its way to this device.
+          {m.space_not_here_explain()}
         </p>
       </SubPage>
     )
@@ -81,8 +82,7 @@ function SpacePage() {
       <SpaceName space={space} />
       {space.personal ? (
         <p className="max-w-sm font-serif text-lg leading-relaxed">
-          Your personal space is only yours. To share, make a shared space and
-          move notes and lists into it.
+          {m.space_personal_explain()}
         </p>
       ) : (
         <>
@@ -111,7 +111,7 @@ function SpaceName({ space }: { space: SpaceView }) {
         // Remounts when the name changes elsewhere, so it never shows stale text.
         key={space.name}
         defaultValue={space.name}
-        aria-label="Space name"
+        aria-label={m.space_name()}
         maxLength={60}
         onBlur={(event) => {
           const name = event.currentTarget.value.trim()
@@ -137,7 +137,7 @@ function Members({ space }: { space: SpaceView }) {
   return (
     <section aria-labelledby="members" className="flex flex-col gap-2">
       <h2 id="members" className="text-xs text-muted-foreground">
-        Members
+        {m.space_members()}
       </h2>
       <ul className="flex flex-col gap-3">
         {space.members.map((member) => (
@@ -162,9 +162,7 @@ function MemberRow({
   isMe: boolean
   canManage: boolean
 }) {
-  const label = roleChoices.find(
-    (choice) => choice.value === member.role,
-  )?.label
+  const label = m.role({ role: member.role })
   return (
     <li className="flex flex-col">
       <span className="font-serif text-lg">
@@ -174,8 +172,8 @@ function MemberRow({
       {canManage ? (
         <div className="flex flex-wrap items-center gap-x-4">
           <ChoiceGroup
-            label={`Role of ${member.member_name}`}
-            choices={roleChoices}
+            label={m.space_role_of({ name: member.member_name })}
+            choices={roleChoices()}
             value={member.role}
             onChange={(role: MemberRole) =>
               void attempt(() =>
@@ -205,7 +203,7 @@ function MemberRow({
               }
               className={`${textButton} hover:text-destructive`}
             >
-              Remove
+              {m.space_remove()}
             </Button>
           )}
         </div>
@@ -244,8 +242,7 @@ function Invites({ spaceId }: { spaceId: string }) {
       })
       setLink(`${window.location.origin}/invite/${token}`)
       setSentTo(emailed ? (to ?? null) : null)
-      if (to && !emailed)
-        toast('The email could not be sent. Share the link instead.')
+      if (to && !emailed) toast(m.space_email_failed())
       setEmail('')
       refresh()
     })
@@ -253,24 +250,26 @@ function Invites({ spaceId }: { spaceId: string }) {
 
   async function share(url: string) {
     if (navigator.share) {
-      await navigator.share({ title: 'Join me on Oriel', url }).catch(() => {})
+      await navigator
+        .share({ title: m.space_share_title(), url })
+        .catch(() => {})
       return
     }
     await navigator.clipboard.writeText(url)
-    toast('Link copied')
+    toast(m.space_link_copied())
   }
 
   return (
     <section aria-labelledby="invite" className="flex flex-col gap-2">
       <h2 id="invite" className="text-xs text-muted-foreground">
-        Invite someone
+        {m.space_invite()}
       </h2>
       <ChoiceGroup
-        label="They can"
+        label={m.space_they_can()}
         showLabel
         choices={[
-          { value: 'editor', label: 'Edit' },
-          { value: 'viewer', label: 'Only view' },
+          { value: 'editor', label: m.space_can_edit() },
+          { value: 'viewer', label: m.space_only_view() },
         ]}
         value={role}
         onChange={setRole}
@@ -280,7 +279,7 @@ function Invites({ spaceId }: { spaceId: string }) {
         className="flex flex-col gap-3"
       >
         <TextField
-          label="Their email (optional)"
+          label={m.space_their_email()}
           type="email"
           autoComplete="off"
           value={email}
@@ -290,26 +289,27 @@ function Invites({ spaceId }: { spaceId: string }) {
           type="submit"
           className="h-11 w-fit rounded-sm bg-foreground px-4 text-sm text-background data-focus-visible:outline-2 data-focus-visible:outline-offset-2"
         >
-          {email.trim() ? 'Send invite' : 'Create invite link'}
+          {email.trim() ? m.space_send_invite() : m.space_create_link()}
         </Button>
       </Form>
       {link && (
         <div className="flex flex-col gap-1">
           <p role="status" className="text-xs text-muted-foreground">
-            {sentTo ? `Invite sent to ${sentTo}. ` : ''}
-            One person can join with this link within 7 days. It is shown only
-            now.
+            {sentTo ? `${m.space_invite_sent({ email: sentTo })} ` : ''}
+            {m.space_link_note()}
           </p>
           <div className="flex items-center gap-3">
             <input
               readOnly
               value={link}
-              aria-label="Invite link"
+              aria-label={m.space_invite_link()}
               onFocus={(event) => event.currentTarget.select()}
               className="h-11 min-w-0 flex-1 border-b-[1.5px] border-foreground/25 bg-transparent font-mono text-xs outline-none"
             />
             <Button onPress={() => void share(link)} className={textButton}>
-              {typeof navigator.share === 'function' ? 'Share' : 'Copy'}
+              {typeof navigator.share === 'function'
+                ? m.share()
+                : m.space_copy()}
             </Button>
           </div>
         </div>
@@ -322,20 +322,22 @@ function Invites({ spaceId }: { spaceId: string }) {
               className="flex items-center justify-between text-sm text-muted-foreground"
             >
               <span>
-                {invite.email ?? 'Open link'} ·{' '}
-                {invite.role === 'viewer' ? 'view only' : 'can edit'} · until{' '}
-                {formatShortDate(invite.expiresAt)}
+                {m.space_invite_line({
+                  who: invite.email ?? m.space_open_link(),
+                  role: invite.role,
+                  date: formatShortDate(invite.expiresAt),
+                })}
               </span>
               <Button
                 onPress={() =>
                   void attempt(
                     () => revokeInvite({ data: { inviteId: invite.id } }),
-                    'Invite link revoked',
+                    m.space_invite_revoked(),
                   ).then(refresh)
                 }
                 className={textButton}
               >
-                Revoke
+                {m.space_revoke()}
               </Button>
             </li>
           ))}
@@ -360,16 +362,14 @@ function RecentChanges({ spaceId }: { spaceId: string }) {
   return (
     <section aria-labelledby="changes" className="flex flex-col gap-2">
       <h2 id="changes" className="text-xs text-muted-foreground">
-        Recent changes
+        {m.space_recent()}
       </h2>
       {sentences === 'offline' ? (
         <p className="text-sm text-muted-foreground">
-          Recent changes show when you are online.
+          {m.space_recent_offline()}
         </p>
       ) : sentences.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Nothing has changed here yet.
-        </p>
+        <p className="text-sm text-muted-foreground">{m.space_recent_none()}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {sentences.map((sentence) => (
@@ -416,7 +416,9 @@ function Leave({
           : removeMember({
               data: { spaceId: space.id, memberId: account?.userId ?? '' },
             }),
-      deleting ? `${space.name} was deleted.` : `You left ${space.name}.`,
+      deleting
+        ? m.space_deleted({ space: space.name })
+        : m.space_left({ space: space.name }),
     )
     if (left) {
       close()
@@ -427,7 +429,7 @@ function Leave({
   return (
     <DialogTrigger>
       <Button className={`${textButton} w-fit hover:text-destructive`}>
-        {deleting ? 'Delete space' : 'Leave space'}
+        {deleting ? m.space_delete() : m.space_leave()}
       </Button>
       <ModalOverlay
         isDismissable
@@ -441,12 +443,14 @@ function Leave({
             {({ close }) => (
               <>
                 <Heading slot="title" className="font-serif text-2xl">
-                  {deleting ? `Delete ${space.name}?` : `Leave ${space.name}?`}
+                  {deleting
+                    ? m.space_delete_title({ space: space.name })
+                    : m.space_leave_title({ space: space.name })}
                 </Heading>
                 <p className="text-sm text-muted-foreground">
                   {deleting
-                    ? 'Everything in it is deleted for every member. This cannot be undone.'
-                    : 'Its notes and lists disappear from your devices. An owner can invite you again.'}
+                    ? m.space_delete_explain()
+                    : m.space_leave_explain()}
                 </p>
                 <div className="mt-2 flex justify-end gap-2">
                   <Button
@@ -454,13 +458,15 @@ function Leave({
                     autoFocus
                     className={`${textButton} px-4`}
                   >
-                    Cancel
+                    {m.cancel()}
                   </Button>
                   <Button
                     onPress={() => void confirm(close)}
                     className="h-11 rounded-sm bg-destructive px-4 text-sm text-background data-focus-visible:outline-2"
                   >
-                    {deleting ? 'Delete' : 'Leave'}
+                    {deleting
+                      ? m.space_delete_button()
+                      : m.space_leave_button()}
                   </Button>
                 </div>
               </>

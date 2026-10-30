@@ -6,14 +6,13 @@ import { SubPage } from '#/components/sub-page'
 import { TextField } from '#/components/ui/text-field'
 import { useAccount } from '#/lib/account'
 import { useSpaces } from '#/lib/spaces'
+import { m } from '#/paraglide/messages.js'
 import { createSpace } from '#/server/sharing-functions'
 
 export const Route = createFileRoute('/spaces/')({
   ssr: false,
   component: SpacesPage,
 })
-
-const roleLabels = { owner: 'Owner', editor: 'Editor', viewer: 'Viewer' }
 
 function SpacesPage() {
   const account = useAccount()
@@ -29,9 +28,9 @@ function SpacesPage() {
     try {
       await createSpace({ data: { name } })
       setName('')
-      toast(`${name.trim()} is ready. Invite people from its page.`)
+      toast(m.spaces_ready({ name: name.trim() }))
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Could not create it.')
+      toast(error instanceof Error ? error.message : m.spaces_create_failed())
     } finally {
       setBusy(false)
     }
@@ -40,11 +39,11 @@ function SpacesPage() {
   return (
     <SubPage back="/account">
       <div className="flex flex-col gap-2">
-        <h1 className="font-serif text-4xl tracking-tight">Spaces</h1>
+        <h1 className="font-serif text-4xl tracking-tight">
+          {m.spaces_title()}
+        </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Your personal space is only yours. Make a shared space for a
-          household, a trip or a project, invite people, and move notes and
-          lists into it.
+          {m.spaces_explain()}
         </p>
       </div>
 
@@ -61,8 +60,11 @@ function SpacesPage() {
               </span>
               <span className="text-sm text-muted-foreground">
                 {space.personal
-                  ? 'Only you'
-                  : `${roleLabels[space.role]} · ${space.members.length} ${space.members.length === 1 ? 'member' : 'members'}`}
+                  ? m.spaces_only_you()
+                  : m.spaces_role_members({
+                      role: m.role({ role: space.role }),
+                      count: space.members.length,
+                    })}
               </span>
             </Link>
           </li>
@@ -72,7 +74,7 @@ function SpacesPage() {
       <Form onSubmit={submit} className="flex max-w-sm items-end gap-3">
         <div className="flex-1">
           <TextField
-            label="New shared space"
+            label={m.spaces_new()}
             name="name"
             value={name}
             onChange={setName}
@@ -85,7 +87,7 @@ function SpacesPage() {
           isPending={busy}
           className="mb-6 h-11 rounded-sm bg-foreground px-4 text-sm text-background data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-pending:opacity-60"
         >
-          Create
+          {m.spaces_create()}
         </Button>
       </Form>
     </SubPage>

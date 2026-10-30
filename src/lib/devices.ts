@@ -1,3 +1,5 @@
+import { m } from '#/paraglide/messages.js'
+
 const browsers: [RegExp, string][] = [
   [/EdgA?\//, 'Edge'],
   [/OPR\//, 'Opera'],
@@ -22,9 +24,9 @@ const match = (list: [RegExp, string][], userAgent: string) =>
 
 /** "Chrome on Android" from a user agent, enough to tell a person's own devices apart. */
 export function describeDevice(userAgent: string | null) {
-  if (!userAgent) return 'Unknown device'
+  if (!userAgent) return m.device_unknown()
   const browser = match(browsers, userAgent)
   const system = match(systems, userAgent)
-  if (browser && system) return `${browser} on ${system}`
-  return browser ?? system ?? 'Unknown device'
+  if (browser && system) return m.device_on({ browser, system })
+  return browser ?? system ?? m.device_unknown()
 }

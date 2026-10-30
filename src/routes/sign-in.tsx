@@ -4,10 +4,15 @@ import { Button, Form } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { TextField } from '#/components/ui/text-field'
-import { completeSignIn, DifferentAccountError } from '#/lib/account'
+import {
+  authErrorMessage,
+  completeSignIn,
+  DifferentAccountError,
+} from '#/lib/account'
 import { authClient } from '#/lib/auth-client'
 import { oneOf, text } from '#/lib/search-params'
 import { pageMeta } from '#/lib/seo'
+import { m } from '#/paraglide/messages.js'
 
 // Where to continue after signing in; only paths inside the app.
 const appPath = (value: unknown) => {
@@ -18,11 +23,9 @@ const appPath = (value: unknown) => {
 export const Route = createFileRoute('/sign-in')({
   ssr: false,
   head: () => ({
-    meta: pageMeta(
-      'Sign in to Oriel',
-      'Notes, lists and tasks that work offline and sync between your devices. Create a free account or sign in.',
-      { indexed: true },
-    ),
+    meta: pageMeta(m.signin_meta_title(), m.signin_meta_description(), {
+      indexed: true,
+    }),
   }),
   validateSearch: (
     search: Record<string, unknown>,
@@ -56,14 +59,14 @@ function SignIn() {
           })
         : await authClient.signIn.email({ email, password })
       if (authError) {
-        setError(authError.message ?? 'That did not work. Try again.')
+        setError(authErrorMessage(authError, m.error_try_again()))
         return
       }
       const claimed = await completeSignIn()
       toast(
         claimed > 0
-          ? `Signed in. ${claimed} ${claimed === 1 ? 'item' : 'items'} from this device now belong to your account.`
-          : 'Signed in.',
+          ? m.signin_done_claimed({ count: claimed })
+          : m.signin_done(),
       )
       await navigate({ to: redirect ?? '/app' })
     } catch (caught) {
@@ -72,8 +75,8 @@ function SignIn() {
         caught instanceof DifferentAccountError
           ? caught.message
           : navigator.onLine
-            ? 'Something went wrong. Try again.'
-            : 'You are offline. Signing in needs a connection.',
+            ? m.error_something()
+            : m.signin_offline(),
       )
     } finally {
       setBusy(false)
@@ -84,12 +87,10 @@ function SignIn() {
     <SubPage>
       <div className="flex flex-col gap-2">
         <h1 className="font-serif text-4xl tracking-tight">
-          {creating ? 'Create an account' : 'Welcome back'}
+          {creating ? m.signin_create_title() : m.signin_welcome()}
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Oriel works without an account. Create one to keep your notes on all
-          your devices and to share lists; everything already on this device
-          moves into it.
+          {m.signin_explain()}
         </p>
       </div>
 
@@ -99,17 +100,22 @@ function SignIn() {
         className="flex max-w-sm flex-col gap-5"
       >
         {creating && (
-          <TextField label="Name" name="name" autoComplete="name" isRequired />
+          <TextField
+            label={m.signin_name()}
+            name="name"
+            autoComplete="name"
+            isRequired
+          />
         )}
         <TextField
-          label="Email"
+          label={m.signin_email()}
           name="email"
           type="email"
           autoComplete="email"
           isRequired
         />
         <TextField
-          label="Password"
+          label={m.signin_password()}
           name="password"
           type="password"
           autoComplete={creating ? 'new-password' : 'current-password'}
@@ -126,7 +132,7 @@ function SignIn() {
           isPending={busy}
           className="h-11 w-fit rounded-sm bg-foreground px-5 text-sm text-background transition-opacity data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-pending:opacity-60 motion-reduce:transition-none"
         >
-          {creating ? 'Create account' : 'Sign in'}
+          {creating ? m.signin_create_button() : m.signin_button()}
         </Button>
       </Form>
 
@@ -135,18 +141,18 @@ function SignIn() {
           to="/reset-password"
           className="-mt-4 w-fit text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
         >
-          Forgot your password?
+          {m.signin_forgot()}
         </Link>
       )}
 
       <p className="text-sm text-muted-foreground">
-        {creating ? 'Already have an account? ' : 'New to Oriel? '}
+        {creating ? m.signin_have_account() : m.signin_new()}{' '}
         <Link
           to="/sign-in"
           search={{ mode: creating ? 'sign-in' : 'create' }}
           className="text-foreground underline underline-offset-4"
         >
-          {creating ? 'Sign in' : 'Create an account'}
+          {creating ? m.signin_button() : m.signin_create_title()}
         </Link>
       </p>
     </SubPage>

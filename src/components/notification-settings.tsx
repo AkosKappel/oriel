@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { ChoiceGroup } from '#/components/ui/choice-group'
 import { currentZone, rememberZone } from '#/lib/notification-zone'
+import { m } from '#/paraglide/messages.js'
 import {
   getDeviceNotifications,
   getNotificationKey,
@@ -59,7 +60,7 @@ export function NotificationSettings({
       return
     }
     if ((await Notification.requestPermission()) !== 'granted') {
-      toast('Notifications are blocked for Oriel in the browser settings.')
+      toast(m.notify_blocked())
       return
     }
     const registration = await navigator.serviceWorker.ready
@@ -91,37 +92,33 @@ export function NotificationSettings({
       ...next,
     }).catch((error: unknown) => {
       console.error('Could not change notifications', error)
-      toast('That did not work. Check the connection and try again.')
+      toast(m.notify_failed())
     })
   }
 
   return wrap(
     <>
       <ChoiceGroup
-        label="Morning reminder"
+        label={m.notify_morning()}
         showLabel
         choices={[
-          { value: 'off', label: 'Off' },
-          { value: 'on', label: 'At 8:00' },
+          { value: 'off', label: m.notify_off() },
+          { value: 'on', label: m.notify_at_eight() },
         ]}
         value={state.reminders ? 'on' : 'off'}
         onChange={(value) => change({ reminders: value === 'on' })}
       />
       <ChoiceGroup
-        label="Changes by others"
+        label={m.notify_changes()}
         showLabel
         choices={[
-          { value: 'off', label: 'Off' },
-          { value: 'on', label: 'On' },
+          { value: 'off', label: m.notify_off() },
+          { value: 'on', label: m.notify_on() },
         ]}
         value={state.changes ? 'on' : 'off'}
         onChange={(value) => change({ changes: value === 'on' })}
       />
-      <p className="text-sm text-muted-foreground">
-        On this device: each morning, your open tasks due that day, overdue ones
-        included; and what others add or check off in shared spaces, a few
-        minutes later and gathered into one notification.
-      </p>
+      <p className="text-sm text-muted-foreground">{m.notify_help()}</p>
     </>,
   )
 }

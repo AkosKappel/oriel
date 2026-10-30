@@ -4,6 +4,7 @@ import { Button } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { useAccount } from '#/lib/account'
+import { m } from '#/paraglide/messages.js'
 import { acceptInvite, describeInvite } from '#/server/sharing-functions'
 
 export const Route = createFileRoute('/invite/$token')({
@@ -34,7 +35,7 @@ function InvitePage() {
     return (
       <SubPage>
         <p role="status" className="text-sm text-muted-foreground">
-          Checking the invite…
+          {m.invite_checking()}
         </p>
       </SubPage>
     )
@@ -44,17 +45,15 @@ function InvitePage() {
     return (
       <SubPage>
         <h1 className="font-serif text-3xl italic">
-          This invite could not be checked.
+          {m.invite_check_failed()}
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          {navigator.onLine
-            ? 'Oriel could not reach its server. '
-            : 'Opening an invite needs a connection, and you are offline. '}
+          {navigator.onLine ? m.invite_server() : m.invite_offline()}{' '}
           <Button
             onPress={check}
             className="rounded-sm text-foreground underline underline-offset-4 data-focus-visible:outline-2"
           >
-            Try again
+            {m.error_try_again()}
           </Button>
         </p>
       </SubPage>
@@ -66,14 +65,12 @@ function InvitePage() {
       <SubPage>
         <h1 className="font-serif text-3xl italic">
           {!invite
-            ? 'This invite link does not work.'
+            ? m.invite_broken()
             : invite.state === 'used'
-              ? 'This invite link was already used.'
-              : 'This invite link has expired.'}
+              ? m.invite_already_used()
+              : m.invite_expired()}
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Ask for a new link. Each one works once, for 7 days.
-        </p>
+        <p className="text-sm text-muted-foreground">{m.invite_ask_new()}</p>
       </SubPage>
     )
   }
@@ -84,10 +81,10 @@ function InvitePage() {
     setBusy(true)
     try {
       await acceptInvite({ data: { token } })
-      toast(`You joined ${spaceName}. Its notes and lists arrive in a moment.`)
+      toast(m.invite_joined({ space: spaceName }))
       await navigate({ to: '/app' })
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Could not join.')
+      toast(error instanceof Error ? error.message : m.invite_join_failed())
     } finally {
       setBusy(false)
     }
@@ -97,15 +94,13 @@ function InvitePage() {
     <SubPage>
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted-foreground">
-          {invite.inviterName} invites you to
+          {m.invite_invites_you({ inviter: invite.inviterName })}
         </p>
         <h1 className="font-serif text-4xl tracking-tight">
           {invite.spaceName}
         </h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          {invite.role === 'viewer'
-            ? 'You will be able to see its notes, lists and tasks.'
-            : 'You will be able to see and change its notes, lists and tasks.'}
+          {invite.role === 'viewer' ? m.invite_can_view() : m.invite_can_edit()}
         </p>
       </div>
       {account ? (
@@ -114,19 +109,19 @@ function InvitePage() {
           isPending={busy}
           className="h-11 w-fit rounded-sm bg-foreground px-5 text-sm text-background data-focus-visible:outline-2 data-focus-visible:outline-offset-2 data-pending:opacity-60"
         >
-          Join {invite.spaceName}
+          {m.invite_join({ space: invite.spaceName })}
         </Button>
       ) : (
         <p className="max-w-sm text-sm">
-          Joining a shared space needs an account.{' '}
+          {m.invite_needs_account()}{' '}
           <Link
             to="/sign-in"
             search={{ redirect: `/invite/${token}` }}
             className="underline underline-offset-4"
           >
-            Create one or sign in
+            {m.invite_create_or_sign_in()}
           </Link>
-          ; anything you already wrote on this device comes with you.
+          {m.invite_comes_with_you()}
         </p>
       )}
     </SubPage>

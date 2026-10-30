@@ -7,17 +7,20 @@ import { SubPage } from '#/components/sub-page'
 import { ChoiceGroup } from '#/components/ui/choice-group'
 import type { parseExport } from '#/data/export'
 import { useAccount } from '#/lib/account'
+import { formatLocale, languages } from '#/lib/locale'
 import { setTheme, type Theme, useTheme } from '#/lib/theme'
+import { m } from '#/paraglide/messages.js'
+import { getLocale, setLocale } from '#/paraglide/runtime.js'
 
 export const Route = createFileRoute('/settings')({
   ssr: false,
   component: SettingsPage,
 })
 
-const themeChoices: { value: Theme; label: string }[] = [
-  { value: 'system', label: 'Like the device' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
+const themeChoices = (): { value: Theme; label: string }[] => [
+  { value: 'system', label: m.theme_system() },
+  { value: 'light', label: m.theme_light() },
+  { value: 'dark', label: m.theme_dark() },
 ]
 
 const textButton =
@@ -29,34 +32,46 @@ function SettingsPage() {
 
   return (
     <SubPage>
-      <h1 className="font-serif text-4xl tracking-tight">Settings</h1>
+      <h1 className="font-serif text-4xl tracking-tight">
+        {m.settings_title()}
+      </h1>
 
-      <Section title="Appearance">
+      <Section title={m.settings_appearance()}>
         <ChoiceGroup
-          label="Theme"
-          choices={themeChoices}
+          label={m.settings_theme()}
+          choices={themeChoices()}
           value={theme}
           onChange={setTheme}
         />
+        {/* setLocale keeps the choice in a cookie and reloads, so every page follows it. */}
+        <ChoiceGroup
+          label={m.settings_language()}
+          choices={languages.map(({ locale, name }) => ({
+            value: locale,
+            label: name,
+          }))}
+          value={getLocale()}
+          onChange={(locale) => setLocale(locale)}
+        />
       </Section>
 
-      <Section title="Your data">
+      <Section title={m.settings_data()}>
         <Storage />
         <div className="flex flex-col">
           <Button onPress={() => void exportAs('json')} className={textButton}>
-            Export as JSON
+            {m.export_json()}
           </Button>
           <Button
             onPress={() => void exportAs('markdown')}
             className={textButton}
           >
-            Export as Markdown
+            {m.export_markdown()}
           </Button>
           <Button
             onPress={() => void exportAs('calendar')}
             className={textButton}
           >
-            Add due tasks to a calendar
+            {m.export_calendar()}
           </Button>
           <FileTrigger
             acceptedFileTypes={['application/json', '.json']}
@@ -65,28 +80,21 @@ function SettingsPage() {
               if (file) void importFrom(file)
             }}
           >
-            <Button className={textButton}>Import a JSON export</Button>
+            <Button className={textButton}>{m.import_json()}</Button>
           </FileTrigger>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Exports hold everything on this device, including shared spaces. JSON
-          keeps every detail and can be imported again; Markdown opens in any
-          notes app. Imported items join your own space, and items already here
-          are skipped. The calendar file holds open tasks with a due day, as
-          all-day events; importing a newer one updates them in most calendar
-          apps.
-        </p>
+        <p className="text-sm text-muted-foreground">{m.export_help()}</p>
       </Section>
 
       {account && (
         <NotificationSettings
           wrap={(settings) => (
-            <Section title="Notifications">{settings}</Section>
+            <Section title={m.settings_notifications()}>{settings}</Section>
           )}
         />
       )}
 
-      <Section title="Account">
+      <Section title={m.settings_account()}>
         {account ? (
           <Link to="/account" className={textButton}>
             {account.name}
@@ -94,19 +102,18 @@ function SettingsPage() {
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              No account needed. Sign in to sync between devices and share
-              lists.
+              {m.settings_no_account()}
             </p>
             <Link to="/sign-in" className={textButton}>
-              Sign in or create an account
+              {m.settings_sign_in_or_create()}
             </Link>
           </>
         )}
       </Section>
 
-      <Section title="Oriel">
+      <Section title={m.settings_oriel()}>
         <Link to="/about" className={textButton}>
-          About Oriel and your data
+          {m.settings_about()}
         </Link>
       </Section>
     </SubPage>
@@ -148,7 +155,7 @@ async function exportAs(format: 'json' | 'markdown' | 'calendar') {
     }
   } catch (error) {
     console.error('Export failed', error)
-    toast('Could not export. Try again.')
+    toast(m.export_failed())
   }
 }
 
@@ -158,30 +165,33 @@ async function importFrom(file: File) {
     const { parseExport } = await import('#/data/export')
     parsed = parseExport(await file.text())
   } catch {
-    toast('That file is not an Oriel JSON export.')
+    toast(m.import_not_export())
     return
   }
   try {
     const { store } = await import('#/data/client')
     const { added, skipped } = await store.importItems(parsed.items)
     const notes = [
-      skipped > 0 && `${skipped} already here or in the trash`,
-      parsed.invalid > 0 && `${parsed.invalid} could not be read`,
+      skipped > 0 && m.import_skipped({ count: skipped }),
+      parsed.invalid > 0 && m.import_invalid({ count: parsed.invalid }),
     ].filter(Boolean)
     toast(
-      `Imported ${added} ${added === 1 ? 'item' : 'items'}${notes.length > 0 ? ` (${notes.join(', ')})` : ''}.`,
+      notes.length > 0
+        ? m.import_done_with_notes({ count: added, notes: notes.join(', ') })
+        : m.import_done({ count: added }),
     )
   } catch (error) {
     console.error('Import failed', error)
-    toast('Could not import. Nothing was changed.')
+    toast(m.import_failed())
   }
 }
 
-const sizeFormat = new Intl.NumberFormat('en-GB', {
-  style: 'unit',
-  unit: 'megabyte',
-  maximumFractionDigits: 1,
-})
+const megabytes = (bytes: number) =>
+  new Intl.NumberFormat(formatLocale(), {
+    style: 'unit',
+    unit: 'megabyte',
+    maximumFractionDigits: 1,
+  }).format(bytes / 1_000_000)
 
 type StorageState = { usage?: number; persisted: boolean } | null
 
@@ -207,7 +217,7 @@ function Storage() {
   async function protect() {
     const granted = await navigator.storage.persist()
     if (!granted) {
-      toast('The browser decides this itself; it may allow it later.')
+      toast(m.storage_denied())
     }
     setState(await readStorage())
   }
@@ -218,20 +228,18 @@ function Storage() {
     <div className="flex flex-col gap-1">
       <p className="font-serif text-lg">
         {state.usage === undefined
-          ? 'Stored in this browser'
-          : `${sizeFormat.format(state.usage / 1_000_000)} in this browser`}
+          ? m.storage_stored()
+          : m.storage_in_browser({ size: megabytes(state.usage) })}
       </p>
       <p className="text-sm text-muted-foreground">
-        {state.persisted
-          ? 'Kept safe: the browser will not clear it to free space.'
-          : 'The browser may clear it if the device runs out of space.'}
+        {state.persisted ? m.storage_kept() : m.storage_may_clear()}
       </p>
       {!state.persisted && (
         <Button
           onPress={() => void protect()}
           className="w-fit rounded-sm py-2 text-sm underline underline-offset-4 data-focus-visible:outline-2"
         >
-          Ask to keep it
+          {m.storage_ask()}
         </Button>
       )}
     </div>

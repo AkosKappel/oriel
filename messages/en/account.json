@@ -1,1 +1,272 @@
-{}
+{
+  "settings_title": "Settings",
+  "settings_appearance": "Appearance",
+  "settings_theme": "Theme",
+  "theme_system": "Like the device",
+  "theme_light": "Light",
+  "theme_dark": "Dark",
+  "settings_language": "Language",
+  "settings_data": "Your data",
+  "export_json": "Export as JSON",
+  "export_markdown": "Export as Markdown",
+  "export_calendar": "Add due tasks to a calendar",
+  "import_json": "Import a JSON export",
+  "export_help": "Exports hold everything on this device, including shared spaces. JSON keeps every detail and can be imported again; Markdown opens in any notes app. Imported items join your own space, and items already here are skipped. The calendar file holds open tasks with a due day, as all-day events; importing a newer one updates them in most calendar apps.",
+  "export_failed": "Could not export. Try again.",
+  "import_not_export": "That file is not an Oriel JSON export.",
+  "import_failed": "Could not import. Nothing was changed.",
+  "import_done": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Imported {count} item.",
+        "countPlural=other": "Imported {count} items."
+      }
+    }
+  ],
+  "import_done_with_notes": [
+    {
+      "declarations": [
+        "input count",
+        "input notes",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Imported {count} item ({notes}).",
+        "countPlural=other": "Imported {count} items ({notes})."
+      }
+    }
+  ],
+  "import_skipped": "{count} already here or in the trash",
+  "import_invalid": "{count} could not be read",
+  "storage_in_browser": "{size} in this browser",
+  "storage_stored": "Stored in this browser",
+  "storage_kept": "Kept safe: the browser will not clear it to free space.",
+  "storage_may_clear": "The browser may clear it if the device runs out of space.",
+  "storage_ask": "Ask to keep it",
+  "storage_denied": "The browser decides this itself; it may allow it later.",
+  "settings_notifications": "Notifications",
+  "settings_account": "Account",
+  "settings_no_account": "No account needed. Sign in to sync between devices and share lists.",
+  "settings_sign_in_or_create": "Sign in or create an account",
+  "settings_oriel": "Oriel",
+  "settings_about": "About Oriel and your data",
+  "notify_morning": "Morning reminder",
+  "notify_changes": "Changes by others",
+  "notify_off": "Off",
+  "notify_on": "On",
+  "notify_at_eight": "At 8:00",
+  "notify_help": "On this device: each morning, your open tasks due that day, overdue ones included; and what others add or check off in shared spaces, a few minutes later and gathered into one notification.",
+  "notify_blocked": "Notifications are blocked for Oriel in the browser settings.",
+  "notify_failed": "That did not work. Check the connection and try again.",
+  "signin_meta_title": "Sign in to Oriel",
+  "signin_meta_description": "Notes, lists and tasks that work offline and sync between your devices. Create a free account or sign in.",
+  "error_try_again": "That did not work. Try again.",
+  "error_something": "Something went wrong. Try again.",
+  "signin_offline": "You are offline. Signing in needs a connection.",
+  "signin_done": "Signed in.",
+  "signin_done_claimed": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Signed in. {count} item from this device now belongs to your account.",
+        "countPlural=other": "Signed in. {count} items from this device now belong to your account."
+      }
+    }
+  ],
+  "signin_create_title": "Create an account",
+  "signin_welcome": "Welcome back",
+  "signin_name": "Name",
+  "signin_email": "Email",
+  "signin_password": "Password",
+  "signin_create_button": "Create account",
+  "signin_button": "Sign in",
+  "signin_forgot": "Forgot your password?",
+  "signin_have_account": "Already have an account?",
+  "signin_new": "New to Oriel?",
+  "reset_offline": "You are offline. Resetting a password needs a connection.",
+  "reset_title": "Reset your password",
+  "reset_expired_below": "That link has expired or was used already. Ask for a new one below.",
+  "reset_explain": "Enter the email of your account and we will send you a link to choose a new password.",
+  "reset_send": "Send link",
+  "reset_expired": "That link has expired or was used already. Ask for a new one.",
+  "reset_changed": "Password changed. Sign in with the new one.",
+  "reset_choose": "Choose a new password",
+  "reset_rules": "At least 10 characters. You will be signed out on your other devices.",
+  "reset_new_password": "New password",
+  "reset_change": "Change password",
+  "account_other_owner": "This device has notes from another account. Sign out of that account first.",
+  "account_no_session": "The session was not created. Try again.",
+  "account_name_failed": "Could not change the name. Try again.",
+  "account_wrong_password": "The current password is not right.",
+  "account_password_failed": "Could not change the password. Try again.",
+  "account_delete_failed": "Could not delete the account. Try again.",
+  "auth_wrong_credentials": "The email or password is not right.",
+  "auth_exists": "An account with this email already exists. Sign in instead.",
+  "auth_too_short": "Use at least 10 characters for the password.",
+  "auth_too_long": "That password is too long.",
+  "auth_bad_email": "Check the email address.",
+  "auth_too_many": "Too many tries. Wait a minute and try again.",
+  "device_unknown": "Unknown device",
+  "device_on": "{browser} on {system}",
+  "signin_explain": "Oriel works without an account. Create one to keep your notes on all your devices and to share lists; everything already on this device moves into it.",
+  "reset_sent": "If {email} has an account, a link is on its way. It works once and expires in an hour.",
+  "reset_remembered": "Remembered it?",
+  "acct_sync": "Sync",
+  "acct_signed_out_server": "Signed out on the server",
+  "acct_connecting": "Connecting",
+  "acct_offline": "Offline",
+  "acct_last_synced": "Last synced {time}.",
+  "acct_pending": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} change waiting to upload.",
+        "countPlural=other": "{count} changes waiting to upload."
+      }
+    }
+  ],
+  "acct_all_saved": "Everything on this device is saved to your account.",
+  "acct_sign_in_again": "Sign in again to keep syncing",
+  "acct_spaces_link": "Spaces and sharing",
+  "acct_device_signed_out": "{device} is signed out. It stops syncing within minutes.",
+  "acct_device_failed": "Could not sign out that device. Try again.",
+  "acct_devices": "Signed-in devices",
+  "acct_devices_offline": "Connect to see your devices.",
+  "acct_this_device": "This device",
+  "acct_signed_in_on": "Signed in {date}",
+  "acct_sign_out_device": "Sign out {device}, signed in {date}",
+  "acct_sign_out": "Sign out",
+  "acct_check_connection": "That did not work. Check the connection and try again.",
+  "acct_needs_connection": "This needs a connection.",
+  "acct_change_name": "Change name",
+  "acct_change_name_title": "Change your name",
+  "acct_name_changed": "Name changed. Shared spaces show it once synced.",
+  "acct_name_explain": "Members of your shared spaces see this name.",
+  "acct_change_password": "Change password",
+  "acct_change_password_title": "Change your password",
+  "acct_password_changed": "Password changed. Other devices are signed out.",
+  "acct_current_password": "Current password",
+  "acct_sign_out_failed": "Could not sign out. Check the connection and try again.",
+  "acct_sign_out_title": "Sign out of Oriel?",
+  "acct_sign_out_pending": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} change has not reached your account yet. Oriel tries to send it first; anything it cannot send is lost.",
+        "countPlural=other": "{count} changes have not reached your account yet. Oriel tries to send them first; anything it cannot send is lost."
+      }
+    }
+  ],
+  "acct_sign_out_saved": "Your notes are saved to your account. Signing out removes them from this device; sign in again to get them back.",
+  "acct_delete_failed_connection": "Could not delete the account. Check the connection and try again.",
+  "acct_delete": "Delete account",
+  "acct_delete_title": "Delete your account?",
+  "acct_delete_explain": "Your account, your personal space and every shared space only you use are deleted for good, on the server and on this device. Shared spaces others use stay with them. To keep a copy, export it in",
+  "acct_delete_explain_end": " first.",
+  "acct_delete_needs_connection": "Deleting an account needs a connection.",
+  "acct_delete_for_good": "Delete for good",
+  "acct_delete_settings_link": "Settings",
+  "acct_password_explain": "Your other devices are signed out; this one stays signed in.",
+  "role": [
+    {
+      "declarations": ["input role"],
+      "selectors": ["role"],
+      "match": {
+        "role=owner": "Owner",
+        "role=editor": "Editor",
+        "role=*": "Viewer"
+      }
+    }
+  ],
+  "spaces_title": "Spaces",
+  "spaces_explain": "Your personal space is only yours. Make a shared space for a household, a trip or a project, invite people, and move notes and lists into it.",
+  "spaces_ready": "{name} is ready. Invite people from its page.",
+  "spaces_create_failed": "Could not create it.",
+  "spaces_only_you": "Only you",
+  "spaces_role_members": [
+    {
+      "declarations": [
+        "input count",
+        "input role",
+        "local countPlural = count: plural"
+      ],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{role} · {count} member",
+        "countPlural=other": "{role} · {count} members"
+      }
+    }
+  ],
+  "spaces_new": "New shared space",
+  "spaces_create": "Create",
+  "space_not_here": "This space is not here.",
+  "space_not_here_explain": "You may have left it, or it is still on its way to this device.",
+  "space_personal_explain": "Your personal space is only yours. To share, make a shared space and move notes and lists into it.",
+  "space_name": "Space name",
+  "space_members": "Members",
+  "space_role_of": "Role of {name}",
+  "space_remove": "Remove",
+  "space_email_failed": "The email could not be sent. Share the link instead.",
+  "space_share_title": "Join me on Oriel",
+  "space_link_copied": "Link copied",
+  "space_invite": "Invite someone",
+  "space_they_can": "They can",
+  "space_can_edit": "Edit",
+  "space_only_view": "Only view",
+  "space_their_email": "Their email (optional)",
+  "space_send_invite": "Send invite",
+  "space_create_link": "Create invite link",
+  "space_invite_sent": "Invite sent to {email}.",
+  "space_link_note": "One person can join with this link within 7 days. It is shown only now.",
+  "space_invite_link": "Invite link",
+  "space_copy": "Copy",
+  "space_open_link": "Open link",
+  "space_invite_line": [
+    {
+      "declarations": ["input who", "input role", "input date"],
+      "selectors": ["role"],
+      "match": {
+        "role=viewer": "{who} · view only · until {date}",
+        "role=*": "{who} · can edit · until {date}"
+      }
+    }
+  ],
+  "space_invite_revoked": "Invite link revoked",
+  "space_revoke": "Revoke",
+  "space_recent": "Recent changes",
+  "space_recent_offline": "Recent changes show when you are online.",
+  "space_recent_none": "Nothing has changed here yet.",
+  "space_deleted": "{space} was deleted.",
+  "space_left": "You left {space}.",
+  "space_delete": "Delete space",
+  "space_leave": "Leave space",
+  "space_delete_title": "Delete {space}?",
+  "space_leave_title": "Leave {space}?",
+  "space_delete_explain": "Everything in it is deleted for every member. This cannot be undone.",
+  "space_leave_explain": "Its notes and lists disappear from your devices. An owner can invite you again.",
+  "space_delete_button": "Delete",
+  "space_leave_button": "Leave",
+  "invite_checking": "Checking the invite…",
+  "invite_check_failed": "This invite could not be checked.",
+  "invite_server": "Oriel could not reach its server.",
+  "invite_offline": "Opening an invite needs a connection, and you are offline.",
+  "invite_broken": "This invite link does not work.",
+  "invite_already_used": "This invite link was already used.",
+  "invite_expired": "This invite link has expired.",
+  "invite_ask_new": "Ask for a new link. Each one works once, for 7 days.",
+  "invite_joined": "You joined {space}. Its notes and lists arrive in a moment.",
+  "invite_join_failed": "Could not join.",
+  "invite_invites_you": "{inviter} invites you to",
+  "invite_can_view": "You will be able to see its notes, lists and tasks.",
+  "invite_can_edit": "You will be able to see and change its notes, lists and tasks.",
+  "invite_join": "Join {space}",
+  "invite_needs_account": "Joining a shared space needs an account.",
+  "invite_create_or_sign_in": "Create one or sign in",
+  "invite_comes_with_you": "; anything you already wrote on this device comes with you."
+}

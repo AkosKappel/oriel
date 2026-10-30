@@ -26,8 +26,10 @@ import {
   signOut,
   useAccount,
 } from '#/lib/account'
+import { formatLocale } from '#/lib/locale'
 import { useOnline } from '#/lib/online'
 import { describeSync, useSyncStatus } from '#/lib/sync-status'
+import { m } from '#/paraglide/messages.js'
 import { getDevices, signOutOtherDevice } from '#/server/account'
 
 export const Route = createFileRoute('/account')({
@@ -38,18 +40,20 @@ export const Route = createFileRoute('/account')({
 const quietButton =
   'h-11 rounded-sm px-4 text-sm transition-colors data-focus-visible:outline-2 data-focus-visible:outline-offset-2 motion-reduce:transition-none'
 
-const dayFormat = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-})
+const formatDate = (date: Date) =>
+  new Intl.DateTimeFormat(formatLocale(), {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
 
-const timeFormat = new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'long',
-  hour: '2-digit',
-  minute: '2-digit',
-})
+const formatTime = (date: Date) =>
+  new Intl.DateTimeFormat(formatLocale(), {
+    day: 'numeric',
+    month: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
 
 /** Changes not yet on the server, refreshed whenever the sync status changes. */
 function usePendingChanges() {
@@ -76,10 +80,10 @@ function AccountPage() {
   if (!account) return <Navigate to="/sign-in" replace />
 
   const state = account.needsSignIn
-    ? 'Signed out on the server'
+    ? m.acct_signed_out_server()
     : online
-      ? (describeSync(status, online) ?? 'Connecting')
-      : 'Offline'
+      ? (describeSync(status, online) ?? m.acct_connecting())
+      : m.acct_offline()
 
   return (
     <SubPage>
@@ -88,15 +92,13 @@ function AccountPage() {
         <h1 className="font-serif text-4xl tracking-tight">{account.name}</h1>
       </div>
 
-      <section aria-label="Sync" className="flex flex-col gap-1">
+      <section aria-label={m.acct_sync()} className="flex flex-col gap-1">
         <p className="font-serif text-lg">{state}</p>
         <p className="text-sm text-muted-foreground">
           {status?.lastSyncedAt
-            ? `Last synced ${timeFormat.format(status.lastSyncedAt)}. `
+            ? `${m.acct_last_synced({ time: formatTime(status.lastSyncedAt) })} `
             : ''}
-          {pending
-            ? `${pending} ${pending === 1 ? 'change' : 'changes'} waiting to upload.`
-            : 'Everything on this device is saved to your account.'}
+          {pending ? m.acct_pending({ count: pending }) : m.acct_all_saved()}
         </p>
         {account.needsSignIn && (
           <Link
@@ -104,7 +106,7 @@ function AccountPage() {
             search={{ mode: 'sign-in' }}
             className="w-fit text-sm underline underline-offset-4"
           >
-            Sign in again to keep syncing
+            {m.acct_sign_in_again()}
           </Link>
         )}
       </section>
@@ -113,7 +115,7 @@ function AccountPage() {
         to="/spaces"
         className="w-fit font-serif text-lg underline decoration-1 underline-offset-4"
       >
-        Spaces and sharing
+        {m.acct_spaces_link()}
       </Link>
 
       {!account.needsSignIn && <Devices />}
@@ -147,10 +149,10 @@ function Devices() {
   async function signOutDevice(device: Device) {
     try {
       await signOutOtherDevice({ data: { sessionId: device.id } })
-      toast(`${device.device} is signed out. It stops syncing within minutes.`)
+      toast(m.acct_device_signed_out({ device: device.device }))
     } catch (error) {
       console.error('Could not sign out the device', error)
-      toast('Could not sign out that device. Try again.')
+      toast(m.acct_device_failed())
     }
     refresh()
   }
@@ -158,11 +160,11 @@ function Devices() {
   return (
     <section aria-labelledby="devices" className="flex flex-col gap-1">
       <h2 id="devices" className="text-xs text-muted-foreground">
-        Signed-in devices
+        {m.acct_devices()}
       </h2>
       {!online ? (
         <p className="text-sm text-muted-foreground">
-          Connect to see your devices.
+          {m.acct_devices_offline()}
         </p>
       ) : devices === null ? (
         <p className="text-sm text-muted-foreground">Loading</p>
@@ -177,17 +179,22 @@ function Devices() {
                 <span className="font-serif text-lg">{device.device}</span>
                 <span className="text-sm text-muted-foreground">
                   {device.current
-                    ? 'This device'
-                    : `Signed in ${dayFormat.format(new Date(device.signedInAt))}`}
+                    ? m.acct_this_device()
+                    : m.acct_signed_in_on({
+                        date: formatDate(new Date(device.signedInAt)),
+                      })}
                 </span>
               </span>
               {!device.current && (
                 <Button
                   onPress={() => void signOutDevice(device)}
-                  aria-label={`Sign out ${device.device}, signed in ${dayFormat.format(new Date(device.signedInAt))}`}
+                  aria-label={m.acct_sign_out_device({
+                    device: device.device,
+                    date: formatDate(new Date(device.signedInAt)),
+                  })}
                   className={`${quietButton} -mr-4 text-muted-foreground hover:text-foreground`}
                 >
-                  Sign out
+                  {m.acct_sign_out()}
                 </Button>
               )}
             </li>
@@ -233,7 +240,7 @@ function FormDialog({
       else close()
     } catch (caught) {
       console.error(`${title} failed`, caught)
-      setError('That did not work. Check the connection and try again.')
+      setError(m.acct_check_connection())
     } finally {
       setBusy(false)
     }
@@ -269,7 +276,7 @@ function FormDialog({
                 )}
                 {!online && (
                   <p className="text-sm text-muted-foreground">
-                    This needs a connection.
+                    {m.acct_needs_connection()}
                   </p>
                 )}
                 <div className="mt-2 flex justify-end gap-2">
@@ -277,7 +284,7 @@ function FormDialog({
                     onPress={close}
                     className={`${quietButton} text-muted-foreground hover:text-foreground`}
                   >
-                    Cancel
+                    {m.cancel()}
                   </Button>
                   <Button
                     type="submit"
@@ -300,20 +307,18 @@ function FormDialog({
 function ChangeName({ name }: { name: string }) {
   return (
     <FormDialog
-      label="Change name"
-      title="Change your name"
+      label={m.acct_change_name()}
+      title={m.acct_change_name_title()}
       submitLabel="Save"
       submit={async (form) => {
         const message = await changeName(String(form.get('name')).trim())
-        if (!message) toast('Name changed. Shared spaces show it once synced.')
+        if (!message) toast(m.acct_name_changed())
         return message
       }}
     >
-      <p className="text-sm text-muted-foreground">
-        Members of your shared spaces see this name.
-      </p>
+      <p className="text-sm text-muted-foreground">{m.acct_name_explain()}</p>
       <TextField
-        label="Name"
+        label={m.signin_name()}
         name="name"
         defaultValue={name}
         autoComplete="name"
@@ -328,23 +333,23 @@ function ChangeName({ name }: { name: string }) {
 function ChangePassword() {
   return (
     <FormDialog
-      label="Change password"
-      title="Change your password"
+      label={m.acct_change_password()}
+      title={m.acct_change_password_title()}
       submitLabel="Change password"
       submit={async (form) => {
         const message = await changePassword(
           String(form.get('current')),
           String(form.get('new')),
         )
-        if (!message) toast('Password changed. Other devices are signed out.')
+        if (!message) toast(m.acct_password_changed())
         return message
       }}
     >
       <p className="text-sm text-muted-foreground">
-        Your other devices are signed out; this one stays signed in.
+        {m.acct_password_explain()}
       </p>
       <TextField
-        label="Current password"
+        label={m.acct_current_password()}
         name="current"
         type="password"
         autoComplete="current-password"
@@ -352,7 +357,7 @@ function ChangePassword() {
         autoFocus
       />
       <TextField
-        label="New password"
+        label={m.reset_new_password()}
         name="new"
         type="password"
         autoComplete="new-password"
@@ -376,7 +381,7 @@ function SignOut({ pending }: { pending: number }) {
       window.location.assign('/app')
     } catch (caught) {
       console.error('Sign-out failed', caught)
-      setError('Could not sign out. Check the connection and try again.')
+      setError(m.acct_sign_out_failed())
     } finally {
       setBusy(false)
     }
@@ -387,7 +392,7 @@ function SignOut({ pending }: { pending: number }) {
       <Button
         className={`${quietButton} -ml-4 w-fit text-muted-foreground hover:text-foreground`}
       >
-        Sign out
+        {m.acct_sign_out()}
       </Button>
       <ModalOverlay
         isDismissable
@@ -401,12 +406,12 @@ function SignOut({ pending }: { pending: number }) {
             {({ close }) => (
               <>
                 <Heading slot="title" className="font-serif text-2xl">
-                  Sign out of Oriel?
+                  {m.acct_sign_out_title()}
                 </Heading>
                 <p className="text-sm text-muted-foreground">
                   {pending > 0
-                    ? `${pending} ${pending === 1 ? 'change has' : 'changes have'} not reached your account yet. Oriel tries to send them first; anything it cannot send is lost.`
-                    : 'Your notes are saved to your account. Signing out removes them from this device; sign in again to get them back.'}
+                    ? m.acct_sign_out_pending({ count: pending })
+                    : m.acct_sign_out_saved()}
                 </p>
                 {error && (
                   <p role="alert" className="text-sm text-destructive">
@@ -419,14 +424,14 @@ function SignOut({ pending }: { pending: number }) {
                     autoFocus
                     className={`${quietButton} text-muted-foreground hover:text-foreground`}
                   >
-                    Cancel
+                    {m.cancel()}
                   </Button>
                   <Button
                     onPress={() => void confirm(close)}
                     isPending={busy}
                     className={`${quietButton} bg-foreground text-background data-pending:opacity-60`}
                   >
-                    Sign out
+                    {m.acct_sign_out()}
                   </Button>
                 </div>
               </>
@@ -457,9 +462,7 @@ function DeleteAccount() {
       window.location.assign('/app')
     } catch (caught) {
       console.error('Account deletion failed', caught)
-      setError(
-        'Could not delete the account. Check the connection and try again.',
-      )
+      setError(m.acct_delete_failed_connection())
     } finally {
       setBusy(false)
     }
@@ -470,7 +473,7 @@ function DeleteAccount() {
       <Button
         className={`${quietButton} -ml-4 w-fit text-muted-foreground hover:text-destructive`}
       >
-        Delete account
+        {m.acct_delete()}
       </Button>
       <ModalOverlay
         isDismissable
@@ -487,23 +490,20 @@ function DeleteAccount() {
                 className="flex flex-col gap-3"
               >
                 <Heading slot="title" className="font-serif text-2xl">
-                  Delete your account?
+                  {m.acct_delete_title()}
                 </Heading>
                 <p className="text-sm text-muted-foreground">
-                  Your account, your personal space and every shared space only
-                  you use are deleted for good, on the server and on this
-                  device. Shared spaces others use stay with them. To keep a
-                  copy, export it in{' '}
+                  {m.acct_delete_explain()}{' '}
                   <Link
                     to="/settings"
                     className="text-foreground underline underline-offset-4"
                   >
-                    Settings
-                  </Link>{' '}
-                  first.
+                    {m.acct_delete_settings_link()}
+                  </Link>
+                  {m.acct_delete_explain_end()}
                 </p>
                 <TextField
-                  label="Password"
+                  label={m.signin_password()}
                   name="password"
                   type="password"
                   autoComplete="current-password"
@@ -516,7 +516,7 @@ function DeleteAccount() {
                 )}
                 {!online && (
                   <p className="text-sm text-muted-foreground">
-                    Deleting an account needs a connection.
+                    {m.acct_delete_needs_connection()}
                   </p>
                 )}
                 <div className="mt-2 flex justify-end gap-2">
@@ -525,7 +525,7 @@ function DeleteAccount() {
                     autoFocus
                     className={`${quietButton} text-muted-foreground hover:text-foreground`}
                   >
-                    Cancel
+                    {m.cancel()}
                   </Button>
                   <Button
                     type="submit"
@@ -533,7 +533,7 @@ function DeleteAccount() {
                     isDisabled={!online}
                     className={`${quietButton} bg-destructive text-background data-disabled:opacity-60 data-pending:opacity-60`}
                   >
-                    Delete for good
+                    {m.acct_delete_for_good()}
                   </Button>
                 </div>
               </Form>

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { Owner } from '#/data/schema'
+import { m } from '#/paraglide/messages.js'
 import { getAccount } from '#/server/account'
 
 /**
@@ -70,11 +71,30 @@ export function useAccount() {
 const loadClient = () => import('#/data/client')
 const loadAuth = async () => (await import('#/lib/auth-client')).authClient
 
+// Better Auth's own messages are English; the common ones are said in the page's language.
+const authErrors: Record<string, () => string> = {
+  INVALID_EMAIL_OR_PASSWORD: m.auth_wrong_credentials,
+  INVALID_PASSWORD: m.auth_wrong_credentials,
+  USER_ALREADY_EXISTS: m.auth_exists,
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: m.auth_exists,
+  PASSWORD_TOO_SHORT: m.auth_too_short,
+  PASSWORD_TOO_LONG: m.auth_too_long,
+  INVALID_EMAIL: m.auth_bad_email,
+}
+
+/** A message to show for an error from Better Auth, in the page's language where known. */
+export function authErrorMessage(
+  error: { code?: string; message?: string; status?: number },
+  fallback: string,
+) {
+  if (error.status === 429) return m.auth_too_many()
+  const known = error.code ? authErrors[error.code] : undefined
+  return known ? known() : (error.message ?? fallback)
+}
+
 export class DifferentAccountError extends Error {
   constructor() {
-    super(
-      'This device has notes from another account. Sign out of that account first.',
-    )
+    super(m.account_other_owner())
   }
 }
 
@@ -85,7 +105,7 @@ export class DifferentAccountError extends Error {
  */
 export async function completeSignIn() {
   const account = await getAccount()
-  if (!account) throw new Error('The session was not created. Try again.')
+  if (!account) throw new Error(m.account_no_session())
   // The device still holds another account's data (its session expired): never mix the two.
   if (current && current.userId !== account.userId) {
     await (await loadAuth()).signOut()
@@ -101,7 +121,7 @@ export async function completeSignIn() {
 /** Renames the account; spaces show the new name once it syncs. Returns an error message or null. */
 export async function changeName(name: string) {
   const { error } = await (await loadAuth()).updateUser({ name })
-  if (error) return error.message ?? 'Could not change the name. Try again.'
+  if (error) return authErrorMessage(error, m.account_name_failed())
   if (current) write({ ...current, name })
   return null
 }
@@ -121,8 +141,8 @@ export async function changePassword(
   })
   if (!error) return null
   return error.code === 'INVALID_PASSWORD'
-    ? 'The current password is not right.'
-    : (error.message ?? 'Could not change the password. Try again.')
+    ? m.account_wrong_password()
+    : authErrorMessage(error, m.account_password_failed())
 }
 
 /** Changes made on this device that the server has not received yet. */
@@ -175,7 +195,7 @@ async function stopNotifications() {
  */
 export async function deleteAccount(password: string) {
   const { error } = await (await loadAuth()).deleteUser({ password })
-  if (error) return error.message ?? 'Could not delete the account. Try again.'
+  if (error) return authErrorMessage(error, m.account_delete_failed())
   write(null)
   await (await loadClient()).database.disconnectAndClear()
   return null
