@@ -78,6 +78,30 @@ export const saveSubscription = createServerFn({ method: 'POST' })
       })
   })
 
+/** Moves the morning reminder to the zone the device is in now (after travel). */
+export const updateTimeZone = createServerFn({ method: 'POST' })
+  .middleware([signedIn])
+  .validator(
+    z.object({
+      endpoint: z.string().max(2000),
+      timeZone: z
+        .string()
+        .max(64)
+        .refine((zone) => localClock(new Date(), zone) !== null),
+    }),
+  )
+  .handler(async ({ context, data }) => {
+    await db
+      .update(pushSubscription)
+      .set({ timeZone: data.timeZone })
+      .where(
+        and(
+          eq(pushSubscription.userId, context.userId),
+          eq(pushSubscription.endpoint, data.endpoint),
+        ),
+      )
+  })
+
 export const removeSubscription = createServerFn({ method: 'POST' })
   .middleware([signedIn])
   .validator(z.object({ endpoint: z.string().max(2000) }))

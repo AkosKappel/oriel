@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { ChoiceGroup } from '#/components/ui/choice-group'
+import { currentZone, rememberZone } from '#/lib/notification-zone'
 import {
   getDeviceNotifications,
   getNotificationKey,
@@ -69,14 +70,16 @@ export function NotificationSettings({
         applicationServerKey: state.key,
       }))
     const { endpoint, keys } = subscription.toJSON()
+    const zone = currentZone()
     await saveSubscription({
       data: {
         endpoint: endpoint ?? '',
         keys: { p256dh: keys?.p256dh ?? '', auth: keys?.auth ?? '' },
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timeZone: zone,
         ...next,
       },
     })
+    rememberZone(zone)
     setState({ ...state, ...next, subscription })
   }
 

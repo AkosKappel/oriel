@@ -26,6 +26,7 @@ import {
 import type { Item, ItemType, TaskStatus } from '#/data/schema'
 import { useAccount } from '#/lib/account'
 import { formatDay, greeting } from '#/lib/dates'
+import { refreshNotificationZone } from '#/lib/notification-zone'
 import { useOnline } from '#/lib/online'
 import { reportError } from '#/lib/report-error'
 import { flag, oneOf, text, uuid } from '#/lib/search-params'
@@ -74,6 +75,7 @@ function Notebook() {
   useNextAndPreviousKeys()
   usePurgeOldTrash()
   useRememberDevice()
+  useEffect(() => void refreshNotificationZone(), [])
   const { spaces, byId } = useSpaces()
   const sync = describeSync(useSyncStatus(), useOnline())
   const space = spaceId ? byId.get(spaceId) : undefined
