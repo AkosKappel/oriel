@@ -1,4 +1,6 @@
-// What a morning reminder says and when it is morning: pure, so it is tested without a server.
+import type { ActivitySentence } from '#/lib/activity'
+
+// What notifications say and when it is morning: pure, so it is tested without a server.
 
 /** The day and hour at `now` in a time zone, or null for a zone this server does not know. */
 export function localClock(now: Date, timeZone: string) {
@@ -42,5 +44,33 @@ export function reminderMessage(titles: string[]) {
         : `${titles.length} tasks for today`,
     body,
     url: '/app?type=task&due=today',
+  }
+}
+
+/** Only these changes are worth a notification: what was added, and what was checked off. */
+export const noticedActions = ['added', 'completed'] as const
+
+const sentence = ({ before, title, after }: ActivitySentence) =>
+  [before, title, after].filter(Boolean).join(' ')
+
+/**
+ * The notification for other members' changes, newest first ("Anna added Milk and Eggs to
+ * Groceries"); null when there is nothing. One change opens its item, several open the notebook.
+ */
+export function changesMessage(sentences: ActivitySentence[]) {
+  const [first] = sentences
+  if (!first) return null
+  if (sentences.length === 1) {
+    return {
+      title: first.title,
+      body: sentence(first),
+      url: `/items/${first.itemId}`,
+    }
+  }
+  const more = sentences.length - 2
+  return {
+    title: `${sentences.length} changes in your spaces`,
+    body: `${sentences.slice(0, 2).map(sentence).join('. ')}${more > 0 ? `, and ${more} more` : ''}.`,
+    url: '/app',
   }
 }

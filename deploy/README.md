@@ -45,7 +45,7 @@ service start.
    ```
 
 3. Fill in `~/deploy/oriel/.env` with fresh secrets (the comments say how to make each),
-   `IMAGE_TAG` from the latest green CI run on `main`, a production `RESEND_API_KEY` and, for morning reminders, a VAPID key pair (`npx web-push generate-vapid-keys`). Put
+   `IMAGE_TAG` from the latest green CI run on `main`, a production `RESEND_API_KEY` and, for notifications, a VAPID key pair (`npx web-push generate-vapid-keys`). Put
    the Tailscale auth key into `tailscale/ts.env` (`TS_AUTHKEY=...`, the same reusable key as
    the other apps). `chmod 600` both files.
 4. Start it: `cd ~/deploy/oriel && docker compose up -d`.

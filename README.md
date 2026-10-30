@@ -43,7 +43,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 - **Swipes:** on a phone, swipe a row right to finish a task (or archive a note or list) and left to move it to the trash, with Undo. Checking something gives a short vibration on Android.
 - **Wide screens:** the list stays on the left and the open item reads beside it; on a phone they are separate screens.
 - **Lists:** check, rename, remove (or empty the text) and add entries; drag an entry by its handle, or use the arrow keys on it, to change the order; pasting several lines adds one entry per line, scanning a product's barcode (Chrome on Android, online) puts its name from Open Food Facts in the add field, and entries used in earlier lists are suggested while typing. Checked entries move to the bottom; "Clear checked" removes them and "Uncheck all" resets a list for reuse, both with Undo.
-- **Settings:** theme (like the device, light or dark), a morning reminder per device (a notification at 8:00 local time with the tasks due that day, through Web Push), storage used, export of everything as JSON or Markdown, open tasks with a due day as a calendar file (.ics), and import of a JSON export (into your own space, skipping what is already there).
+- **Settings:** theme (like the device, light or dark), notifications per device through Web Push (a morning reminder at 8:00 local time with the tasks due that day, and what others add or check off in shared spaces, gathered into one notification), storage used, export of everything as JSON or Markdown, open tasks with a due day as a calendar file (.ics), and import of a JSON export (into your own space, skipping what is already there).
 
 ## Offline and installable
 

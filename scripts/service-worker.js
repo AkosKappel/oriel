@@ -70,7 +70,7 @@ self.addEventListener('fetch', (event) => {
   )
 })
 
-// Morning reminders (src/server/reminders.ts): the server sends title, body, a page to open and a
+// Notifications (src/server/notifications.ts): the server sends title, body, a page to open and a
 // tag, so a later reminder replaces an unread one instead of piling up.
 self.addEventListener('push', (event) => {
   const message = event.data?.json() ?? {}

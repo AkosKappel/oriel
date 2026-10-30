@@ -81,8 +81,8 @@ function Privacy() {
             the spaces you belong to, your role in each, and open invites.
           </li>
           <li>
-            for each device where you turn on the morning reminder, the address
-            its browser gives for notifications and its time zone;
+            for each device where you turn on notifications, the address its
+            browser gives for them, its time zone and which ones it wants;
           </li>
           <li>
             earlier versions of the text of your notes and tasks, one per
@@ -123,9 +123,9 @@ function Privacy() {
           </li>
           <li>
             Your browser’s <strong>push service</strong> (Google for Chrome,
-            Mozilla for Firefox, Apple for Safari) delivers the morning reminder
-            if you turn it on. The reminder is encrypted for your device; the
-            service only sees that a message goes to it, and when.
+            Mozilla for Firefox, Apple for Safari) delivers notifications if you
+            turn them on. They are encrypted for your device; the service only
+            sees that a message goes to it, and when.
           </li>
           <li>
             <strong>Open Food Facts</strong> (a non-profit in France) looks up

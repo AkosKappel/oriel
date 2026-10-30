@@ -264,7 +264,7 @@ export const noteVersion = pgTable(
   (t) => [index().on(t.itemId, t.savedAt)],
 )
 
-// A device that said yes to the morning reminder. The endpoint is unique, so a device that
+// A device that said yes to notifications. The endpoint is unique, so a device that
 // changes hands (another user signs in) moves to the new user.
 export const pushSubscription = pgTable(
   'push_subscription',
@@ -280,6 +280,11 @@ export const pushSubscription = pgTable(
     timeZone: text().notNull(),
     // The device's day the last reminder went out, so restarts never send twice.
     remindedOn: date({ mode: 'string' }),
+    // What the device asked for: the morning reminder, and changes other members make.
+    reminders: boolean().default(true).notNull(),
+    changes: boolean().default(false).notNull(),
+    // Changes up to this moment have been notified (or were made before the device asked).
+    changesSince: timestamp({ withTimezone: true }).defaultNow().notNull(),
     ...timestamps,
   },
   (t) => [index().on(t.userId)],
