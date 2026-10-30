@@ -73,6 +73,10 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Moving an item between spaces re-inserts it and its entries (`moveItem`), so the server checks edit rights in both spaces.
 - Shared spaces have no owner column: deleting a user does not delete them. Better Auth's `deleteUser.beforeDelete` calls `releaseSpaces`, which deletes spaces where the user is the only member and refuses while the user is the only owner of a space others use.
 
+## Reminders
+
+- Morning reminders are Web Push (`web-push`): a device opts in from Settings (`src/components/reminder-setting.tsx`) and stores its subscription and time zone (`push_subscription`). `src/server.ts` runs `runReminders` (`src/server/reminders.ts`) every 15 minutes; from 08:00 in the device's zone it sends that day's open tasks once (`reminded_on`). The pure rules are in `src/server/reminder-rules.ts`. Off without `VAPID_*` keys, and the service worker that shows them runs only in production builds.
+
 ## Security
 
 - Production pages get a CSP with a per-request nonce (`getRouter` in `src/router.tsx`, header from the root route's `headers`, policy in `src/lib/security-headers.ts`); Nitro route rules add the other headers to every response. Inline scripts must carry the router's nonce: use `ScriptOnce`, never `dangerouslySetInnerHTML`. New external origins need a `connect-src` entry.

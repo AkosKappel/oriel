@@ -81,6 +81,10 @@ function Privacy() {
             the spaces you belong to, your role in each, and open invites.
           </li>
           <li>
+            for each device where you turn on the morning reminder, the address
+            its browser gives for notifications and its time zone;
+          </li>
+          <li>
             earlier versions of the text of your notes and tasks, one per
             editing session, so you can restore them;
           </li>
@@ -118,6 +122,12 @@ function Privacy() {
             name and email address as the reply-to address.
           </li>
           <li>
+            Your browser’s <strong>push service</strong> (Google for Chrome,
+            Mozilla for Firefox, Apple for Safari) delivers the morning reminder
+            if you turn it on. The reminder is encrypted for your device; the
+            service only sees that a message goes to it, and when.
+          </li>
+          <li>
             <strong>Open Food Facts</strong> (a non-profit in France) looks up
             the name of a product when you scan its barcode into a list. Only
             then does your browser contact it, sending the barcode number and,
@@ -125,8 +135,9 @@ function Privacy() {
           </li>
         </ul>
         <p>
-          Tailscale and Resend are based in the United States, so their data may
-          be processed there. No other services receive your data.
+          Tailscale, Resend and the push services of Google, Mozilla and Apple
+          are based in the United States, so their data may be processed there.
+          No other services receive your data.
         </p>
       </TextSection>
 

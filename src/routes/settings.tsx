@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { type ReactNode, useEffect, useId, useState } from 'react'
 import { Button, FileTrigger } from 'react-aria-components'
 import { toast } from 'sonner'
+import { ReminderSetting } from '#/components/reminder-setting'
 import { SubPage } from '#/components/sub-page'
 import { ChoiceGroup } from '#/components/ui/choice-group'
 import {
@@ -82,6 +83,12 @@ function SettingsPage() {
           apps.
         </p>
       </Section>
+
+      {account && (
+        <ReminderSetting
+          wrap={(setting) => <Section title="Reminders">{setting}</Section>}
+        />
+      )}
 
       <Section title="Account">
         {account ? (

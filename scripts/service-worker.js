@@ -69,3 +69,36 @@ self.addEventListener('fetch', (event) => {
     }),
   )
 })
+
+// Morning reminders (src/server/reminders.ts): the server sends title, body, a page to open and a
+// tag, so a later reminder replaces an unread one instead of piling up.
+self.addEventListener('push', (event) => {
+  const message = event.data?.json() ?? {}
+  event.waitUntil(
+    self.registration.showNotification(message.title ?? 'Oriel', {
+      body: message.body,
+      tag: message.tag,
+      icon: '/icon-192.png',
+      data: { url: message.url ?? '/app' },
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = new URL(
+    event.notification.data?.url ?? '/app',
+    self.location.origin,
+  )
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windows) => {
+        const open = windows.find(
+          (client) => new URL(client.url).origin === url.origin,
+        )
+        if (open) return open.focus().then(() => open.navigate(url.href))
+        return self.clients.openWindow(url.href)
+      }),
+  )
+})

@@ -48,6 +48,7 @@
     "react-dom": "^19.3.1",
     "sonner": "^2.0.8",
     "tailwindcss": "^4.3.3",
+    "web-push": "^3.6.7",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -63,6 +64,7 @@
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^6.1.2",
     "better-sqlite3": "^13.0.3",
     "drizzle-kit": "^0.31.11",

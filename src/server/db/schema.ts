@@ -263,3 +263,24 @@ export const noteVersion = pgTable(
   },
   (t) => [index().on(t.itemId, t.savedAt)],
 )
+
+// A device that said yes to the morning reminder. The endpoint is unique, so a device that
+// changes hands (another user signs in) moves to the new user.
+export const pushSubscription = pgTable(
+  'push_subscription',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    endpoint: text().notNull().unique(),
+    p256dh: text().notNull(),
+    auth: text().notNull(),
+    // The device's IANA time zone, so the reminder comes in its morning.
+    timeZone: text().notNull(),
+    // The device's day the last reminder went out, so restarts never send twice.
+    remindedOn: date({ mode: 'string' }),
+    ...timestamps,
+  },
+  (t) => [index().on(t.userId)],
+)
