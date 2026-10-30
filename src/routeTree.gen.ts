@@ -25,6 +25,7 @@ import { Route as SitePrivacyRouteImport } from './routes/_site/privacy'
 import { Route as SiteTermsRouteImport } from './routes/_site/terms'
 import { Route as ApiClientErrorRouteImport } from './routes/api/client-error'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiPresenceRouteImport } from './routes/api/presence'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as SpacesIndexRouteImport } from './routes/spaces.index'
 import { Route as SpacesSpaceIdRouteImport } from './routes/spaces.$spaceId'
@@ -111,6 +112,11 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPresenceRoute = ApiPresenceRouteImport.update({
+  id: '/api/presence',
+  path: '/api/presence',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InviteTokenRoute = InviteTokenRouteImport.update({
   id: '/invite/$token',
   path: '/invite/$token',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof SiteTermsRoute
   '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/presence': typeof ApiPresenceRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/spaces/': typeof SpacesIndexRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/terms': typeof SiteTermsRoute
   '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/presence': typeof ApiPresenceRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/spaces': typeof SpacesIndexRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_site/terms': typeof SiteTermsRoute
   '/api/client-error': typeof ApiClientErrorRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/presence': typeof ApiPresenceRoute
   '/invite/$token': typeof InviteTokenRoute
   '/spaces/$spaceId': typeof SpacesSpaceIdRoute
   '/_site/': typeof SiteIndexRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/api/client-error'
     | '/api/health'
+    | '/api/presence'
     | '/invite/$token'
     | '/spaces/$spaceId'
     | '/spaces/'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/api/client-error'
     | '/api/health'
+    | '/api/presence'
     | '/invite/$token'
     | '/spaces/$spaceId'
     | '/spaces'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/_site/terms'
     | '/api/client-error'
     | '/api/health'
+    | '/api/presence'
     | '/invite/$token'
     | '/spaces/$spaceId'
     | '/_site/'
@@ -303,6 +315,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   ApiClientErrorRoute: typeof ApiClientErrorRoute
   ApiHealthRoute: typeof ApiHealthRoute
+  ApiPresenceRoute: typeof ApiPresenceRoute
   InviteTokenRoute: typeof InviteTokenRoute
   SpacesSpaceIdRoute: typeof SpacesSpaceIdRoute
   SpacesIndexRoute: typeof SpacesIndexRoute
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/presence': {
+      id: '/api/presence'
+      path: '/api/presence'
+      fullPath: '/api/presence'
+      preLoaderRoute: typeof ApiPresenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invite/$token': {
       id: '/invite/$token'
       path: '/invite/$token'
@@ -521,6 +541,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   ApiClientErrorRoute: ApiClientErrorRoute,
   ApiHealthRoute: ApiHealthRoute,
+  ApiPresenceRoute: ApiPresenceRoute,
   InviteTokenRoute: InviteTokenRoute,
   SpacesSpaceIdRoute: SpacesSpaceIdRoute,
   SpacesIndexRoute: SpacesIndexRoute,

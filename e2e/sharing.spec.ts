@@ -42,6 +42,13 @@ test('a viewer joins a shared space by link and sees it read-only', async ({
   )
   await expect(viewer.getByRole('button', { name: /trash/ })).toBeHidden()
 
+  // Both on the same note: each sees the other is there, and Ben sees Anna leave.
+  await rows(owner).filter({ hasText: 'Dinner on Sunday' }).click()
+  await expect(owner.getByText('Ben is here too')).toBeVisible()
+  await expect(viewer.getByText('Anna is here too')).toBeVisible()
+  await owner.goto(`/app?space=${spaceId}`)
+  await expect(viewer.getByText('Anna is here too')).toBeHidden()
+
   // What another member adds while Ben looks on is announced to his screen reader.
   await capture(owner, 'Note', 'Bring dessert')
   await expect(

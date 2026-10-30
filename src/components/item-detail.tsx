@@ -40,6 +40,7 @@ import type { Store } from '#/data/store'
 import { useAccount } from '#/lib/account'
 import { formatDay, formatShortDate, localDay, snoozeDays } from '#/lib/dates'
 import { renderMarkdown } from '#/lib/markdown'
+import { presenceText, usePresence } from '#/lib/presence'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { cn } from '#/lib/utils'
 import { createSpace } from '#/server/sharing-functions'
@@ -127,6 +128,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
     userId && userId !== account?.userId
       ? space?.members.find((member) => member.user_id === userId)?.member_name
       : undefined
+  const here = presenceText(
+    usePresence(item.id, Boolean(account && space && !space.personal)),
+  )
   const author = otherName(item.created_by)
   const doneBy = item.completed_at ? otherName(item.completed_by) : undefined
   const deletedBy = item.deleted_at ? otherName(item.deleted_by) : undefined
@@ -416,6 +420,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           {pinned && ' · Pinned'}
           {archived && ' · Archived'}
           {!canChange && ' · View only'}
+          {/* Always there, so screen readers hear who arrives. */}
+          <span role="status">{here && ` · ${here}`}</span>
         </p>
         <div className="relative">
           {item.type === 'task' && (

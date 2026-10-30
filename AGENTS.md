@@ -73,6 +73,10 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Moving an item between spaces re-inserts it and its entries (`moveItem`), so the server checks edit rights in both spaces.
 - Shared spaces have no owner column: deleting a user does not delete them. Better Auth's `deleteUser.beforeDelete` calls `releaseSpaces`, which deletes spaces where the user is the only member and refuses while the user is the only owner of a space others use.
 
+## Presence
+
+- `/api/presence?item=` is a server-sent event stream of the other members who have a shared item open (`src/server/presence.ts`, in memory, one app process; members only, at most 20 streams per user, a heartbeat every 25 s, `X-Accel-Buffering: no` for nginx). `usePresence` (`src/lib/presence.ts`) shows "Anna is here too" on the item page. The service worker leaves `/api/` alone.
+
 ## Notifications
 
 - Notifications are Web Push (`web-push`): a device opts in from Settings (`src/components/notification-settings.tsx`) to the morning reminder, changes by others, or both, stored with its time zone (`push_subscription`). `src/server.ts` runs `runNotifications` (`src/server/notifications.ts`) every 5 minutes: from 08:00 in the device's zone it sends that day's open tasks once (`reminded_on`), and what other members added or checked off (from `activity`, at least 2 minutes old, since `changes_since`) as one notification. The pure rules are in `src/server/notification-rules.ts`. Off without `VAPID_*` keys, and the service worker that shows them runs only in production builds.

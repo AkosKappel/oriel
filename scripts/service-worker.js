@@ -42,6 +42,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return
   // Sync shares the origin in production (nginx /powersync/); it must never come from a cache.
   if (url.pathname.startsWith('/powersync/')) return
+  // API calls are live by nature (presence is a stream that never ends); never cache them.
+  if (url.pathname.startsWith('/api/')) return
 
   // Pages: the server when online; offline, a public page as cached, anything else the app shell.
   if (request.mode === 'navigate') {
