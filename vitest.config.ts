@@ -8,6 +8,10 @@ if (existsSync('.env')) process.loadEnvFile()
 export default defineConfig({
   test: {
     include: ['src/**/*.test.{ts,tsx}'],
+    // Each data test opens real SQLite in a worker thread; on a busy machine (this one also runs
+    // live apps) that alone took over the 10 s default.
+    hookTimeout: 30_000,
+    testTimeout: 20_000,
     passWithNoTests: true,
   },
 })
