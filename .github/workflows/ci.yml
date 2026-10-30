@@ -103,18 +103,27 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # The action keeps its reports in .lighthouseci/, which each run starts afresh: upload after each.
       - uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
         with:
           configPath: ./lighthouserc.json
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-desktop
+          path: .lighthouseci/
+          include-hidden-files: true
       # Lighthouse's default mobile emulation (slow 4G, 4x CPU), reported but not enforced yet.
-      - uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
+      - if: ${{ !cancelled() }}
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # 12.6.2
         with:
           configPath: ./lighthouserc.mobile.json
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: lighthouse-report
-          path: lighthouse-report/
+          name: lighthouse-mobile
+          path: .lighthouseci/
+          include-hidden-files: true
 
   image:
     needs: [check, e2e, lighthouse]
