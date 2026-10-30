@@ -23,8 +23,12 @@ export const auth = betterAuth({
     sendResetPassword: async ({ user, url }) => {
       await sendPasswordResetEmail({ to: user.email, url })
     },
-    // Whoever knew the old password is signed out everywhere.
+    // Whoever knew the old password is signed out everywhere, and a passkey they may have added
+    // with that access stops working too. The owner adds their own passkeys again.
     revokeSessionsOnPasswordReset: true,
+    onPasswordReset: async ({ user }) => {
+      await db.delete(schema.passkey).where(eq(schema.passkey.userId, user.id))
+    },
   },
   // Always on: Better Auth's default enables it only when NODE_ENV is `production`, which the
   // server does not set by itself. Per client IP from `X-Forwarded-For`, which the Tailscale

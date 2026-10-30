@@ -283,5 +283,7 @@
   "acct_passkey_remove": "Remove",
   "acct_passkey_remove_label": "Remove the passkey {name}, added {date}",
   "acct_passkey_removed": "Removed the passkey {name}. You can also delete it from the device's password manager.",
-  "acct_passkey_remove_failed": "Could not remove the passkey."
+  "acct_passkey_remove_failed": "Could not remove the passkey.",
+  "acct_passkeys_failed": "Could not load your passkeys. Reload the page to try again.",
+  "acct_passkeys_unsupported": "This browser cannot use passkeys."
 }

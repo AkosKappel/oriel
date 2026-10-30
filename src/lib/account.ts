@@ -84,7 +84,12 @@ const authErrors: Record<string, () => string> = {
   ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED: m.auth_passkey_exists,
   PASSKEY_NOT_FOUND: m.auth_passkey_unknown,
   AUTHENTICATION_FAILED: m.auth_passkey_unknown,
+  CHALLENGE_NOT_FOUND: m.error_try_again,
 }
+
+/** Older browsers and some in-app browsers have no WebAuthn: passkeys are not offered there. */
+export const passkeysSupported = () =>
+  typeof window.PublicKeyCredential === 'function'
 
 // The browser's passkey dialog was closed, timed out or replaced by another one: nothing to say.
 const passkeyCancellations = new Set([

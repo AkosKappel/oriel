@@ -24,6 +24,7 @@ import {
   changePassword,
   deleteAccount,
   passkeyCancelled,
+  passkeysSupported,
   pendingChanges,
   signOut,
   useAccount,
@@ -214,8 +215,19 @@ type Passkey = { id: string; name?: string | null; createdAt: Date }
 
 function Passkeys() {
   const online = useOnline()
-  const { data: passkeys, isPending } = authClient.useListPasskeys()
+  const {
+    data: passkeys,
+    error: listError,
+    isPending,
+    refetch,
+  } = authClient.useListPasskeys()
   const [adding, setAdding] = useState(false)
+  const [removing, setRemoving] = useState<string | null>(null)
+
+  // The list loads once with the page; a page opened offline loads it when the connection is back.
+  useEffect(() => {
+    if (online) refetch()
+  }, [online, refetch])
 
   async function add() {
     setAdding(true)
@@ -232,7 +244,9 @@ function Passkeys() {
 
   async function remove(passkey: Passkey) {
     const name = passkey.name ?? m.device_unknown()
+    setRemoving(passkey.id)
     const { error } = await authClient.passkey.deletePasskey({ id: passkey.id })
+    setRemoving(null)
     toast(
       error ? m.acct_passkey_remove_failed() : m.acct_passkey_removed({ name }),
     )
@@ -249,6 +263,10 @@ function Passkeys() {
       {!online ? (
         <p className="text-sm text-muted-foreground">
           {m.acct_passkeys_offline()}
+        </p>
+      ) : listError ? (
+        <p className="text-sm text-muted-foreground">
+          {m.acct_passkeys_failed()}
         </p>
       ) : isPending ? null : (
         <>
@@ -269,6 +287,7 @@ function Passkeys() {
                   </span>
                   <Button
                     onPress={() => void remove(passkey)}
+                    isPending={removing === passkey.id}
                     aria-label={m.acct_passkey_remove_label({ name, date })}
                     className={`${quietButton} -mr-4 text-muted-foreground hover:text-foreground`}
                   >
@@ -278,13 +297,19 @@ function Passkeys() {
               )
             })}
           </ul>
-          <Button
-            onPress={() => void add()}
-            isPending={adding}
-            className={`${quietButton} -ml-4 w-fit underline underline-offset-4 data-pending:opacity-60`}
-          >
-            {m.acct_passkey_add()}
-          </Button>
+          {passkeysSupported() ? (
+            <Button
+              onPress={() => void add()}
+              isPending={adding}
+              className={`${quietButton} -ml-4 w-fit underline underline-offset-4 data-pending:opacity-60`}
+            >
+              {m.acct_passkey_add()}
+            </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {m.acct_passkeys_unsupported()}
+            </p>
+          )}
         </>
       )}
     </section>

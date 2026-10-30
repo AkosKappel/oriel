@@ -113,7 +113,7 @@
   "auth_too_long": "Toto heslo je príliš dlhé.",
   "auth_bad_email": "Skontroluj e-mailovú adresu.",
   "auth_too_many": "Príliš veľa pokusov. Počkaj minútu a skús znova.",
-  "auth_passkey_not_fresh": "Z bezpečnostných dôvodov môžeš prístupový kľúč pridať len po prihlásení za posledný deň. Odhlás sa, znova sa prihlás a skús to ešte raz.",
+  "auth_passkey_not_fresh": "Z bezpečnostných dôvodov môžeš prístupový kľúč pridať, len ak si sa prihlásil počas posledného dňa. Odhlás sa, znova sa prihlás a skús to ešte raz.",
   "auth_passkey_exists": "Toto zariadenie už má prístupový kľúč pre Oriel.",
   "auth_passkey_unknown": "Tento prístupový kľúč tu nepoznáme. Prihlás sa radšej heslom.",
   "device_unknown": "Neznáme zariadenie",
@@ -289,5 +289,7 @@
   "acct_passkey_remove": "Odstrániť",
   "acct_passkey_remove_label": "Odstrániť prístupový kľúč {name}, pridaný {date}",
   "acct_passkey_removed": "Prístupový kľúč {name} je odstránený. Môžeš ho vymazať aj zo správcu hesiel v zariadení.",
-  "acct_passkey_remove_failed": "Prístupový kľúč sa nepodarilo odstrániť."
+  "acct_passkey_remove_failed": "Prístupový kľúč sa nepodarilo odstrániť.",
+  "acct_passkeys_failed": "Prístupové kľúče sa nepodarilo načítať. Obnov stránku a skús to znova.",
+  "acct_passkeys_unsupported": "Tento prehliadač nevie používať prístupové kľúče."
 }

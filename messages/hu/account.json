@@ -79,7 +79,7 @@
   "auth_too_long": "Ez a jelszó túl hosszú.",
   "auth_bad_email": "Ellenőrizd az e-mail-címet.",
   "auth_too_many": "Túl sok próbálkozás. Várj egy percet, és próbáld újra.",
-  "auth_passkey_not_fresh": "Biztonsági okból azonosítókulcsot csak az elmúlt napon belüli bejelentkezés után adhatsz hozzá. Jelentkezz ki, majd be újra, és próbáld meg még egyszer.",
+  "auth_passkey_not_fresh": "Biztonsági okból azonosítókulcsot csak az elmúlt napon belüli bejelentkezés után adhatsz hozzá. Jelentkezz ki, majd jelentkezz be újra, és próbáld meg még egyszer.",
   "auth_passkey_exists": "Ezen az eszközön már van azonosítókulcsod az Orielhez.",
   "auth_passkey_unknown": "Ezt az azonosítókulcsot itt nem ismerjük. Jelentkezz be a jelszavaddal.",
   "device_unknown": "Ismeretlen eszköz",
@@ -221,5 +221,7 @@
   "acct_passkey_remove": "Eltávolítás",
   "acct_passkey_remove_label": "A(z) {name} azonosítókulcs eltávolítása (hozzáadva: {date})",
   "acct_passkey_removed": "A(z) {name} azonosítókulcs eltávolítva. Az eszköz jelszókezelőjéből is törölheted.",
-  "acct_passkey_remove_failed": "Nem sikerült eltávolítani az azonosítókulcsot."
+  "acct_passkey_remove_failed": "Nem sikerült eltávolítani az azonosítókulcsot.",
+  "acct_passkeys_failed": "Nem sikerült betölteni az azonosítókulcsaidat. Töltsd újra az oldalt, és próbáld meg újra.",
+  "acct_passkeys_unsupported": "Ez a böngésző nem tud azonosítókulcsot használni."
 }

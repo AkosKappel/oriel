@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useRef, useState } from 'react'
 import { Button, Form } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
@@ -9,6 +9,7 @@ import {
   completeSignIn,
   DifferentAccountError,
   passkeyCancelled,
+  passkeysSupported,
 } from '#/lib/account'
 import { authClient } from '#/lib/auth-client'
 import { oneOf, text } from '#/lib/search-params'
@@ -37,6 +38,13 @@ export const Route = createFileRoute('/sign-in')({
   component: SignIn,
 })
 
+// Errors that come after a person picked a passkey, so asking again cannot loop by itself.
+const afterPick = new Set([
+  'CHALLENGE_NOT_FOUND',
+  'PASSKEY_NOT_FOUND',
+  'AUTHENTICATION_FAILED',
+])
+
 function SignIn() {
   const { mode = 'create', redirect } = Route.useSearch()
   const creating = mode === 'create'
@@ -44,28 +52,42 @@ function SignIn() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const mounted = useRef(true)
+  useEffect(
+    () => () => {
+      mounted.current = false
+    },
+    [],
+  )
+
   /**
-   * Runs one way of signing in, then finishes it. A quiet attempt (passkey autofill, which waits
-   * for the person to pick one) leaves the buttons usable.
+   * Runs one way of signing in, then finishes it. Returns true once signed in, otherwise the
+   * error's code. A quiet attempt (passkey autofill, which waits for the person to pick one) keeps
+   * the buttons usable until a passkey is picked.
    */
   async function signIn(
     attempt: () => Promise<{
       error: { code?: string; message?: string; status?: number } | null
     }>,
     quiet = false,
-  ) {
-    if (!quiet) {
+  ): Promise<true | string | undefined> {
+    let holding = !quiet
+    if (holding) {
       setError(null)
       setBusy(true)
     }
     try {
       const { error: authError } = await attempt()
       if (authError) {
-        if (!passkeyCancelled(authError)) {
+        // An expired challenge only means the page sat open a while; autofill asks again.
+        const expired = quiet && authError.code === 'CHALLENGE_NOT_FOUND'
+        if (!passkeyCancelled(authError) && !expired) {
           setError(authErrorMessage(authError, m.error_try_again()))
         }
-        return
+        return authError.code
       }
+      holding = true
+      setBusy(true)
       const claimed = await completeSignIn()
       toast(
         claimed > 0
@@ -73,6 +95,7 @@ function SignIn() {
           : m.signin_done(),
       )
       await navigate({ to: redirect ?? '/app' })
+      return true
     } catch (caught) {
       console.error('Sign-in failed', caught)
       setError(
@@ -82,9 +105,35 @@ function SignIn() {
             ? m.error_something()
             : m.signin_offline(),
       )
+      return undefined
     } finally {
-      if (!quiet) setBusy(false)
+      if (holding) setBusy(false)
     }
+  }
+
+  /**
+   * Offers saved passkeys in the email field's suggestions (conditional mediation). The request
+   * waits until one is picked and is replaced by the passkey button's own request. After leaving
+   * the page it stays pending, harmlessly, until another passkey request replaces it.
+   */
+  async function offerPasskeys() {
+    if (
+      !(await window.PublicKeyCredential?.isConditionalMediationAvailable?.())
+    )
+      return
+    for (;;) {
+      const result = await signIn(
+        () => authClient.signIn.passkey({ autoFill: true }),
+        true,
+      )
+      // Ask again only after a picked passkey failed; anything else would repeat at once.
+      if (!mounted.current || !afterPick.has(result as string)) return
+    }
+  }
+
+  async function signInWithPasskey() {
+    const result = await signIn(() => authClient.signIn.passkey())
+    if (result !== true && mounted.current) void offerPasskeys()
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -103,18 +152,9 @@ function SignIn() {
     )
   }
 
-  // Offers saved passkeys in the email field's suggestions (conditional mediation). The request
-  // waits until one is picked; the passkey button or leaving the page cancels it.
   // biome-ignore lint/correctness/useExhaustiveDependencies: start once per mode
   useEffect(() => {
-    if (creating) return
-    void window.PublicKeyCredential?.isConditionalMediationAvailable?.().then(
-      (available) => {
-        if (available) {
-          void signIn(() => authClient.signIn.passkey({ autoFill: true }), true)
-        }
-      },
-    )
+    if (!creating) void offerPasskeys()
   }, [creating])
 
   return (
@@ -170,9 +210,9 @@ function SignIn() {
         </Button>
       </Form>
 
-      {!creating && (
+      {!creating && passkeysSupported() && (
         <Button
-          onPress={() => void signIn(() => authClient.signIn.passkey())}
+          onPress={() => void signInWithPasskey()}
           isDisabled={busy}
           className="-mt-4 h-11 w-fit text-sm underline underline-offset-4 data-disabled:opacity-60 data-focus-visible:outline-2"
         >

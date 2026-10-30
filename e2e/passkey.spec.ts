@@ -6,15 +6,23 @@ import { expectNoAxeViolations, signUp } from './helpers'
 test('adds a passkey, signs in with it and removes it', async ({ page }) => {
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('WebAuthn.enable')
-  await cdp.send('WebAuthn.addVirtualAuthenticator', {
-    options: {
-      protocol: 'ctap2',
-      transport: 'internal',
-      hasResidentKey: true,
-      hasUserVerification: true,
-      isUserVerified: true,
+  const { authenticatorId } = await cdp.send(
+    'WebAuthn.addVirtualAuthenticator',
+    {
+      options: {
+        protocol: 'ctap2',
+        transport: 'internal',
+        hasResidentKey: true,
+        hasUserVerification: true,
+        isUserVerified: true,
+      },
     },
-  })
+  )
+  const presence = (enabled: boolean) =>
+    cdp.send('WebAuthn.setAutomaticPresenceSimulation', {
+      authenticatorId,
+      enabled,
+    })
 
   await signUp(page, 'Pat')
   await page.goto('/account')
@@ -23,10 +31,15 @@ test('adds a passkey, signs in with it and removes it', async ({ page }) => {
   await expect(page.getByText('Passkey added.')).toBeVisible()
   await expect(passkeys.getByRole('listitem')).toHaveCount(1)
 
-  // A signed-out browser that still holds the passkey.
+  // A signed-out browser that still holds the passkey. The page also offers it in the email
+  // field's autofill, which the authenticator would answer by itself; the button is tested here.
   await page.context().clearCookies()
+  await presence(false)
   await page.goto('/sign-in?mode=sign-in')
-  await page.getByRole('button', { name: 'Sign in with a passkey' }).click()
+  const button = page.getByRole('button', { name: 'Sign in with a passkey' })
+  await button.waitFor()
+  await presence(true)
+  await button.click()
   await page.waitForURL('/app')
 
   await page.goto('/account')
