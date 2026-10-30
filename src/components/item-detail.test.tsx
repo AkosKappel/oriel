@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { NewItem } from '#/data/schema'
@@ -120,6 +120,24 @@ describe('ItemDetail', () => {
     await user.click(await findUndo('Water plants: next due 12 January'))
     await waitFor(() => expect(item()?.due_on).toBe('2099-01-05'))
     expect(item()?.completed_at).toBeNull()
+  })
+
+  it('offers to archive a list once its last entry is checked', async () => {
+    const user = userEvent.setup()
+    const { id, item } = await openItem({ type: 'list', title: 'Groceries' })
+    await store.addEntries(id, ['Milk', 'Eggs'])
+
+    await user.click(
+      await screen.findByRole('checkbox', { name: 'Check Milk' }),
+    )
+    expect(screen.queryByText('All done. Archive the list?')).toBeNull()
+
+    await user.click(screen.getByRole('checkbox', { name: 'Check Eggs' }))
+    const offer = (
+      await screen.findByText('All done. Archive the list?')
+    ).closest('li') as HTMLElement
+    await user.click(within(offer).getByRole('button', { name: 'Archive' }))
+    await waitFor(() => expect(item()?.archived_at).not.toBeNull())
   })
 
   it('archives an item and moves it to the trash with Undo', async () => {

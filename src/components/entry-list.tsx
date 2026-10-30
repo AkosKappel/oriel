@@ -35,12 +35,15 @@ export function EntryList({
   itemId,
   readOnly = false,
   checkedBy = () => undefined,
+  onAllDone,
 }: {
   store: Store
   itemId: string
   readOnly?: boolean
   /** The name to show beside an entry someone else checked. */
   checkedBy?: (userId: string | null) => string | undefined
+  /** Called when the user checks the last open entry here, not when another member does. */
+  onAllDone?: () => void
 }) {
   const { data, isReady } = useLiveQuery({
     query: (q) =>
@@ -138,6 +141,9 @@ export function EntryList({
             readOnly={readOnly}
             movable={!readOnly && !entry.completed_at && openEntries.length > 1}
             onMove={(to) => void move(openEntries.indexOf(entry), to)}
+            onCheck={(selected) => {
+              if (selected && openEntries.length === 1) onAllDone?.()
+            }}
             checker={
               entry.completed_at ? checkedBy(entry.completed_by) : undefined
             }
@@ -156,6 +162,7 @@ function EntryRow({
   readOnly,
   movable,
   onMove,
+  onCheck,
   checker,
 }: {
   store: Store
@@ -166,6 +173,7 @@ function EntryRow({
   movable: boolean
   /** Moves this entry to an index among the open entries. */
   onMove: (to: number) => void
+  onCheck: (selected: boolean) => void
   checker?: string
 }) {
   const done = entry.completed_at !== null
@@ -202,9 +210,10 @@ function EntryRow({
         className="absolute -left-[2.375rem]"
         isSelected={done}
         isDisabled={readOnly}
-        onChange={(selected) =>
+        onChange={(selected) => {
           void store.setEntryCompleted(entry.id, selected)
-        }
+          onCheck(selected)
+        }}
         aria-label={m.entry_check({ text: entry.text })}
       />
       <input

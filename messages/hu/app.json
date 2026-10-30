@@ -445,6 +445,7 @@
   "markdown_hint": "Markdown működik: **félkövér**, *dőlt*, # címsor, - lista, [hivatkozás](url).",
   "entries_none": "Még nincs tétel",
   "entries_all_done": "Minden kész",
+  "entries_done_archive": "Minden kész. Archiválod a listát?",
   "entries_left": "{total}-ből {open} maradt",
   "entries_uncheck_all": "Minden pipa levétele",
   "entries_clear_checked": "Kipipáltak törlése",

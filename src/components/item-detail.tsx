@@ -569,6 +569,17 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
             itemId={item.id}
             readOnly={!editable}
             checkedBy={otherName}
+            onAllDone={
+              archived
+                ? undefined
+                : () =>
+                    toast(m.entries_done_archive(), {
+                      action: {
+                        label: m.archive(),
+                        onClick: () => void archive(true),
+                      },
+                    })
+            }
           />
         ) : (
           <BodyField

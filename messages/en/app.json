@@ -449,6 +449,7 @@
   "markdown_hint": "Markdown works: **bold**, *italic*, # heading, - list, [link](url).",
   "entries_none": "No items yet",
   "entries_all_done": "All done",
+  "entries_done_archive": "All done. Archive the list?",
   "entries_left": "{open} of {total} left",
   "entries_uncheck_all": "Uncheck all",
   "entries_clear_checked": "Clear checked",

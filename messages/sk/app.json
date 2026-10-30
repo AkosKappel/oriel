@@ -463,6 +463,7 @@
   "markdown_hint": "Funguje Markdown: **tučné**, *kurzíva*, # nadpis, - zoznam, [odkaz](url).",
   "entries_none": "Zatiaľ žiadne položky",
   "entries_all_done": "Všetko hotové",
+  "entries_done_archive": "Všetko hotové. Archivovať zoznam?",
   "entries_left": "Zostáva {open} z {total}",
   "entries_uncheck_all": "Odznačiť všetko",
   "entries_clear_checked": "Vymazať označené",
