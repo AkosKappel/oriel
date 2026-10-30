@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { itemToText, parseExport, toJson, toMarkdown } from './export'
+import {
+  itemToText,
+  parseExport,
+  toCalendar,
+  toJson,
+  toMarkdown,
+} from './export'
 import type { Entry, Item } from './schema'
 
 const timestamp = '2026-10-01T00:00:00.000Z'
@@ -114,5 +120,74 @@ describe('parseExport', () => {
       archived_at: null,
       deleted_at: null,
     })
+  })
+})
+
+describe('toCalendar', () => {
+  const exportedAt = new Date('2026-10-30T09:15:00.000Z')
+
+  it('turns open tasks with a due day into all-day events', () => {
+    const ics = toCalendar(
+      [
+        item({
+          id: 'vet',
+          type: 'task',
+          title: 'Call the vet; ask, then book',
+          body: 'Before\nFriday',
+          due_on: '2026-10-31',
+        }),
+        item({ id: 'no-day', type: 'task' }),
+        item({
+          id: 'done',
+          type: 'task',
+          due_on: '2026-11-02',
+          completed_at: timestamp,
+        }),
+        item({
+          id: 'trashed',
+          type: 'task',
+          due_on: '2026-11-02',
+          deleted_at: timestamp,
+        }),
+        item({ id: 'note', type: 'note', due_on: '2026-11-02' }),
+      ],
+      exportedAt,
+    )
+
+    expect(ics.split('\r\n')).toEqual([
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Oriel//Tasks//EN',
+      'CALSCALE:GREGORIAN',
+      'BEGIN:VEVENT',
+      'UID:vet@oriel',
+      'DTSTAMP:20261030T091500Z',
+      'DTSTART;VALUE=DATE:20261031',
+      'DTEND;VALUE=DATE:20261101',
+      'SUMMARY:Call the vet\\; ask\\, then book',
+      'DESCRIPTION:Before\\nFriday',
+      'END:VEVENT',
+      'END:VCALENDAR',
+      '',
+    ])
+  })
+
+  it('folds long lines at 75 bytes without splitting a character', () => {
+    const title = 'Á'.repeat(100)
+    const ics = toCalendar(
+      [item({ id: 'long', type: 'task', title, due_on: '2026-10-31' })],
+      exportedAt,
+    )
+    const lines = ics.split('\r\n')
+    const start = lines.findIndex((line) => line.startsWith('SUMMARY:'))
+    const folded = lines.slice(start, lines.indexOf('END:VEVENT'))
+
+    expect(folded.length).toBeGreaterThan(1)
+    for (const line of folded) {
+      expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75)
+    }
+    expect(folded.map((line, i) => (i ? line.slice(1) : line)).join('')).toBe(
+      `SUMMARY:${title}`,
+    )
   })
 })

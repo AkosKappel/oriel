@@ -4,7 +4,13 @@ import { Button, FileTrigger } from 'react-aria-components'
 import { toast } from 'sonner'
 import { SubPage } from '#/components/sub-page'
 import { ChoiceGroup } from '#/components/ui/choice-group'
-import { download, parseExport, toJson, toMarkdown } from '#/data/export'
+import {
+  download,
+  parseExport,
+  toCalendar,
+  toJson,
+  toMarkdown,
+} from '#/data/export'
 import { useAccount } from '#/lib/account'
 import { setTheme, type Theme, useTheme } from '#/lib/theme'
 
@@ -51,6 +57,12 @@ function SettingsPage() {
           >
             Export as Markdown
           </Button>
+          <Button
+            onPress={() => void exportAs('calendar')}
+            className={textButton}
+          >
+            Add due tasks to a calendar
+          </Button>
           <FileTrigger
             acceptedFileTypes={['application/json', '.json']}
             onSelect={(files) => {
@@ -65,7 +77,9 @@ function SettingsPage() {
           Exports hold everything on this device, including shared spaces. JSON
           keeps every detail and can be imported again; Markdown opens in any
           notes app. Imported items join your own space, and items already here
-          are skipped.
+          are skipped. The calendar file holds open tasks with a due day, as
+          all-day events; importing a newer one updates them in most calendar
+          apps.
         </p>
       </Section>
 
@@ -108,7 +122,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-async function exportAs(format: 'json' | 'markdown') {
+async function exportAs(format: 'json' | 'markdown' | 'calendar') {
   try {
     // Settings never needs the local database otherwise, so it loads only for this.
     const { store } = await import('#/data/client')
@@ -123,8 +137,10 @@ async function exportAs(format: 'json' | 'markdown') {
         toJson(items, entries, now),
         'application/json',
       )
-    } else {
+    } else if (format === 'markdown') {
       download(`oriel-${day}.md`, toMarkdown(items, entries), 'text/markdown')
+    } else {
+      download('oriel-tasks.ics', toCalendar(items, now), 'text/calendar')
     }
   } catch (error) {
     console.error('Export failed', error)

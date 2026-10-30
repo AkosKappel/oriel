@@ -69,6 +69,74 @@ export function itemToText(item: Item, entries: Entry[], heading = '') {
 }
 
 /** Hands a file to the browser's download, which also works offline. */
+const encoder = new TextEncoder()
+
+/** Escapes iCalendar text and folds lines at 75 bytes without splitting a character (RFC 5545). */
+function icsLine(name: string, value: string) {
+  const escaped = value
+    .replace(/[\\;,]/g, (c) => `\\${c}`)
+    .replace(/\r?\n/g, '\\n')
+  const lines: string[] = []
+  let line = `${name}:`
+  let bytes = encoder.encode(line).length
+  for (const char of escaped) {
+    const size = encoder.encode(char).length
+    if (bytes + size > 75) {
+      lines.push(line)
+      line = ' '
+      bytes = 1
+    }
+    line += char
+    bytes += size
+  }
+  lines.push(line)
+  return lines.join('\r\n')
+}
+
+const icsDay = (day: string) => day.replaceAll('-', '')
+
+/**
+ * Open tasks with a due day as all-day events, for any calendar app. The task id is the event's
+ * UID, so importing a newer file updates the events instead of doubling them.
+ */
+export function toCalendar(items: Item[], exportedAt: Date) {
+  const stamp = `${exportedAt.toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`
+  const events = items
+    .filter(
+      (item) =>
+        item.type === 'task' &&
+        item.due_on &&
+        !item.completed_at &&
+        !item.archived_at &&
+        !item.deleted_at,
+    )
+    .flatMap((item) => {
+      const due = item.due_on as string
+      // DTEND is exclusive: the next day, at noon so daylight saving cannot move it.
+      const next = new Date(`${due}T12:00:00Z`)
+      next.setUTCDate(next.getUTCDate() + 1)
+      return [
+        'BEGIN:VEVENT',
+        `UID:${item.id}@oriel`,
+        `DTSTAMP:${stamp}`,
+        `DTSTART;VALUE=DATE:${icsDay(due)}`,
+        `DTEND;VALUE=DATE:${icsDay(next.toISOString().slice(0, 10))}`,
+        icsLine('SUMMARY', item.title),
+        ...(item.body ? [icsLine('DESCRIPTION', item.body)] : []),
+        'END:VEVENT',
+      ]
+    })
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Oriel//Tasks//EN',
+    'CALSCALE:GREGORIAN',
+    ...events,
+    'END:VCALENDAR',
+    '',
+  ].join('\r\n')
+}
+
 export function download(filename: string, content: string, type: string) {
   const url = URL.createObjectURL(new Blob([content], { type }))
   const link = document.createElement('a')
