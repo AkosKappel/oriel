@@ -89,6 +89,15 @@ export const listInvites = createServerFn({ method: 'GET' })
     ),
   )
 
+export const listActivity = createServerFn({ method: 'GET' })
+  .middleware([signedIn])
+  .validator(spaceInput)
+  .handler(async ({ data, context }) =>
+    (await sharing.listActivity(context.userId, data.spaceId)).map(
+      ({ at, ...line }) => ({ ...line, at: at.toISOString() }),
+    ),
+  )
+
 export const revokeInvite = createServerFn({ method: 'POST' })
   .middleware([signedIn])
   .validator(z.object({ inviteId: z.uuid() }))

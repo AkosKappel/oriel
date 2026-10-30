@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import {
   bodySchema,
@@ -10,7 +10,14 @@ import {
   titleSchema,
 } from '#/data/schema'
 import { db } from '#/server/db'
-import { entries, items, spaceMember } from '#/server/db/schema'
+import {
+  type ActivityAction,
+  activity,
+  entries,
+  items,
+  space,
+  spaceMember,
+} from '#/server/db/schema'
 
 // Applies a batch from the client's PowerSync upload queue. The server is the authority: every
 // operation is validated and checked against space membership before it touches the database.
@@ -96,6 +103,39 @@ const markedBy = (at: Date | null | undefined, userId: string) =>
   at === undefined ? undefined : at ? userId : null
 const entryPatch = entryFields.partial()
 
+const toggled = (
+  at: Date | null | undefined,
+  on: ActivityAction,
+  off: ActivityAction,
+) => (at === undefined ? undefined : at ? on : off)
+
+/** What a PATCH means to the other members; undefined for changes not worth a line (a pin). */
+function itemAction(patch: z.output<typeof itemPatch>) {
+  const { title, body, type, due_on, status, priority } = patch
+  return (
+    toggled(patch.deleted_at, 'trashed', 'restored') ??
+    toggled(patch.completed_at, 'completed', 'reopened') ??
+    toggled(patch.archived_at, 'archived', 'unarchived') ??
+    ([title, body, type, due_on, status, priority].some((v) => v !== undefined)
+      ? 'edited'
+      : undefined)
+  )
+}
+
+const entryAction = (patch: z.output<typeof entryPatch>) =>
+  toggled(patch.completed_at, 'completed', 'reopened') ??
+  (patch.text !== undefined ? 'edited' : undefined)
+
+// The same change repeated within this time (typing in a note, saved as it goes) is one line.
+const foldWithin = 10 * 60 * 1000
+
+type Log = (
+  spaceId: string,
+  itemId: string,
+  entryId: string | null,
+  action: ActivityAction | undefined,
+) => Promise<void>
+
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
 class Rejected extends Error {
@@ -140,11 +180,50 @@ export async function applyUpload(userId: string, operations: Operation[]) {
       if (!roles.get(spaceId)) throw new Rejected('forbidden')
     }
 
+    // Only shared spaces keep a log: in a personal space the only one acting is its owner.
+    const shared = new Map<string, boolean>()
+    const log: Log = async (spaceId, itemId, entryId, action) => {
+      if (!action) return
+      if (!shared.has(spaceId)) {
+        const [found] = await tx
+          .select({ personalOwnerId: space.personalOwnerId })
+          .from(space)
+          .where(eq(space.id, spaceId))
+        shared.set(spaceId, found !== undefined && !found.personalOwnerId)
+      }
+      if (!shared.get(spaceId)) return
+
+      const [last] = await tx
+        .select()
+        .from(activity)
+        .where(eq(activity.spaceId, spaceId))
+        .orderBy(desc(activity.at))
+        .limit(1)
+      const now = new Date()
+      if (
+        last &&
+        last.userId === userId &&
+        last.itemId === itemId &&
+        last.entryId === entryId &&
+        last.action === action &&
+        now.getTime() - last.at.getTime() < foldWithin
+      ) {
+        await tx
+          .update(activity)
+          .set({ at: now })
+          .where(eq(activity.id, last.id))
+      } else {
+        await tx
+          .insert(activity)
+          .values({ spaceId, userId, itemId, entryId, action, at: now })
+      }
+    }
+
     for (const operation of operations) {
       try {
         // A savepoint per operation: a failure undoes only that operation.
         const outcome = await tx.transaction((savepoint) =>
-          applyOperation(savepoint, operation, userId, requireEditor),
+          applyOperation(savepoint, operation, userId, requireEditor, log),
         )
         if (outcome === 'applied') applied += 1
         else skipped += 1
@@ -184,6 +263,7 @@ async function applyOperation(
   { op, table, id, data }: Operation,
   userId: string,
   requireEditor: (spaceId: string) => Promise<void>,
+  log: Log,
 ): Promise<'applied' | 'skipped'> {
   if (table === 'items') {
     const [existing] = await tx
@@ -217,6 +297,7 @@ async function applyOperation(
         .insert(items)
         .values({ id, createdBy: userId, ...values })
         .onConflictDoUpdate({ target: items.id, set: values })
+      if (!existing) await log(row.space_id, id, null, 'added')
       return 'applied'
     }
 
@@ -247,11 +328,12 @@ async function applyOperation(
     }
     if (!hasValues(values)) return 'skipped'
     await tx.update(items).set(values).where(eq(items.id, id))
+    await log(existing.spaceId, id, null, itemAction(patch))
     return 'applied'
   }
 
   const [existing] = await tx
-    .select({ spaceId: entries.spaceId })
+    .select({ spaceId: entries.spaceId, itemId: entries.itemId })
     .from(entries)
     .where(eq(entries.id, id))
 
@@ -282,6 +364,7 @@ async function applyOperation(
       .insert(entries)
       .values({ id, ...values })
       .onConflictDoUpdate({ target: entries.id, set: values })
+    if (!existing) await log(row.space_id, row.item_id, id, 'added')
     return 'applied'
   }
 
@@ -304,5 +387,6 @@ async function applyOperation(
   }
   if (!hasValues(values)) return 'skipped'
   await tx.update(entries).set(values).where(eq(entries.id, id))
+  await log(existing.spaceId, existing.itemId, id, entryAction(patch))
   return 'applied'
 }

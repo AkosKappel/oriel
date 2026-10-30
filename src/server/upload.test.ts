@@ -5,7 +5,7 @@ import type { Operation } from './upload'
 // Needs the database (`docker compose up -d db` and `npm run db:migrate`).
 describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
   const { db } = await import('#/server/db')
-  const { entries, items, spaceMember, user } = await import(
+  const { activity, entries, items, spaceMember, user } = await import(
     '#/server/db/schema'
   )
   const { ensurePersonalSpace } = await import('#/server/spaces')
@@ -316,5 +316,59 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     expect(
       await db.select().from(entries).where(eq(entries.id, entry.id)),
     ).toEqual([])
+  })
+
+  it('logs changes in a shared space, folding repeated edits, and nothing in a personal one', async () => {
+    const { createSharedSpace, listActivity } = await import('#/server/sharing')
+    const { space } = await import('#/server/db/schema')
+    const home = await createSharedSpace(alice, 'Home')
+    await db
+      .insert(spaceMember)
+      .values({ spaceId: home, userId: bob, role: 'editor', memberName: 'Bob' })
+    try {
+      const list = put('items', itemRow(home, { type: 'list' }))
+      const milk = put('entries', entryRow(list.id, home))
+      await applyUpload(alice, [list, milk])
+      const patch = (
+        table: Operation['table'],
+        id: string,
+        data: Record<string, unknown>,
+      ): Operation => ({ op: 'PATCH', table, id, data })
+      await applyUpload(bob, [
+        patch('entries', milk.id, { completed_at: now }),
+        patch('items', list.id, { body: 'For Saturday' }),
+        patch('items', list.id, { body: 'For Saturday, early' }),
+        patch('items', list.id, { pinned_at: now }),
+      ])
+
+      const lines = await listActivity(bob, home)
+      expect(
+        lines.map(({ action, memberName, entryText }) => ({
+          action,
+          memberName,
+          entryText,
+        })),
+      ).toEqual([
+        { action: 'edited', memberName: 'Bob', entryText: null },
+        { action: 'completed', memberName: 'Bob', entryText: 'Milk' },
+        { action: 'added', memberName: 'Test', entryText: 'Milk' },
+        { action: 'added', memberName: 'Test', entryText: null },
+      ])
+      expect(lines[0].itemTitle).toBe('Call the vet')
+
+      // Nothing kept once the item is gone, and only members may read the log.
+      await applyUpload(alice, [{ op: 'DELETE', table: 'items', id: list.id }])
+      expect(await listActivity(alice, home)).toEqual([])
+      const { id: carol } = await newUser()
+      await expect(listActivity(carol, home)).rejects.toThrow()
+
+      const own = put('items', itemRow(aliceSpace))
+      await applyUpload(alice, [own])
+      expect(
+        await db.select().from(activity).where(eq(activity.itemId, own.id)),
+      ).toEqual([])
+    } finally {
+      await db.delete(space).where(eq(space.id, home))
+    }
   })
 })

@@ -46,6 +46,18 @@ test('a viewer joins a shared space by link and sees it read-only', async ({
     viewer.getByRole('status').filter({ hasText: 'Anna added Bring dessert' }),
   ).toBeAttached()
 
+  // The space page lists who changed what, linking to the item.
+  await viewer.goto(`/spaces/${spaceId}`)
+  const changes = viewer.getByRole('region', { name: 'Recent changes' })
+  await expect(changes.getByRole('listitem').first()).toContainText(
+    'Anna added Bring dessert',
+  )
+  await expectNoAxeViolations(viewer)
+  await changes.getByRole('link', { name: 'Dinner on Sunday' }).click()
+  await expect(viewer.getByRole('textbox', { name: 'Title' })).toHaveValue(
+    'Dinner on Sunday',
+  )
+
   await owner.context().close()
   await viewer.context().close()
 })

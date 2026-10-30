@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { type FormEvent, useCallback, useEffect, useState } from 'react'
 import {
   Button,
@@ -15,11 +15,13 @@ import { ChoiceGroup } from '#/components/ui/choice-group'
 import { TextField } from '#/components/ui/text-field'
 import type { Member, MemberRole } from '#/data/schema'
 import { useAccount } from '#/lib/account'
-import { formatShortDate } from '#/lib/dates'
+import { type ActivitySentence, describeActivity } from '#/lib/activity'
+import { formatShortDate, formatWhen } from '#/lib/dates'
 import { type SpaceView, useSpaces } from '#/lib/spaces'
 import {
   createInvite,
   deleteSpace,
+  listActivity,
   listInvites,
   removeMember,
   renameSpace,
@@ -86,6 +88,7 @@ function SpacePage() {
         <>
           <Members space={space} />
           {owner && <Invites spaceId={space.id} />}
+          <RecentChanges spaceId={space.id} />
           <div className="flex flex-wrap gap-x-6">
             {(!owner || otherOwners) && <Leave space={space} action="leave" />}
             {owner && <Leave space={space} action="delete" />}
@@ -334,6 +337,58 @@ function Invites({ spaceId }: { spaceId: string }) {
               >
                 Revoke
               </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function RecentChanges({ spaceId }: { spaceId: string }) {
+  // Undefined while loading; the log lives on the server only.
+  const [sentences, setSentences] = useState<ActivitySentence[] | 'offline'>()
+
+  useEffect(() => {
+    listActivity({ data: { spaceId } }).then(
+      (lines) => setSentences(describeActivity(lines)),
+      () => setSentences('offline'),
+    )
+  }, [spaceId])
+
+  if (sentences === undefined) return null
+  return (
+    <section aria-labelledby="changes" className="flex flex-col gap-2">
+      <h2 id="changes" className="text-xs text-muted-foreground">
+        Recent changes
+      </h2>
+      {sentences === 'offline' ? (
+        <p className="text-sm text-muted-foreground">
+          Recent changes show when you are online.
+        </p>
+      ) : sentences.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Nothing has changed here yet.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {sentences.map((sentence) => (
+            <li key={sentence.key} className="font-serif text-base">
+              {sentence.before}{' '}
+              <Link
+                to="/items/$itemId"
+                params={{ itemId: sentence.itemId }}
+                className="underline decoration-foreground/25 underline-offset-4 hover:decoration-foreground"
+              >
+                {sentence.title}
+              </Link>
+              {sentence.after && ` ${sentence.after}`}{' '}
+              <time
+                dateTime={sentence.at}
+                className="font-sans text-xs text-muted-foreground"
+              >
+                {formatWhen(sentence.at)}
+              </time>
             </li>
           ))}
         </ul>

@@ -16,6 +16,19 @@ export const formatDay = (date: Date) => dayFormat.format(date)
 export const formatShortDate = (iso: string) =>
   shortFormat.format(new Date(iso))
 
+const timeFormat = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+/** "14:05" today, "27 October" before. */
+export function formatWhen(iso: string, now = new Date()) {
+  const date = new Date(iso)
+  return localDay(date) === localDay(now)
+    ? timeFormat.format(date)
+    : shortFormat.format(date)
+}
+
 /** The device's calendar day as `YYYY-MM-DD`, the form due dates are stored in. */
 export function localDay(date: Date) {
   const pad = (value: number) => String(value).padStart(2, '0')

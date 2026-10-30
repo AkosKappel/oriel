@@ -204,3 +204,41 @@ export const entries = pgTable(
     check('entries_text_length', sql`char_length(${t.text}) between 1 and 500`),
   ],
 )
+
+export const activityActions = [
+  'added',
+  'edited',
+  'completed',
+  'reopened',
+  'archived',
+  'unarchived',
+  'trashed',
+  'restored',
+] as const
+export type ActivityAction = (typeof activityActions)[number]
+
+// Who changed what in a shared space, written by the upload endpoint. It keeps no copies of
+// content: titles and entry text are joined at read time, and the rows go with the item or entry.
+// Never replicated to devices.
+export const activity = pgTable(
+  'activity',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    spaceId: uuid()
+      .notNull()
+      .references(() => space.id, { onDelete: 'cascade' }),
+    userId: text().references(() => user.id, { onDelete: 'set null' }),
+    itemId: uuid()
+      .notNull()
+      .references(() => items.id, { onDelete: 'cascade' }),
+    // Set when the change was to one entry of a list.
+    entryId: uuid().references(() => entries.id, { onDelete: 'cascade' }),
+    action: text().$type<ActivityAction>().notNull(),
+    at: timestamp({ withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index().on(t.spaceId, t.at),
+    index().on(t.itemId),
+    index().on(t.entryId),
+  ],
+)

@@ -1,8 +1,26 @@
 import { createHash, randomBytes } from 'node:crypto'
-import { and, count, eq, gt, inArray, isNotNull, isNull } from 'drizzle-orm'
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+} from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '#/server/db'
-import { invite, space, spaceMember, user } from '#/server/db/schema'
+import {
+  activity,
+  entries,
+  invite,
+  items,
+  space,
+  spaceMember,
+  user,
+} from '#/server/db/schema'
 
 // Sharing rules. Everything here runs on the server with the signed-in user as `actorId`; the
 // server functions in sharing-functions.ts are thin wrappers. Who may do what:
@@ -17,6 +35,7 @@ export const inviteEmailSchema = z.email('Check the email address').max(254)
 export type MemberRole = 'owner' | 'editor' | 'viewer'
 
 const inviteLifetimeDays = 7
+const activityDays = 90
 // Accounts are not email-verified, so emailed invites are capped to keep Oriel from being a spam relay.
 const emailedInvitesPerDay = 20
 
@@ -178,6 +197,45 @@ export async function listInvites(actorId: string, spaceId: string) {
         ),
       )
       .orderBy(invite.createdAt)
+  })
+}
+
+/** The latest changes in a space, for any member. Older lines are dropped on the way. */
+export async function listActivity(actorId: string, spaceId: string) {
+  return db.transaction(async (tx) => {
+    if (!(await roleOf(tx, spaceId, actorId))) {
+      throw new SharingError('You are not a member of this space.')
+    }
+    const cutoff = new Date(Date.now() - activityDays * 24 * 60 * 60 * 1000)
+    await tx
+      .delete(activity)
+      .where(and(eq(activity.spaceId, spaceId), lt(activity.at, cutoff)))
+    return tx
+      .select({
+        id: activity.id,
+        action: activity.action,
+        at: activity.at,
+        userId: activity.userId,
+        // Null once the member has left or deleted their account.
+        memberName: spaceMember.memberName,
+        itemId: items.id,
+        itemTitle: items.title,
+        itemType: items.type,
+        entryText: entries.text,
+      })
+      .from(activity)
+      .innerJoin(items, eq(items.id, activity.itemId))
+      .leftJoin(entries, eq(entries.id, activity.entryId))
+      .leftJoin(
+        spaceMember,
+        and(
+          eq(spaceMember.spaceId, activity.spaceId),
+          eq(spaceMember.userId, activity.userId),
+        ),
+      )
+      .where(eq(activity.spaceId, spaceId))
+      .orderBy(desc(activity.at))
+      .limit(50)
   })
 }
 

@@ -80,6 +80,10 @@ function Privacy() {
           <li>
             the spaces you belong to, your role in each, and open invites.
           </li>
+          <li>
+            in shared spaces, a log of who added, changed, checked or deleted
+            what and when, shown to the space's members.
+          </li>
         </ul>
         <p>
           Your devices download only the spaces you belong to. Members of a
@@ -144,6 +148,10 @@ function Privacy() {
           <li>
             Database backups: one per day, each kept for 14 days, so deleted
             data disappears from backups within 14 days.
+          </li>
+          <li>
+            The log of changes in a shared space: 90 days, and it goes with the
+            item or entry it is about.
           </li>
           <li>Web server logs: 12 months.</li>
           <li>Data on your device: until you sign out or clear it.</li>
