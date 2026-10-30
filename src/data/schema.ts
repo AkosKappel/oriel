@@ -26,6 +26,7 @@ const items = new Table(
     due_on: column.text,
     repeat: column.text,
     snoozed_until: column.text,
+    assigned_to: column.text,
     archived_at: column.text,
     deleted_at: column.text,
     deleted_by: column.text,
@@ -143,6 +144,8 @@ export const itemSchema = z.object({
   repeat: repeatSchema.catch(null),
   // Off home until this day; in a shared space, for every member (like a pin).
   snoozed_until: dueSchema.catch(null),
+  // A member of the item's space a task is for; the server checks the membership.
+  assigned_to: z.string().nullable().catch(null),
   archived_at: z.string().nullable(),
   // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
   deleted_at: z.string().nullable(),

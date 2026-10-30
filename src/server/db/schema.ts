@@ -169,6 +169,7 @@ export const items = pgTable(
     repeat: text(),
     // Off home until this day.
     snoozedUntil: date({ mode: 'string' }),
+    assignedTo: text().references(() => user.id, { onDelete: 'set null' }),
     archivedAt: timestamp({ withTimezone: true }),
     // In the trash since then; devices delete it for good after 30 days.
     deletedAt: timestamp({ withTimezone: true }),

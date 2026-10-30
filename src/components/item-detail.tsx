@@ -455,6 +455,35 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           </div>
         )}
 
+        {item.type === 'task' &&
+          !item.completed_at &&
+          space &&
+          !space.personal && (
+            <ChoiceGroup
+              label="For"
+              showLabel
+              choices={[
+                { value: 'anyone', label: 'Anyone' },
+                ...space.members.map((member) => ({
+                  value: member.user_id,
+                  label:
+                    member.user_id === account?.userId
+                      ? 'Me'
+                      : member.member_name,
+                })),
+              ]}
+              value={item.assigned_to ?? 'anyone'}
+              isDisabled={!editable}
+              onChange={(value) =>
+                void store.setItemAssignee(
+                  item.id,
+                  value === 'anyone' ? null : value,
+                )
+              }
+              className="mb-2"
+            />
+          )}
+
         {item.type === 'task' && !item.completed_at && (
           <ChoiceGroup
             label="Repeats"

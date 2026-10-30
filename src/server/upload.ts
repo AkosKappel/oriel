@@ -62,6 +62,7 @@ const itemFields = z.object({
   due_on: dueSchema,
   repeat: repeatSchema,
   snoozed_until: dueSchema,
+  assigned_to: z.string().min(1).nullable(),
   archived_at: nullableDate,
   deleted_at: nullableDate,
   created_at: date,
@@ -78,6 +79,7 @@ const itemPut = itemFields.extend({
   due_on: dueSchema.default(null),
   repeat: repeatSchema.default(null),
   snoozed_until: dueSchema.default(null),
+  assigned_to: z.string().min(1).nullable().default(null),
   archived_at: nullableDate.default(null),
   deleted_at: nullableDate.default(null),
 })
@@ -116,12 +118,13 @@ const toggled = (
 
 /** What a PATCH means to the other members; undefined for changes not worth a line (a pin). */
 function itemAction(patch: z.output<typeof itemPatch>) {
-  const { title, body, type, due_on, repeat, status, priority } = patch
+  const { title, body, type, due_on, repeat, status, priority, assigned_to } =
+    patch
   return (
     toggled(patch.deleted_at, 'trashed', 'restored') ??
     toggled(patch.completed_at, 'completed', 'reopened') ??
     toggled(patch.archived_at, 'archived', 'unarchived') ??
-    ([title, body, type, due_on, repeat, status, priority].some(
+    ([title, body, type, due_on, repeat, status, priority, assigned_to].some(
       (v) => v !== undefined,
     )
       ? 'edited'
@@ -265,6 +268,22 @@ const isConstraintViolation = (error: unknown) => {
 const hasValues = (values: Record<string, unknown>) =>
   Object.values(values).some((value) => value !== undefined)
 
+/** A task can be for any member of its space, and nobody else. */
+async function requireAssignable(
+  tx: Tx,
+  spaceId: string,
+  assignee: string | null | undefined,
+) {
+  if (!assignee) return
+  const [member] = await tx
+    .select({ userId: spaceMember.userId })
+    .from(spaceMember)
+    .where(
+      and(eq(spaceMember.spaceId, spaceId), eq(spaceMember.userId, assignee)),
+    )
+  if (!member) throw new Rejected('invalid')
+}
+
 async function applyOperation(
   tx: Tx,
   { op, table, id, data }: Operation,
@@ -283,6 +302,7 @@ async function applyOperation(
       const row = parse(itemPut, data)
       await requireEditor(row.space_id)
       if (existing) await requireEditor(existing.spaceId)
+      await requireAssignable(tx, row.space_id, row.assigned_to)
       const values = {
         spaceId: row.space_id,
         type: row.type,
@@ -296,6 +316,7 @@ async function applyOperation(
         dueOn: row.due_on,
         repeat: row.repeat,
         snoozedUntil: row.snoozed_until,
+        assignedTo: row.assigned_to,
         archivedAt: row.archived_at,
         deletedAt: row.deleted_at,
         deletedBy: markedBy(row.deleted_at, userId),
@@ -319,6 +340,7 @@ async function applyOperation(
     }
 
     const patch = parse(itemPatch, data)
+    await requireAssignable(tx, existing.spaceId, patch.assigned_to)
     const values = {
       type: patch.type,
       title: patch.title,
@@ -331,6 +353,7 @@ async function applyOperation(
       dueOn: patch.due_on,
       repeat: patch.repeat,
       snoozedUntil: patch.snoozed_until,
+      assignedTo: patch.assigned_to,
       archivedAt: patch.archived_at,
       deletedAt: patch.deleted_at,
       deletedBy: markedBy(patch.deleted_at, userId),

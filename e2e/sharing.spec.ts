@@ -58,6 +58,16 @@ test('a viewer joins a shared space by link and sees it read-only', async ({
     'Dinner on Sunday',
   )
 
+  // A task the owner gives to Ben shows under his "For me".
+  await capture(owner, 'Task', 'Buy wine')
+  await rows(owner).filter({ hasText: 'Buy wine' }).click()
+  await owner.getByRole('radio', { name: 'Ben' }).check({ force: true })
+  await viewer.goto('/app?type=task')
+  await viewer.getByRole('link', { name: 'For me' }).click()
+  await expect(rows(viewer)).toHaveCount(1)
+  await expect(rows(viewer).first()).toContainText('For you')
+  await expect(rows(viewer).first()).toContainText('Buy wine')
+
   await owner.context().close()
   await viewer.context().close()
 })

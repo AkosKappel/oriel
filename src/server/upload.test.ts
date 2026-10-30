@@ -188,6 +188,33 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     expect(await findItem(task.id)).toMatchObject({ dueOn: null })
   })
 
+  it('assigns a task only to a member of its space', async () => {
+    const task = put('items', itemRow(aliceSpace, { assigned_to: bob }))
+    const own = put('items', itemRow(aliceSpace, { assigned_to: alice }))
+    const result = await applyUpload(alice, [task, own])
+    expect(result.rejected).toMatchObject([{ id: task.id, reason: 'invalid' }])
+    expect(await findItem(own.id)).toMatchObject({ assignedTo: alice })
+
+    await db.insert(spaceMember).values({
+      spaceId: aliceSpace,
+      userId: bob,
+      role: 'viewer',
+      memberName: 'Bob',
+    })
+    try {
+      await applyUpload(alice, [
+        { op: 'PATCH', table: 'items', id: own.id, data: { assigned_to: bob } },
+      ])
+      expect(await findItem(own.id)).toMatchObject({ assignedTo: bob })
+    } finally {
+      await db
+        .delete(spaceMember)
+        .where(
+          and(eq(spaceMember.spaceId, aliceSpace), eq(spaceMember.userId, bob)),
+        )
+    }
+  })
+
   it('stores a snooze day and refuses a time instead of a day', async () => {
     const note = put('items', itemRow(aliceSpace, { type: 'note' }))
     await applyUpload(alice, [note])

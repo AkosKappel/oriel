@@ -215,6 +215,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
      * other, and needs edit rights in both.
      */
     async moveItem(itemId: string, spaceId: string) {
+      await members.preload()
       await database.writeTransaction(async (tx) => {
         const [item] = await tx.getAll<Row>(
           'SELECT * FROM items WHERE id = ?',
@@ -225,7 +226,16 @@ export function createStore(database: CommonPowerSyncDatabase) {
           'SELECT * FROM entries WHERE item_id = ?',
           [itemId],
         )
-        await reinsert(tx, 'items', { ...item, space_id: spaceId })
+        // A task stays for its assignee only if they are in the new space too.
+        const assigneeStays = members.toArray.some(
+          (member) =>
+            member.space_id === spaceId && member.user_id === item.assigned_to,
+        )
+        await reinsert(tx, 'items', {
+          ...item,
+          space_id: spaceId,
+          assigned_to: assigneeStays ? item.assigned_to : null,
+        })
         for (const entry of itemEntries) {
           await reinsert(tx, 'entries', { ...entry, space_id: spaceId })
         }
@@ -334,6 +344,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           due_on: null,
           repeat: null,
           snoozed_until: null,
+          assigned_to: null,
           archived_at: null,
           deleted_at: null,
           deleted_by: null,
@@ -464,6 +475,16 @@ export function createStore(database: CommonPowerSyncDatabase) {
       await saved(
         items.update(id, (draft) => {
           draft.snoozed_until = parsed
+          draft.updated_at = now()
+        }),
+      )
+    },
+
+    /** Gives a task to a member of its space, or to nobody in particular with null. */
+    async setItemAssignee(id: string, userId: string | null) {
+      await saved(
+        items.update(id, (draft) => {
+          draft.assigned_to = userId
           draft.updated_at = now()
         }),
       )

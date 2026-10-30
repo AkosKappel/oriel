@@ -154,6 +154,7 @@ const importedItemSchema = itemSchema.extend({
   due_on: dueSchema.optional().default(null),
   repeat: repeatSchema.optional().default(null),
   snoozed_until: dueSchema.optional().default(null),
+  assigned_to: z.string().nullish().default(null),
   archived_at: z.string().nullish().default(null),
   deleted_at: z.string().nullish().default(null),
   deleted_by: z.string().nullish().default(null),

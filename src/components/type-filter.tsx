@@ -40,6 +40,7 @@ export function TypeFilter({ active }: { active?: ItemType }) {
             type,
             status: undefined,
             due: undefined,
+            mine: undefined,
           })}
           aria-current={active === type ? 'page' : undefined}
           activeOptions={activeOptions}
@@ -52,45 +53,65 @@ export function TypeFilter({ active }: { active?: ItemType }) {
   )
 }
 
-const taskOptions: { status?: TaskStatus; due?: DueFilter; label: string }[] = [
+const taskOptions: {
+  status?: TaskStatus
+  due?: DueFilter
+  mine?: true
+  label: string
+}[] = [
   { label: 'All tasks' },
+  { mine: true, label: 'For me' },
   { due: 'today', label: 'Today' },
   { due: 'upcoming', label: 'Upcoming' },
   ...taskStatuses.map(({ value, label }) => ({ status: value, label })),
 ]
 
-/** Shown with tasks: all of them, the open ones due by today or later, or the ones in one state. */
+/**
+ * Shown with tasks: all of them, the open ones for me (once a space is shared), due by today or
+ * later, or in one state.
+ */
 export function TaskFilter({
   status,
   due,
+  mine,
+  showMine,
 }: {
   status?: TaskStatus
   due?: DueFilter
+  mine?: boolean
+  showMine: boolean
 }) {
   return (
     <nav
       aria-label="Tasks"
       className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
     >
-      {taskOptions.map((option) => (
-        <Link
-          key={option.label}
-          to="/app"
-          // One task filter at a time: picking one clears the other.
-          search={(previous) => ({
-            ...previous,
-            status: option.status,
-            due: option.due,
-          })}
-          aria-current={
-            status === option.status && due === option.due ? 'page' : undefined
-          }
-          activeOptions={activeOptions}
-          className={linkClass}
-        >
-          {option.label}
-        </Link>
-      ))}
+      {taskOptions
+        .filter((option) => showMine || !option.mine)
+        .map((option) => (
+          <Link
+            key={option.label}
+            to="/app"
+            // One task filter at a time: picking one clears the other.
+            search={(previous) => ({
+              ...previous,
+              status: option.status,
+              due: option.due,
+              mine: option.mine,
+            })}
+            aria-current={
+              status === option.status &&
+              due === option.due &&
+              Boolean(mine) === Boolean(option.mine)
+                ? 'page'
+                : undefined
+            }
+            activeOptions={activeOptions}
+            className={linkClass}
+          >
+            {option.label}
+          </Link>
+        ))}
     </nav>
   )
 }

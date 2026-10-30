@@ -79,6 +79,15 @@ export function withStatus(items: Item[], status?: TaskStatus) {
   )
 }
 
+/** Open tasks for one member. Without a member, everything. */
+export function assignedTo(items: Item[], userId?: string) {
+  if (!userId) return items
+  return items.filter(
+    (item) =>
+      item.type === 'task' && item.assigned_to === userId && !item.completed_at,
+  )
+}
+
 export const views = ['snoozed', 'archive', 'trash'] as const
 export type View = (typeof views)[number]
 

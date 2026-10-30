@@ -308,6 +308,7 @@ export function buildSamples(today: Date, extra = 0) {
               .toISOString()
               .slice(0, 10),
       repeat: sample.repeat ?? null,
+      assigned_to: null,
       snoozed_until:
         sample.snoozed === undefined
           ? null

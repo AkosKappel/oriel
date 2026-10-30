@@ -6,6 +6,7 @@ import { completeTask } from '#/components/complete-task'
 import { itemLabels } from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
 import {
+  assignedTo,
   countEntries,
   type DueFilter,
   itemsInView,
@@ -26,6 +27,7 @@ import {
   type TaskStatus,
 } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { useAccount } from '#/lib/account'
 import { describeDue, formatDay, formatShortDate, localDay } from '#/lib/dates'
 import { tick } from '#/lib/haptics'
 import { canEdit, type SpaceView } from '#/lib/spaces'
@@ -46,6 +48,7 @@ export function ItemList({
   type,
   status,
   due,
+  mine,
   spaceId,
   query = '',
   view,
@@ -57,6 +60,8 @@ export function ItemList({
   status?: TaskStatus
   /** With tasks: only open tasks due by today or after it. */
   due?: DueFilter
+  /** With tasks: only open tasks for the signed-in member. */
+  mine?: boolean
   /** Show one space only. */
   spaceId?: string
   /** Show only items that contain these words. */
@@ -67,24 +72,28 @@ export function ItemList({
 }) {
   const { data: items, isLoading } = useRows(store.items)
   const { data: entries } = useRows(store.entries)
+  const account = useAccount()
 
   if (isLoading) return null
 
   const today = localDay(new Date())
-  const shown = withDue(
-    withStatus(
-      searchItems(
-        itemsInView(
-          spaceId ? items.filter((item) => item.space_id === spaceId) : items,
-          view,
+  const shown = assignedTo(
+    withDue(
+      withStatus(
+        searchItems(
+          itemsInView(
+            spaceId ? items.filter((item) => item.space_id === spaceId) : items,
+            view,
+          ),
+          entries,
+          query,
         ),
-        entries,
-        query,
+        type === 'task' ? status : undefined,
       ),
-      type === 'task' ? status : undefined,
+      type === 'task' ? due : undefined,
+      today,
     ),
-    type === 'task' ? due : undefined,
-    today,
+    type === 'task' && mine ? account?.userId : undefined,
   )
   const counts = countEntries(entries)
 
@@ -105,6 +114,13 @@ export function ItemList({
   const { pinned, open, completed } = organizeItems(shown, type)
 
   if (pinned.length + open.length + completed.length === 0) {
+    if (mine && type === 'task' && !query.trim()) {
+      return (
+        <p className="pt-6 text-sm text-muted-foreground" role="status">
+          Nothing is for you right now.
+        </p>
+      )
+    }
     if (due && type === 'task' && !query.trim()) {
       return (
         <p className="pt-6 text-sm text-muted-foreground" role="status">
@@ -326,6 +342,14 @@ function ItemRow({
 }: RowContext & { item: Item }) {
   const done = item.completed_at !== null
   const space = item.space_id ? spaces.get(item.space_id) : undefined
+  const account = useAccount()
+  const assignee =
+    item.type === 'task' && !done && item.assigned_to
+      ? item.assigned_to === account?.userId
+        ? 'you'
+        : space?.members.find((member) => member.user_id === item.assigned_to)
+            ?.member_name
+      : undefined
   const detail = [
     item.deleted_at
       ? `Deleted ${formatShortDate(item.deleted_at)}`
@@ -335,6 +359,7 @@ function ItemRow({
           ? `Back ${formatDay(new Date(`${item.snoozed_until}T12:00:00`))}`
           : null,
     showSpace && space && !space.personal ? space.name : null,
+    assignee && `For ${assignee}`,
     describeItem(item, counts),
   ]
     .filter(Boolean)

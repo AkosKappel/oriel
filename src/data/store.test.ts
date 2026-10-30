@@ -460,6 +460,33 @@ describe('spaces', () => {
   })
 })
 
+describe('assigning tasks', () => {
+  it('keeps an assignee through a move only if they are in the new space', async () => {
+    await database.execute(
+      `INSERT INTO space_member (id, space_id, user_id, role, member_name)
+       VALUES ('a', 'family', 'anna', 'editor', 'Anna'), ('b', 'work', 'ben', 'editor', 'Ben'),
+              ('c', 'work', 'anna', 'editor', 'Anna')`,
+    )
+    const id = await store.createItem(
+      { type: 'task', title: 'Book the hall' },
+      { spaceId: 'family' },
+    )
+    await store.setItemAssignee(id, 'anna')
+    expect(await database.get('SELECT assigned_to FROM items')).toEqual({
+      assigned_to: 'anna',
+    })
+
+    const stored = () => database.get('SELECT space_id, assigned_to FROM items')
+    await store.moveItem(id, 'work')
+    expect(await stored()).toEqual({ space_id: 'work', assigned_to: 'anna' })
+
+    await vi.waitFor(() => expect(store.items.get(id)?.space_id).toBe('work'))
+    await store.setItemAssignee(id, 'ben')
+    await store.moveItem(id, 'family')
+    expect(await stored()).toEqual({ space_id: 'family', assigned_to: null })
+  })
+})
+
 describe('converting between notes and lists', () => {
   it('turns note lines into entries, checked where marked, and back', async () => {
     const id = await store.createItem({

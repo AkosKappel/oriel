@@ -30,6 +30,7 @@ const searchSchema = z.object({
   type: z.enum(itemTypes).optional().catch(undefined),
   status: statusSchema.unwrap().optional().catch(undefined),
   due: z.enum(dueFilters).optional().catch(undefined),
+  mine: z.boolean().optional().catch(undefined),
   space: z.uuid().optional().catch(undefined),
   q: z.string().max(200).optional().catch(undefined),
   view: z.enum(views).optional().catch(undefined),
@@ -48,7 +49,7 @@ export const Route = createFileRoute('/_notebook')({
  */
 function Notebook() {
   const storageFailed = useStorageFailed()
-  const { type, status, due, space: spaceId, q, view } = Route.useSearch()
+  const { type, status, due, mine, space: spaceId, q, view } = Route.useSearch()
   const openItemId = useParams({ strict: false }).itemId
   const itemOpen = openItemId !== undefined
   useEscapeToClose(openItemId)
@@ -104,7 +105,14 @@ function Notebook() {
               <SpaceFilter spaces={spaces} active={spaceId} />
             )}
             <TypeFilter active={type} />
-            {type === 'task' && <TaskFilter status={status} due={due} />}
+            {type === 'task' && (
+              <TaskFilter
+                status={status}
+                due={due}
+                mine={mine}
+                showMine={spaces.some((space) => !space.personal)}
+              />
+            )}
             <SearchField query={q} />
           </div>
           {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is always region or main, both take a label */}
@@ -118,6 +126,7 @@ function Notebook() {
               type={type}
               status={status}
               due={due}
+              mine={mine}
               spaceId={spaceId}
               query={q}
               view={view}
