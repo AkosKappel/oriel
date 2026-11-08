@@ -73,10 +73,9 @@ Deleting the account (with the password) removes it, the personal space and ever
 - TypeScript
 - React Aria Components for accessible controls, Tailwind CSS v4, Newsreader and Instrument Sans (self-hosted), Lucide icons
 - [TanStack DB](https://tanstack.com/db) for reactive client collections and optimistic writes
-- [PowerSync](https://www.powersync.com) Web SDK with SQLite (WASM) as the local database
+- [PowerSync](https://www.powersync.com) Web SDK with SQLite (WASM) as the local database, and the self-hosted PowerSync Service syncing it with PostgreSQL
 - Zod for validation
 - PostgreSQL 18 with Drizzle ORM, Better Auth for accounts
-- Planned: syncing the local database with PostgreSQL through PowerSync
 - Biome, Vitest, GitHub Actions
 
 ## How it works
