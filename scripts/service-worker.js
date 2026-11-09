@@ -45,13 +45,16 @@ self.addEventListener('fetch', (event) => {
   // API calls are live by nature (presence is a stream that never ends); never cache them.
   if (url.pathname.startsWith('/api/')) return
 
-  // Pages: the server when online; offline, a public page as cached, anything else the app shell.
+  // Pages: the server when online; offline, or while the app behind nginx is down (502, 503,
+  // 504), a public page as cached and anything else the app shell, since the data is local.
   if (request.mode === 'navigate') {
     const offline = publicPages.includes(url.pathname) ? url.pathname : appShell
+    const fromCache = (response) =>
+      caches.match(offline).then((cached) => cached ?? response ?? Response.error())
     event.respondWith(
-      fetch(request).catch(() =>
-        caches.match(offline).then((response) => response ?? Response.error()),
-      ),
+      fetch(request)
+        .then((response) => (response.status >= 502 ? fromCache(response) : response))
+        .catch(() => fromCache()),
     )
     return
   }
