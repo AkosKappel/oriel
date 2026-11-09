@@ -9,6 +9,7 @@ import {
   statusLabel,
 } from '#/components/item-labels'
 import { Checkbox } from '#/components/ui/checkbox'
+import { hasLabel, readLabels } from '#/data/labels'
 import {
   assignedTo,
   type DueFilter,
@@ -44,6 +45,7 @@ export function ItemList({
   mine,
   spaceId,
   query = '',
+  label,
   view,
   spaces,
 }: {
@@ -59,6 +61,8 @@ export function ItemList({
   spaceId?: string
   /** Show only items that contain these words. */
   query?: string
+  /** Show only items with this label. */
+  label?: string
   /** Snoozed, the archive or the trash instead of home. */
   view?: View
   spaces: Map<string, SpaceView>
@@ -72,7 +76,7 @@ export function ItemList({
   if (isLoading) return null
 
   const today = localDay(new Date())
-  const shown = assignedTo(
+  const filtered = assignedTo(
     withDue(
       withStatus(
         searchItems(
@@ -90,6 +94,9 @@ export function ItemList({
     ),
     type === 'task' && mine ? account?.userId : undefined,
   )
+  const shown = label
+    ? filtered.filter((item) => hasLabel(item.labels, label))
+    : filtered
 
   if (view) {
     return (
@@ -359,6 +366,9 @@ function ItemRow({
         ? assignee
         : m.row_for({ name: assignee })),
     describeItem(item, counts),
+    readLabels(item.labels)
+      .map((label) => `#${label}`)
+      .join(' '),
   ]
     .filter(Boolean)
     .join(' · ')

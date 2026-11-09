@@ -11,9 +11,15 @@ import { AppHeader } from '#/components/app-header'
 import { CaptureBar } from '#/components/capture-bar'
 import { ItemList } from '#/components/item-list'
 import { SearchField } from '#/components/search-field'
-import { SpaceFilter, TaskFilter, TypeFilter } from '#/components/type-filter'
+import {
+  LabelFilter,
+  SpaceFilter,
+  TaskFilter,
+  TypeFilter,
+} from '#/components/type-filter'
 import { database, store } from '#/data/client'
 import { itemTypes, taskStatuses } from '#/data/kinds'
+import { labelLength, labelsInUse } from '#/data/labels'
 import { announce, describeMemberChanges } from '#/data/member-changes'
 import {
   type DueFilter,
@@ -45,6 +51,7 @@ type NotebookSearch = {
   mine?: boolean
   space?: string
   q?: string
+  label?: string
   view?: View
 }
 
@@ -58,6 +65,7 @@ export const Route = createFileRoute('/_notebook')({
     mine: flag(search.mine),
     space: uuid(search.space),
     q: text(search.q, 200),
+    label: text(search.label, labelLength),
     view: oneOf(views, search.view),
   }),
   component: Notebook,
@@ -69,7 +77,16 @@ export const Route = createFileRoute('/_notebook')({
  */
 function Notebook() {
   const storageFailed = useStorageFailed()
-  const { type, status, due, mine, space: spaceId, q, view } = Route.useSearch()
+  const {
+    type,
+    status,
+    due,
+    mine,
+    space: spaceId,
+    q,
+    label,
+    view,
+  } = Route.useSearch()
   const openItemId = useParams({ strict: false }).itemId
   const itemOpen = openItemId !== undefined
   useEscapeToClose(openItemId)
@@ -134,6 +151,7 @@ function Notebook() {
                 showMine={spaces.some((space) => !space.personal)}
               />
             )}
+            <Labels active={label} />
             <SearchField query={q} />
           </div>
           {/* biome-ignore lint/a11y/useAriaPropsSupportedByRole: the role is always region or main, both take a label */}
@@ -150,6 +168,7 @@ function Notebook() {
               mine={mine}
               spaceId={spaceId}
               query={q}
+              label={label}
               view={view}
               spaces={byId}
             />
@@ -360,6 +379,14 @@ function MemberAnnouncer({ spaces }: { spaces: Map<string, SpaceView> }) {
       {message}
     </p>
   )
+}
+
+function Labels({ active }: { active?: string }) {
+  const { data: items } = useRows(store.items)
+  const labels = labelsInUse(itemsInView(items).map((item) => item.labels))
+  // A link to a label nobody uses any more still shows what it filters by.
+  if (labels.length === 0 && !active) return null
+  return <LabelFilter labels={labels} active={active} />
 }
 
 function AppBadge() {

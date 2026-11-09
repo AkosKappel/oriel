@@ -98,6 +98,8 @@
   "filter_tasks": "Úlohy",
   "filter_space": "Priestor",
   "filter_all_spaces": "Všetky priestory",
+  "filter_labels": "Štítky",
+  "filter_all_labels": "Všetky štítky",
   "empty_all": "Poznámky, zoznamy a úlohy, ktoré si zapíšeš, sa zobrazia tu.",
   "empty_type": [
     {
@@ -439,6 +441,9 @@
   "meta_view_only": "Len na čítanie",
   "done": "Hotovo",
   "field_priority": "Priorita",
+  "field_labels": "Štítky",
+  "label_add": "Pridať štítok",
+  "label_remove": "Odstrániť štítok {label}",
   "field_status": "Stav",
   "field_due": "Termín",
   "no_date": "Bez dátumu",

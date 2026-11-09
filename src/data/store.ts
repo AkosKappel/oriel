@@ -7,6 +7,7 @@ import { createCollection, createTransaction } from '@tanstack/react-db'
 import { localDay, nextDue } from '#/lib/dates'
 import { readEntryLine } from './capture'
 import type { ImportedItem } from './export'
+import { storeLabels } from './labels'
 import { sortEntries } from './organize'
 import {
   appSchema,
@@ -363,6 +364,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           repeat: null,
           snoozed_until: null,
           assigned_to: null,
+          labels: null,
           archived_at: null,
           deleted_at: null,
           deleted_by: null,
@@ -464,6 +466,17 @@ export function createStore(database: CommonPowerSyncDatabase) {
       await saved(
         items.update(id, (draft) => {
           draft.priority = parsed
+          draft.updated_at = now()
+        }),
+      )
+    },
+
+    /** Replaces the item's labels; they are cleaned and duplicates dropped. */
+    async setItemLabels(id: string, labels: string[]) {
+      const stored = storeLabels(labels)
+      await saved(
+        items.update(id, (draft) => {
+          draft.labels = stored
           draft.updated_at = now()
         }),
       )

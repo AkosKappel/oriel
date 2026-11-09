@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { itemsLabel, statusLabel } from '#/components/item-labels'
-import type { DueFilter } from '#/data/organize'
+import { type DueFilter, fold } from '#/data/organize'
 import {
   type ItemType,
   itemTypes,
@@ -147,6 +147,46 @@ export function SpaceFilter({
           className={linkClass}
         >
           {space.name}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+/** Shown once items have labels: everything, or the items with one label. */
+export function LabelFilter({
+  labels,
+  active,
+}: {
+  labels: string[]
+  active?: string
+}) {
+  return (
+    <nav
+      aria-label={m.filter_labels()}
+      className="flex flex-wrap gap-x-4 text-sm"
+    >
+      <Link
+        to="/app"
+        search={(previous) => ({ ...previous, label: undefined })}
+        aria-current={active ? undefined : 'page'}
+        activeOptions={activeOptions}
+        className={linkClass}
+      >
+        {m.filter_all_labels()}
+      </Link>
+      {labels.map((label) => (
+        <Link
+          key={label}
+          to="/app"
+          search={(previous) => ({ ...previous, label })}
+          aria-current={
+            active && fold(active) === fold(label) ? 'page' : undefined
+          }
+          activeOptions={activeOptions}
+          className={linkClass}
+        >
+          #{label}
         </Link>
       ))}
     </nav>

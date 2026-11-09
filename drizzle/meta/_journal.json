@@ -120,6 +120,13 @@
       "when": 1793383626855,
       "tag": "0016_passkeys",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1794262084807,
+      "tag": "0017_item_labels",
+      "breakpoints": true
     }
   ]
 }

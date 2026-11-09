@@ -6,6 +6,7 @@ import {
   entrySchema,
   type Item,
   itemSchema,
+  labelsSchema,
   repeatSchema,
   statusSchema,
 } from './schema'
@@ -155,6 +156,7 @@ const importedItemSchema = itemSchema.extend({
   repeat: repeatSchema.optional().default(null),
   snoozed_until: dueSchema.optional().default(null),
   assigned_to: z.string().nullish().default(null),
+  labels: labelsSchema.optional().default(null),
   archived_at: z.string().nullish().default(null),
   deleted_at: z.string().nullish().default(null),
   deleted_by: z.string().nullish().default(null),

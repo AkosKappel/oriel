@@ -27,6 +27,7 @@ import {
   repeatLabel,
   statusLabel,
 } from '#/components/item-labels'
+import { LabelsField } from '#/components/labels-field'
 import { NoteHistory } from '#/components/note-history'
 import { Checkbox } from '#/components/ui/checkbox'
 import { ChoiceGroup } from '#/components/ui/choice-group'
@@ -462,6 +463,8 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
           )}
           <TitleField store={store} item={item} readOnly={!editable} />
         </div>
+
+        <LabelsField store={store} item={item} readOnly={!editable} />
 
         {item.type === 'task' && (
           <ChoiceGroup

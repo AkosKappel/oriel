@@ -192,6 +192,8 @@ export const items = pgTable(
     // Off home until this day.
     snoozedUntil: date({ mode: 'string' }),
     assignedTo: text().references(() => user.id, { onDelete: 'set null' }),
+    // A JSON array of label texts, as the client stores it; null for none.
+    labels: text(),
     archivedAt: timestamp({ withTimezone: true }),
     // In the trash since then; devices delete it for good after 30 days.
     deletedAt: timestamp({ withTimezone: true }),

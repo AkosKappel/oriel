@@ -2,6 +2,7 @@ import { column, Schema, Table } from '@powersync/common'
 import { z } from 'zod'
 import { m } from '#/paraglide/messages.js'
 import { itemTypes, taskStatuses } from './kinds'
+import { readLabels, storeLabels } from './labels'
 
 // The page's Content-Security-Policy forbids eval, so Zod must not probe for it with `Function`
 // (the probe fails safely but is reported as a violation). The server keeps Zod's faster parsers.
@@ -29,6 +30,8 @@ const items = new Table(
     repeat: column.text,
     snoozed_until: column.text,
     assigned_to: column.text,
+    // A JSON array of label texts, or null (see labels.ts).
+    labels: column.text,
     archived_at: column.text,
     deleted_at: column.text,
     deleted_by: column.text,
@@ -144,6 +147,8 @@ export const itemSchema = z.object({
   snoozed_until: dueSchema.catch(null),
   // A member of the item's space a task is for; the server checks the membership.
   assigned_to: z.string().nullable().catch(null),
+  // Read with `readLabels`, which takes anything unexpected as no labels.
+  labels: z.string().nullable().catch(null),
   archived_at: z.string().nullable(),
   // In the trash since then. Set by the server to whoever deleted it, like `completed_by`.
   deleted_at: z.string().nullable(),
@@ -171,6 +176,12 @@ export const entrySchema = z.object({
 })
 
 export type Entry = z.infer<typeof entrySchema>
+
+/** Labels as stored: cleaned, without duplicates, capped, as a JSON array; null for none. */
+export const labelsSchema = z
+  .string()
+  .nullable()
+  .transform((stored) => storeLabels(readLabels(stored)))
 
 export const titleSchema = z
   .string()

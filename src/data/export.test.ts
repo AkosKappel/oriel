@@ -24,6 +24,7 @@ const item = (overrides: Partial<Item> & Pick<Item, 'id' | 'type'>): Item => ({
   repeat: null,
   snoozed_until: null,
   assigned_to: null,
+  labels: null,
   archived_at: null,
   deleted_at: null,
   deleted_by: null,

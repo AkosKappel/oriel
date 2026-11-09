@@ -87,6 +87,7 @@ describe('ItemList pages', () => {
         repeat: null,
         snoozed_until: null,
         assigned_to: null,
+        labels: null,
         archived_at: null,
         deleted_at: null,
         deleted_by: null,
@@ -121,5 +122,29 @@ describe('ItemList search', () => {
     const row = await screen.findByRole('link', { name: 'Kávé és croissant' })
     expect(row.querySelector('mark')?.textContent).toBe('Kávé')
     expect(screen.queryByRole('link', { name: 'Tea' })).toBeNull()
+  })
+
+  it('shows only items with a label, and their labels in the row', async () => {
+    const garden = await store.createItem({ type: 'note', title: 'Garden' })
+    await store.setItemLabels(garden, ['Home', 'Spring'])
+    await store.createItem({ type: 'note', title: 'Tax return' })
+    renderPage(<ItemList store={store} spaces={new Map()} label="home" />)
+
+    const row = await screen.findByRole('link', { name: /Garden/ })
+    expect(row.textContent).toContain('#Home #Spring')
+    expect(screen.queryByRole('link', { name: /Tax return/ })).toBeNull()
+  })
+
+  it('finds lists by their entries through the search index', async () => {
+    await store.createItem({
+      type: 'list',
+      title: 'Groceries',
+      entries: ['Oat milk'],
+    })
+    await store.createItem({ type: 'note', title: 'Tea' })
+    renderPage(<ItemList store={store} spaces={new Map()} query="MILK" />)
+
+    expect(await screen.findByRole('link', { name: /Groceries/ })).toBeTruthy()
+    expect(screen.queryByRole('link', { name: /Tea/ })).toBeNull()
   })
 })

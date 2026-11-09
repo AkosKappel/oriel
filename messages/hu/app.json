@@ -98,6 +98,8 @@
   "filter_tasks": "Feladatok",
   "filter_space": "Tér",
   "filter_all_spaces": "Minden tér",
+  "filter_labels": "Címkék",
+  "filter_all_labels": "Minden címke",
   "empty_all": "Az itt leírt jegyzetek, listák és feladatok itt jelennek meg.",
   "empty_type": [
     {
@@ -421,6 +423,9 @@
   "meta_view_only": "Csak megtekintés",
   "done": "Kész",
   "field_priority": "Prioritás",
+  "field_labels": "Címkék",
+  "label_add": "Címke hozzáadása",
+  "label_remove": "{label} címke eltávolítása",
   "field_status": "Állapot",
   "field_due": "Határidő",
   "no_date": "Nincs dátum",

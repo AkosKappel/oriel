@@ -5,6 +5,7 @@ import {
   dueSchema,
   entryTextSchema,
   itemTypes,
+  labelsSchema,
   prioritySchema,
   repeatSchema,
   statusSchema,
@@ -65,6 +66,8 @@ const itemFields = z.object({
   repeat: repeatSchema,
   snoozed_until: dueSchema,
   assigned_to: z.string().min(1).nullable(),
+  // Cleaned and capped rather than refused: labels are never worth losing an edit over.
+  labels: labelsSchema,
   archived_at: nullableDate,
   deleted_at: nullableDate,
   created_at: date,
@@ -82,6 +85,7 @@ const itemPut = itemFields.extend({
   repeat: repeatSchema.default(null),
   snoozed_until: dueSchema.default(null),
   assigned_to: z.string().min(1).nullable().default(null),
+  labels: labelsSchema.default(null),
   archived_at: nullableDate.default(null),
   deleted_at: nullableDate.default(null),
 })
@@ -120,15 +124,32 @@ const toggled = (
 
 /** What a PATCH means to the other members; undefined for changes not worth a line (a pin). */
 function itemAction(patch: z.output<typeof itemPatch>) {
-  const { title, body, type, due_on, repeat, status, priority, assigned_to } =
-    patch
+  const {
+    title,
+    body,
+    type,
+    due_on,
+    repeat,
+    status,
+    priority,
+    assigned_to,
+    labels,
+  } = patch
   return (
     toggled(patch.deleted_at, 'trashed', 'restored') ??
     toggled(patch.completed_at, 'completed', 'reopened') ??
     toggled(patch.archived_at, 'archived', 'unarchived') ??
-    ([title, body, type, due_on, repeat, status, priority, assigned_to].some(
-      (v) => v !== undefined,
-    )
+    ([
+      title,
+      body,
+      type,
+      due_on,
+      repeat,
+      status,
+      priority,
+      assigned_to,
+      labels,
+    ].some((v) => v !== undefined)
       ? 'edited'
       : undefined)
   )
@@ -393,6 +414,7 @@ async function applyOperation(
         repeat: row.repeat,
         snoozedUntil: row.snoozed_until,
         assignedTo,
+        labels: row.labels,
         archivedAt: row.archived_at,
         deletedAt: row.deleted_at,
         deletedBy: markedBy(row.deleted_at, userId),
@@ -433,6 +455,7 @@ async function applyOperation(
       repeat: patch.repeat,
       snoozedUntil: patch.snoozed_until,
       assignedTo: patch.assigned_to,
+      labels: patch.labels,
       archivedAt: patch.archived_at,
       deletedAt: patch.deleted_at,
       deletedBy: markedBy(patch.deleted_at, userId),

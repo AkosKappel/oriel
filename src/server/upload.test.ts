@@ -244,6 +244,36 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
     })
   })
 
+  it('stores labels cleaned and capped, whatever the client sends', async () => {
+    const note = put(
+      'items',
+      itemRow(aliceSpace, {
+        type: 'note',
+        labels: JSON.stringify([
+          '#Home',
+          'home',
+          ...Array(12)
+            .fill('x')
+            .map((x, i) => x + i),
+        ]),
+      }),
+    )
+    await applyUpload(alice, [note])
+    const { labels } = await findItem(note.id)
+    expect(JSON.parse(labels ?? '[]')).toHaveLength(10)
+    expect(JSON.parse(labels ?? '[]')[0]).toBe('Home')
+
+    await applyUpload(alice, [
+      {
+        op: 'PATCH',
+        table: 'items',
+        id: note.id,
+        data: { labels: 'nonsense' },
+      },
+    ])
+    expect(await findItem(note.id)).toMatchObject({ labels: null })
+  })
+
   it('stores how a task repeats and refuses an unknown repeat', async () => {
     const task = put('items', itemRow(aliceSpace, { repeat: 'weekly' }))
     await applyUpload(alice, [task])

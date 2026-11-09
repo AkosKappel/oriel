@@ -266,4 +266,20 @@ describe('ItemDetail', () => {
 
     expect(await screen.findByText('This page was torn out.')).toBeTruthy()
   })
+
+  it('adds labels, several at once, and removes one', async () => {
+    const user = userEvent.setup()
+    const { item } = await openItem({ type: 'note', title: 'Garden' })
+
+    await user.type(
+      screen.getByRole('combobox', { name: 'Add a label' }),
+      '#Home, spring{Enter}',
+    )
+    await waitFor(() => expect(item()?.labels).toBe('["Home","spring"]'))
+    const labels = screen.getByRole('list', { name: 'Labels' })
+    expect(within(labels).getByRole('link', { name: '#Home' })).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: 'Remove label Home' }))
+    await waitFor(() => expect(item()?.labels).toBe('["spring"]'))
+  })
 })

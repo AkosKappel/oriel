@@ -98,6 +98,8 @@
   "filter_tasks": "Tasks",
   "filter_space": "Space",
   "filter_all_spaces": "All spaces",
+  "filter_labels": "Labels",
+  "filter_all_labels": "All labels",
   "empty_all": "Notes, lists and tasks you write down will show up here.",
   "empty_type": [
     {
@@ -425,6 +427,9 @@
   "meta_view_only": "View only",
   "done": "Done",
   "field_priority": "Priority",
+  "field_labels": "Labels",
+  "label_add": "Add a label",
+  "label_remove": "Remove label {label}",
   "field_status": "Status",
   "field_due": "Due",
   "no_date": "No date",

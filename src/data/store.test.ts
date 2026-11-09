@@ -128,6 +128,21 @@ describe('organizing items', () => {
     await expect(store.setItemPriority(id, 5)).rejects.toThrow()
   })
 
+  it('stores labels cleaned and without duplicates, and none as null', async () => {
+    const id = await store.createItem({ type: 'note', title: 'Garden' })
+    expect(store.items.get(id)?.labels).toBeNull()
+
+    await store.setItemLabels(id, ['#Home ', 'home', 'Spring  plans'])
+    expect(await database.get('SELECT labels FROM items')).toEqual({
+      labels: '["Home","Spring plans"]',
+    })
+
+    await store.setItemLabels(id, [])
+    expect(await database.get('SELECT labels FROM items')).toEqual({
+      labels: null,
+    })
+  })
+
   it('duplicates a list with its entries in order, all unchecked', async () => {
     const id = await store.createItem({
       type: 'list',
