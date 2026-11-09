@@ -63,7 +63,7 @@ export function ItemList({
   spaces: Map<string, SpaceView>
 }) {
   const { data: items, isLoading } = useRows(store.items)
-  const { data: entries } = useRows(store.entries)
+  const { data: entries, isLoading: entriesLoading } = useRows(store.entries)
   const account = useAccount()
 
   if (isLoading) return null
@@ -87,7 +87,8 @@ export function ItemList({
     ),
     type === 'task' && mine ? account?.userId : undefined,
   )
-  const counts = countEntries(entries)
+  // Until entries arrive every list would read "Empty list" for a moment.
+  const counts = entriesLoading ? null : countEntries(entries)
 
   if (view) {
     return (
@@ -272,7 +273,7 @@ function Section({ title, children }: { title?: string; children: ReactNode }) {
 
 type RowContext = {
   store: Store
-  counts: EntryCounts
+  counts: EntryCounts | null
   spaces: Map<string, SpaceView>
   /** Name the space of shared items, when not already filtered to one space. */
   showSpace: boolean
@@ -573,8 +574,9 @@ function SwipeRow({
   )
 }
 
-function describeItem(item: Item, counts: EntryCounts) {
+function describeItem(item: Item, counts: EntryCounts | null) {
   if (item.type === 'list') {
+    if (!counts) return null
     const { total = 0, open = 0, upNext = [] } = counts.get(item.id) ?? {}
     if (total === 0) return m.list_empty()
     if (open === 0) return m.list_all_done({ count: total })
