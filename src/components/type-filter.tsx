@@ -83,7 +83,7 @@ export function TaskFilter({
   return (
     <nav
       aria-label={m.filter_tasks()}
-      className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
+      className="flex flex-wrap gap-x-4 text-sm"
     >
       {taskOptions()
         .filter((option) => showMine || !option.mine)
@@ -126,7 +126,7 @@ export function SpaceFilter({
   return (
     <nav
       aria-label={m.filter_space()}
-      className="-mx-1 flex gap-x-4 overflow-x-auto px-1 text-sm"
+      className="flex flex-wrap gap-x-4 text-sm"
     >
       <Link
         to="/app"
