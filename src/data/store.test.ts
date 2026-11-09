@@ -431,6 +431,33 @@ describe('spaces', () => {
     expect(store.entries.toArray[0].space_id).toBe('family')
   })
 
+  it('uploads a whole move in one batch, however many entries the list has', async () => {
+    const { SyncConnector } = await import('./connector')
+    store.setOwner(owner)
+    const entries = Array.from({ length: 150 }, (_, index) => `Entry ${index}`)
+    const id = await store.createItem({ type: 'list', title: 'Big', entries })
+    await store.moveItem(id, 'family')
+
+    const fetch = vi.fn(async (_url: string, _init: RequestInit) =>
+      Response.json({ rejected: [] }),
+    )
+    vi.stubGlobal('fetch', fetch)
+    const connector = new SyncConnector({
+      onRejected: () => {},
+      onSignedOut: () => {},
+    })
+    try {
+      await connector.uploadData(database)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+
+    const { operations } = JSON.parse(String(fetch.mock.calls[0][1].body))
+    // The create, then the move's DELETE and PUT of the list and of every entry.
+    expect(operations).toHaveLength(1 + entries.length + 2 + 2 * entries.length)
+    expect(await database.getCrudBatch()).toBeNull()
+  })
+
   it('moves an item with its entries, uploaded as a delete and a full create', async () => {
     store.setOwner(owner)
     const id = await store.createItem({

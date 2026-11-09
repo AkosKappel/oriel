@@ -1,5 +1,7 @@
 import type {
   AbstractPowerSyncDatabase,
+  CrudEntry,
+  CrudTransaction,
   PowerSyncBackendConnector,
   PowerSyncCredentials,
 } from '@powersync/web'
@@ -40,7 +42,15 @@ export class SyncConnector implements PowerSyncBackendConnector {
   }
 
   async uploadData(database: AbstractPowerSyncDatabase) {
-    const batch = await database.getCrudBatch(batchSize)
+    // Whole transactions only: a move is a DELETE and a PUT in one transaction, and the server
+    // keeps the row only when it sees both in one batch.
+    const crud: CrudEntry[] = []
+    let batch: CrudTransaction | null = null
+    for await (const transaction of database.getCrudTransactions()) {
+      crud.push(...transaction.crud)
+      batch = transaction
+      if (crud.length >= batchSize) break
+    }
     if (!batch) return
 
     const response = await fetch('/api/sync/upload', {
@@ -48,7 +58,7 @@ export class SyncConnector implements PowerSyncBackendConnector {
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        operations: batch.crud.map(({ op, table, id, opData }) => ({
+        operations: crud.map(({ op, table, id, opData }) => ({
           op,
           table,
           id,
@@ -60,7 +70,7 @@ export class SyncConnector implements PowerSyncBackendConnector {
     if (response.status === 400) {
       // A malformed batch never succeeds; retrying would block every later change.
       console.error('The server refused a malformed upload batch')
-      this.events.onRejected(batch.crud.length)
+      this.events.onRejected(crud.length)
       await batch.complete()
       return
     }
