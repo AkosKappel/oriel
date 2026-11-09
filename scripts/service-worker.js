@@ -50,10 +50,14 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     const offline = publicPages.includes(url.pathname) ? url.pathname : appShell
     const fromCache = (response) =>
-      caches.match(offline).then((cached) => cached ?? response ?? Response.error())
+      caches
+        .match(offline)
+        .then((cached) => cached ?? response ?? Response.error())
     event.respondWith(
       fetch(request)
-        .then((response) => (response.status >= 502 ? fromCache(response) : response))
+        .then((response) =>
+          response.status >= 502 ? fromCache(response) : response,
+        )
         .catch(() => fromCache()),
     )
     return
