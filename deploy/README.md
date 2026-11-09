@@ -3,13 +3,13 @@
 The live app runs from its own folder, not from this repository, so the development checkout
 can change branches and reset its database without touching it.
 
-|                 | Development                           | Production                                                                    |
-| --------------- | ------------------------------------- | ----------------------------------------------------------------------------- |
-| Folder          | `~/projects/oriel`                    | `~/deploy/oriel`                                                              |
-| Compose project | `oriel`                               | `oriel-prod`                                                                  |
+|                 | Development                           | Production                                                                                                                  |
+| --------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Folder          | `~/projects/oriel`                    | `~/deploy/oriel`                                                                                                            |
+| Compose project | `oriel`                               | `oriel-prod`                                                                                                                |
 | App             | `pnpm dev` on port 3000               | image from GHCR behind nginx on `127.0.0.1:8087`, public via Cloudflare Tunnel (the old Tailscale Funnel address redirects) |
-| Sync service    | `oriel-powersync` on `127.0.0.1:8086` | `oriel-prod-powersync`, reached through nginx at `/powersync/`                |
-| Database        | `oriel-db` on `127.0.0.1:5437`        | `oriel-prod-db`, no host port                                                 |
+| Sync service    | `oriel-powersync` on `127.0.0.1:8086` | `oriel-prod-powersync`, reached through nginx at `/powersync/`                                                              |
+| Database        | `oriel-db` on `127.0.0.1:5437`        | `oriel-prod-db`, no host port                                                                                               |
 
 ```mermaid
 flowchart LR
