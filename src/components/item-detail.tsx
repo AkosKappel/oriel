@@ -701,12 +701,20 @@ function BodyField({
   saveRef: RefObject<(() => Promise<void>) | null>
 }) {
   const [body, setBody] = useState(item.body)
+  // The stored text the field last saw. Text changed elsewhere (another device or member) replaces
+  // the field's text while nothing is typed here, so leaving the page cannot save a stale copy.
+  const [stored, setStored] = useState(item.body)
+  if (item.body !== stored) {
+    setStored(item.body)
+    if (body === stored) setBody(item.body)
+  }
   const hintId = useId()
   const flush = useRef(async () => {})
   flush.current = async () => {
     // A converted item has no body field any more; its text went into the conversion.
     if (
-      body.trim() === item.body ||
+      readOnly ||
+      body.trim() === stored.trim() ||
       store.items.get(item.id)?.type !== item.type
     )
       return

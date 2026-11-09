@@ -97,6 +97,23 @@ describe('ItemDetail', () => {
     await waitFor(() => expect(item()?.body).toBe('First and second'))
   })
 
+  it('shows text changed elsewhere and keeps it when the page is left', async () => {
+    const { id, item, view } = await openItem({
+      type: 'note',
+      title: 'Plan',
+      body: 'Old text',
+    })
+    await screen.findByText('Old text')
+
+    // Another member's edit arriving by sync.
+    await store.updateItem(id, { body: 'Their text' })
+    expect(await screen.findByText('Their text')).toBeDefined()
+
+    view.unmount()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(item()?.body).toBe('Their text')
+  })
+
   it('completes a task and sets its priority', async () => {
     const user = userEvent.setup()
     const { item } = await openItem({ type: 'task', title: 'Call the vet' })
