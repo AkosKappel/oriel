@@ -549,4 +549,41 @@ describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
       await db.delete(space).where(eq(space.id, work))
     }
   })
+
+  it("keeps a list's entries when its move is refused", async () => {
+    const list = put('items', itemRow(aliceSpace, { type: 'list', body: '' }))
+    const entry = put('entries', entryRow(list.id, aliceSpace))
+    await applyUpload(alice, [list, entry])
+
+    // `moveItem` re-sends the list and each entry as a DELETE and a PUT into the new space.
+    const refused = await applyUpload(alice, [
+      { op: 'DELETE', table: 'items', id: list.id },
+      {
+        op: 'PUT',
+        table: 'items',
+        id: list.id,
+        data: { ...list.data, space_id: bobSpace },
+      },
+      { op: 'DELETE', table: 'entries', id: entry.id },
+      {
+        op: 'PUT',
+        table: 'entries',
+        id: entry.id,
+        data: entryRow(list.id, bobSpace),
+      },
+    ])
+    expect(refused.rejected.map(({ table }) => table)).toEqual([
+      'items',
+      'entries',
+    ])
+    const [kept] = await db
+      .select()
+      .from(entries)
+      .where(eq(entries.id, entry.id))
+    expect(kept).toMatchObject({
+      itemId: list.id,
+      spaceId: aliceSpace,
+      text: 'Milk',
+    })
+  })
 })

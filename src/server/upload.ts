@@ -39,7 +39,8 @@ export const operationSchema = z.object({
 })
 
 export const uploadSchema = z.object({
-  operations: z.array(operationSchema).max(1000),
+  // Room for one whole transaction: moving a list re-sends each of its entries twice.
+  operations: z.array(operationSchema).max(5000),
 })
 
 export type Operation = z.infer<typeof operationSchema>
@@ -230,21 +231,20 @@ export async function applyUpload(userId: string, operations: Operation[]) {
       }
     }
 
-    // A move re-sends an item as a DELETE and then a PUT (`moveItem`). Keeping the row instead
-    // keeps its history, and a PUT the server refuses cannot lose the item.
+    // A move re-sends an item and its entries as a DELETE and then a PUT (`moveItem`). Keeping
+    // the rows instead keeps their history, and a PUT the server refuses cannot lose them.
     const lastPut = new Map(
       operations.flatMap((operation, index) =>
-        operation.table === 'items' && operation.op === 'PUT'
-          ? [[operation.id, index] as const]
+        operation.op === 'PUT'
+          ? [[`${operation.table}:${operation.id}`, index] as const]
           : [],
       ),
     )
 
     for (const [index, operation] of operations.entries()) {
       const moving =
-        operation.table === 'items' &&
         operation.op === 'DELETE' &&
-        (lastPut.get(operation.id) ?? -1) > index
+        (lastPut.get(`${operation.table}:${operation.id}`) ?? -1) > index
       try {
         // A savepoint per operation: a failure undoes only that operation.
         const outcome = moving
