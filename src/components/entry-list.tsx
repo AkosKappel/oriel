@@ -111,11 +111,14 @@ export function EntryList({
     <section aria-label={m.entries_label()} className="flex flex-col">
       <div className="flex min-h-9 items-center justify-between text-xs text-muted-foreground">
         <p aria-live="polite">
-          {total === 0
-            ? m.entries_none()
-            : open === 0
-              ? m.entries_all_done()
-              : m.entries_left({ open, total })}
+          {/* The first list opened loads the entries; until then it is not empty, only unread. */}
+          {!isReady
+            ? null
+            : total === 0
+              ? m.entries_none()
+              : open === 0
+                ? m.entries_all_done()
+                : m.entries_left({ open, total })}
         </p>
         {checked > 0 && !readOnly && (
           <div className="-mr-2 flex print:hidden">
