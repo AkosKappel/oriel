@@ -177,19 +177,25 @@ export const titleSchema = z
   .trim()
   .min(1, { error: () => m.invalid_title_missing() })
   .max(200, { error: () => m.invalid_title_long() })
-export const bodySchema = z.string().trim().max(20_000)
+export const bodySchema = z
+  .string()
+  .trim()
+  .max(20_000, { error: () => m.invalid_text_long() })
 export const entryTextSchema = z
   .string()
   .trim()
   .min(1, { error: () => m.invalid_text_missing() })
-  .max(500)
+  .max(500, { error: () => m.invalid_entry_long() })
 
 export const newItemSchema = z
   .object({
     type: z.enum(itemTypes),
     title: titleSchema,
     body: bodySchema.default(''),
-    entries: z.array(entryTextSchema).max(500).default([]),
+    entries: z
+      .array(entryTextSchema)
+      .max(500, { error: () => m.invalid_entries_many() })
+      .default([]),
   })
   .refine((item) => item.type === 'list' || item.entries.length === 0, {
     message: 'Only lists have entries',
