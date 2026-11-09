@@ -186,12 +186,13 @@ async function importFrom(file: File) {
   }
 }
 
-const megabytes = (bytes: number) =>
+// A small notebook is well under a megabyte, which would round to "0 MB".
+const storageSize = (bytes: number) =>
   new Intl.NumberFormat(formatLocale(), {
     style: 'unit',
-    unit: 'megabyte',
-    maximumFractionDigits: 1,
-  }).format(bytes / 1_000_000)
+    unit: bytes < 1_000_000 ? 'kilobyte' : 'megabyte',
+    maximumFractionDigits: bytes < 1_000_000 ? 0 : 1,
+  }).format(bytes < 1_000_000 ? bytes / 1_000 : bytes / 1_000_000)
 
 type StorageState = { usage?: number; persisted: boolean } | null
 
@@ -229,7 +230,7 @@ function Storage() {
       <p className="font-serif text-lg">
         {state.usage === undefined
           ? m.storage_stored()
-          : m.storage_in_browser({ size: megabytes(state.usage) })}
+          : m.storage_in_browser({ size: storageSize(state.usage) })}
       </p>
       <p className="text-sm text-muted-foreground">
         {state.persisted ? m.storage_kept() : m.storage_may_clear()}
