@@ -237,6 +237,18 @@ describe('ItemDetail', () => {
     expect(store.entries.size).toBe(0)
   })
 
+  it('duplicates a note with the text just typed', async () => {
+    const user = userEvent.setup()
+    const { id } = await openItem({ type: 'note', title: 'Packing' })
+
+    await user.type(screen.getByRole('textbox', { name: 'Note' }), 'tent')
+    await user.click(screen.getByRole('button', { name: 'Duplicate note' }))
+
+    await waitFor(() => expect(store.items.size).toBe(2))
+    const copy = store.items.toArray.find((row) => row.id !== id)
+    expect(copy?.body).toBe('tent')
+  })
+
   it('copies a list as text where the browser cannot share', async () => {
     const user = userEvent.setup()
     await openItem({ type: 'list', title: 'Groceries', entries: ['milk'] })
