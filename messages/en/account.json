@@ -140,6 +140,7 @@
   "acct_device_failed": "Could not sign out that device. Try again.",
   "acct_devices": "Signed-in devices",
   "acct_devices_offline": "Connect to see your devices.",
+  "acct_devices_loading": "Loading…",
   "acct_this_device": "This device",
   "acct_signed_in_on": "Signed in {date}",
   "acct_sign_out_device": "Sign out {device}, signed in {date}",

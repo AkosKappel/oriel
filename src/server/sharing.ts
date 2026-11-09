@@ -11,6 +11,7 @@ import {
   lt,
 } from 'drizzle-orm'
 import { z } from 'zod'
+import { formatLocale } from '#/lib/locale'
 import { m } from '#/paraglide/messages.js'
 import { db } from '#/server/db'
 import {
@@ -411,7 +412,9 @@ export async function releaseSpaces(userId: string) {
     if (needOwner.length > 0) {
       throw new SharingError(
         m.err_spaces_need_owner({
-          spaces: needOwner.join(', '),
+          spaces: new Intl.ListFormat(formatLocale(), {
+            type: 'conjunction',
+          }).format(needOwner),
           count: needOwner.length,
         }),
       )

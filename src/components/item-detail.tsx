@@ -215,7 +215,9 @@ function ItemEditor({ store, item }: { store: Store; item: Item }) {
   async function duplicate() {
     // The copy takes the stored text, so text typed just before must be saved first.
     await saveBody.current?.()
-    const id = await store.duplicateItem(item.id)
+    const id = await store.duplicateItem(item.id, (title) =>
+      m.copy_title({ title }),
+    )
     await navigate({
       to: '/items/$itemId',
       params: { itemId: id },

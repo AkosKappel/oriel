@@ -362,7 +362,8 @@ export function createStore(database: CommonPowerSyncDatabase) {
      * A fresh copy in the same space: title (marked as a copy), text and list entries in their
      * order, all unchecked, so a packing or shopping list can be reused as a template.
      */
-    async duplicateItem(id: string) {
+    /** `copyTitle` names the copy in the reader's language ("Packing (copy)"). */
+    async duplicateItem(id: string, copyTitle: (title: string) => string) {
       const source = items.get(id)
       if (!source) throw new Error('No such item')
       const texts = entries.toArray
@@ -372,7 +373,8 @@ export function createStore(database: CommonPowerSyncDatabase) {
       return store.createItem(
         {
           type: source.type,
-          title: `${source.title.slice(0, 193)} (copy)`,
+          // Room for the suffix within the 200-character limit.
+          title: copyTitle(source.title.slice(0, 185)),
           body: source.body,
           entries: texts,
         },

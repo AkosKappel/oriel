@@ -100,6 +100,7 @@
   "acct_device_failed": "Nem sikerült kijelentkeztetni azt az eszközt. Próbáld újra.",
   "acct_devices": "Bejelentkezett eszközök",
   "acct_devices_offline": "Csatlakozz, hogy lásd az eszközeidet.",
+  "acct_devices_loading": "Betöltés…",
   "acct_this_device": "Ez az eszköz",
   "acct_signed_in_on": "Bejelentkezve: {date}",
   "acct_sign_out_device": "{device} kijelentkeztetése, bejelentkezve: {date}",

@@ -238,8 +238,10 @@ function EntryRow({
       />
       {checker && (
         <span className="shrink-0 pl-2 text-xs text-muted-foreground">
-          <span className="sr-only">checked by </span>
-          {checker}
+          <span aria-hidden="true">{checker}</span>
+          <span className="sr-only">
+            {m.entry_checked_by({ name: checker })}
+          </span>
         </span>
       )}
       {movable && <MoveHandle entry={entry} onMove={onMove} />}
@@ -319,7 +321,7 @@ function MoveHandle({
       type="button"
       data-move-handle={entry.id}
       aria-label={m.entry_move({ text: entry.text })}
-      aria-description="Drag, or use the arrow keys"
+      aria-description={m.entry_move_hint()}
       onKeyDown={onKeyDown}
       onPointerDown={onPointerDown}
       className={cn(rowAction, 'cursor-grab touch-none active:cursor-grabbing')}

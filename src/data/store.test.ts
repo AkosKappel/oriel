@@ -139,7 +139,7 @@ describe('organizing items', () => {
     )
     await store.setEntryCompleted(passport.id, true)
 
-    const copyId = await store.duplicateItem(id)
+    const copyId = await store.duplicateItem(id, (title) => `${title} (copy)`)
 
     expect(store.items.get(copyId)).toMatchObject({
       type: 'list',

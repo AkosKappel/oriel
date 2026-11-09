@@ -144,6 +144,7 @@
   "acct_device_failed": "To zariadenie sa nepodarilo odhlásiť. Skús znova.",
   "acct_devices": "Prihlásené zariadenia",
   "acct_devices_offline": "Pripoj sa, aby si videl svoje zariadenia.",
+  "acct_devices_loading": "Načítava sa…",
   "acct_this_device": "Toto zariadenie",
   "acct_signed_in_on": "Prihlásené {date}",
   "acct_sign_out_device": "Odhlásiť {device}, prihlásené {date}",

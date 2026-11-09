@@ -173,7 +173,9 @@ function Devices() {
           {m.acct_devices_offline()}
         </p>
       ) : devices === null ? (
-        <p className="text-sm text-muted-foreground">Loading</p>
+        <p className="text-sm text-muted-foreground">
+          {m.acct_devices_loading()}
+        </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {devices.map((device) => (
