@@ -164,6 +164,35 @@ describe.skipIf(!process.env.DATABASE_URL)('sharing', async () => {
     expect((await roleOf(family, ben))?.role).toBe('owner')
   })
 
+  it('keeps an owner when two owners demote each other at the same moment', async () => {
+    const pairs = await Promise.all(
+      Array.from({ length: 10 }, async () => {
+        const anna = await newUser('Anna')
+        const ben = await newUser('Ben')
+        const family = await newSpace(anna, 'Family')
+        await sharing.acceptInvite(
+          ben,
+          await sharing.createInvite(anna, family, 'editor'),
+        )
+        await sharing.setMemberRole(anna, family, ben, 'owner')
+        return { anna, ben, family }
+      }),
+    )
+
+    // Many pairs at once, so some requests really overlap.
+    await Promise.allSettled(
+      pairs.flatMap(({ anna, ben, family }) => [
+        sharing.setMemberRole(anna, family, ben, 'editor'),
+        sharing.setMemberRole(ben, family, anna, 'editor'),
+      ]),
+    )
+
+    for (const { anna, ben, family } of pairs) {
+      const roles = [await roleOf(family, anna), await roleOf(family, ben)]
+      expect(roles.filter((member) => member?.role === 'owner')).toHaveLength(1)
+    }
+  })
+
   it('before an account is deleted, removes spaces nobody else uses and keeps an owner on the rest', async () => {
     const anna = await newUser('Anna')
     const ben = await newUser('Ben')

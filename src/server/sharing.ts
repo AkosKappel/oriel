@@ -80,6 +80,13 @@ async function nameOf(tx: Tx, userId: string) {
 }
 
 async function ownerCount(tx: Tx, spaceId: string) {
+  // Locks the space until the transaction ends, so two owners demoting or removing each other
+  // at the same moment take turns: the second one counts after the first one's change.
+  await tx
+    .select({ id: space.id })
+    .from(space)
+    .where(eq(space.id, spaceId))
+    .for('update')
   const [{ owners }] = await tx
     .select({ owners: count() })
     .from(spaceMember)
