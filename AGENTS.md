@@ -4,19 +4,19 @@ A mobile-first, offline-first app for notes, lists and tasks, with live sync and
 
 ## Commands
 
-npm only (`package-lock.json`).
+pnpm only (`pnpm-lock.yaml`).
 
-| Command               | What it does                                        |
-| --------------------- | --------------------------------------------------- |
-| `npm run dev`         | Dev server on port 3000                             |
-| `npm run check:fix`   | Biome format, lint and import sort                  |
-| `npm run typecheck`   | Regenerates the route tree, then `tsc`              |
-| `npm test`            | Vitest, `src/**/*.test.{ts,tsx}`                    |
-| `npm run test:e2e`    | Playwright against the built app and the services   |
-| `npm run build`       | Production build into `.output/`                    |
-| `npm run db:generate` | Migration from changes in `src/server/db/schema.ts` |
-| `npm run db:migrate`  | Apply migrations (`docker compose up -d db` first)  |
-| `npm run samples`     | Sample data to import (`src/data/samples.ts`)       |
+| Command            | What it does                                        |
+| ------------------ | --------------------------------------------------- |
+| `pnpm dev`         | Dev server on port 3000                             |
+| `pnpm check:fix`   | Biome format, lint and import sort                  |
+| `pnpm typecheck`   | Regenerates the route tree, then `tsc`              |
+| `pnpm test`        | Vitest, `src/**/*.test.{ts,tsx}`                    |
+| `pnpm test:e2e`    | Playwright against the built app and the services   |
+| `pnpm build`       | Production build into `.output/`                    |
+| `pnpm db:generate` | Migration from changes in `src/server/db/schema.ts` |
+| `pnpm db:migrate`  | Apply migrations (`docker compose up -d db` first)  |
+| `pnpm samples`     | Sample data to import (`src/data/samples.ts`)       |
 
 Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same.
 
@@ -39,7 +39,7 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Deleting an item moves it to the trash (`deleted_at`, Undo with `restoreItem`); archived and trashed items are kept off home by `itemsInView`. Permanent deletes return a `Snapshot`, and `restore(snapshot)` undoes them.
 - Read whole tables with `useRows(store.items)` (`src/lib/use-rows.ts`), not `useLiveQuery` over a bare `from`: a query compiles a second collection per hook. Use `useLiveQuery` with `where` for subsets.
 - Tests run the same store against real SQLite through `@powersync/node` (`src/data/store.test.ts`).
-- End-to-end tests (`e2e/`, Playwright, desktop and mobile Chrome, axe) run against `npm run build` with the database and PowerSync up; one worker locally, two in CI. Each test signs up its own `e2e-…@example.com` accounts, sending its own `X-Forwarded-For` to the auth routes only; the teardown deletes them. CI builds the stack from `compose.yaml` with throwaway keys.
+- End-to-end tests (`e2e/`, Playwright, desktop and mobile Chrome, axe) run against `pnpm build` with the database and PowerSync up; one worker locally, two in CI. Each test signs up its own `e2e-…@example.com` accounts, sending its own `X-Forwarded-For` to the auth routes only; the teardown deletes them. CI builds the stack from `compose.yaml` with throwaway keys.
 - Component tests (`src/components/*.test.tsx`) use Testing Library in jsdom (`// @vitest-environment jsdom` per file). They mock `#/data/client` with `#/test/client` (that store on Node SQLite) and render through `renderPage` from `#/test/dom` (router, toaster, empty tables after each test). Click Undo with `findUndo(message)`; query by role and label, as a user would.
 - `@tanstack/react-db` and `@tanstack/powersync-db-collection` are pinned together; both must depend on the same `@tanstack/db` version.
 
@@ -89,12 +89,12 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 
 ## Image
 
-- `Dockerfile`: build stage runs `npm ci` and `npm run build`; the runtime stage holds `.output`, `drizzle/`, `scripts/migrate.ts` and its two packages, runs as `node`, and has no npm. Migrations in production: `node scripts/migrate.ts` from the image (drizzle-kit is not in it). CI builds, scans (Trivy) and pushes `main` to GHCR; never build images on the home server except a single check, and never scan there.
+- `Dockerfile`: build stage runs `pnpm install --frozen-lockfile` and `pnpm build`; the runtime stage holds `.output`, `drizzle/`, `scripts/migrate.ts` and its two packages, runs as `node`, and has no npm, pnpm or corepack. Migrations in production: `node scripts/migrate.ts` from the image (drizzle-kit is not in it). CI builds, scans (Trivy) and pushes `main` to GHCR; never build images on the home server except a single check, and never scan there.
 
 ## Offline
 
 - `scripts/service-worker.js` is a template; `scripts/service-worker-plugin.ts` fills in the precache list and the public pages and emits `sw.js` with the client build. Offline, a public page comes from the cache as it is and every other page gets the `/app` shell. It must be emitted during the build: Nitro only serves files it knows when it bundles.
-- The worker only runs in production builds; test offline with `npm run build` and `npm start`.
+- The worker only runs in production builds; test offline with `pnpm build` and `pnpm start`.
 - Long text fields save when the page is hidden, not only on unmount.
 
 ## Languages
@@ -103,12 +103,12 @@ Run `check`, `typecheck`, `test` and `build` before committing; CI runs the same
 - Every user-facing string is a message, called where it is shown (`m.key()`), never kept in a module-level constant: the server renders pages in each request's language. Labels for item types, priorities, statuses and repeats are functions in `src/components/item-labels.ts`.
 - Write whole phrases per language: a phrase that depends on the item type selects on it (`type=note`, `type=list`, `type=*`) instead of gluing translated words together, and counts use plural forms (Slovak has one, few and other). Address the reader informally (tegeződés, tykanie), like BudgetMaster.
 - Dates and name lists follow the language through `formatLocale()` (`src/lib/locale.ts`: en-IE, hu-HU, sk-SK). Notifications are sent outside any request, so their messages get the device's `locale` explicitly (`push_subscription.locale`).
-- `src/paraglide` is generated and not committed: `npm run i18n` (run by `typecheck` and `test`) or the Vite plugin compiles it.
+- `src/paraglide` is generated and not committed: `pnpm i18n` (run by `typecheck` and `test`) or the Vite plugin compiles it.
 
 ## Conventions
 
 - Imports from `src` use the `#/` alias (`#/lib/utils`).
-- Routes are files in `src/routes`; `src/routeTree.gen.ts` is generated, never edit it. The dev server and `npm run build` append a `Register` block that `tsr generate` (run by `npm run typecheck`) leaves out; commit the `tsr generate` form, so stop the dev server and run `npx tsr generate` before committing a route change. The notebook (`/app`) and the item page (`/items/$itemId`) share the `_notebook` layout (filters in its search params, `AppHeader` and list and reading pane side by side from `lg`); settings, account and spaces use `SubPage`. The public pages (`/`, about, FAQ, privacy, terms, accessibility) are server-rendered under the `_site` layout (`SiteShell`); they must not import the local database (`#/data/client`), and neither may anything in the root route or the headers, or every page loads PowerSync. The home page sends a device that has used the notebook (`oriel.used` or a remembered account) straight to `/app` when it opens `/` itself.
+- Routes are files in `src/routes`; `src/routeTree.gen.ts` is generated, never edit it. The dev server and `pnpm build` append a `Register` block that `tsr generate` (run by `pnpm typecheck`) leaves out; commit the `tsr generate` form, so stop the dev server and run `pnpm exec tsr generate` before committing a route change. The notebook (`/app`) and the item page (`/items/$itemId`) share the `_notebook` layout (filters in its search params, `AppHeader` and list and reading pane side by side from `lg`); settings, account and spaces use `SubPage`. The public pages (`/`, about, FAQ, privacy, terms, accessibility) are server-rendered under the `_site` layout (`SiteShell`); they must not import the local database (`#/data/client`), and neither may anything in the root route or the headers, or every page loads PowerSync. The home page sends a device that has used the notebook (`oriel.used` or a remembered account) straight to `/app` when it opens `/` itself.
 - Pages need one `main` landmark and an `h1` (an `sr-only` one where the title is an editable input). Text uses `text-muted-foreground` or stronger; `text-faint` is for placeholders and decoration only.
 - Interactive primitives are React Aria Components, wrapped in `src/components/ui` (`Checkbox`, `ChoiceGroup`). Use React Aria (`Button`, `ToggleButton`, `RadioGroup`, ...) for new controls; style their states with Tailwind data variants (`data-selected:`, `data-focus-visible:`, `data-pressed:`).
 - Visual direction is "Paper": serif (Newsreader) for content, small sans (Instrument Sans) for controls and metadata, whitespace instead of borders and boxes, the selected option underlined. Titles share one column; checkboxes sit in the left margin (`pl-10` on the content, `-left-[2.375rem]` on the checkbox).

@@ -88,7 +88,7 @@ describe('changesMessage', () => {
   })
 })
 
-// Needs the database (`docker compose up -d db` and `npm run db:migrate`).
+// Needs the database (`docker compose up -d db` and `pnpm db:migrate`).
 describe.skipIf(!process.env.DATABASE_URL)('runNotifications', async () => {
   const keys = webpush.generateVAPIDKeys()
   process.env.VAPID_PUBLIC_KEY = keys.publicKey

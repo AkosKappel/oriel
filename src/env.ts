@@ -30,7 +30,7 @@ const schema = z.object({
   // Must be on a domain verified in Resend; onboarding@resend.dev only reaches the account owner.
   EMAIL_FROM: z.string().default('Oriel <onboarding@resend.dev>'),
   // Optional: morning reminders (Web Push) are offered only with a VAPID key pair, made once with
-  // `npx web-push generate-vapid-keys`. The subject is a contact for the push services.
+  // `pnpm exec web-push generate-vapid-keys`. The subject is a contact for the push services.
   VAPID_PUBLIC_KEY: z.preprocess(
     (value) => value || undefined,
     z.string().optional(),

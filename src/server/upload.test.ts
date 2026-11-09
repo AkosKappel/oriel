@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Operation } from './upload'
 
-// Needs the database (`docker compose up -d db` and `npm run db:migrate`).
+// Needs the database (`docker compose up -d db` and `pnpm db:migrate`).
 describe.skipIf(!process.env.DATABASE_URL)('applyUpload', async () => {
   const { db } = await import('#/server/db')
   const { activity, entries, items, spaceMember, user } = await import(

@@ -26,5 +26,5 @@ lighthouse-report
 deploy/tailscale/ts.env
 oriel-samples.json
 
-# Paraglide output, compiled from messages/ by `npm run i18n` and the Vite plugin
+# Paraglide output, compiled from messages/ by `pnpm i18n` and the Vite plugin
 src/paraglide

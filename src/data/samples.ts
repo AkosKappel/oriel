@@ -3,7 +3,7 @@ import type { Entry, Item } from './schema'
 // Sample data for trying the app and testing edge cases: text that is very short or very long,
 // punctuation, Markdown and HTML, emoji, diacritics, other scripts (also right to left), and
 // every item state. It is an ordinary JSON export, so Settings → Import loads it with or without
-// an account. Written by `npm run samples`; kept free of runtime imports so Node runs it as is.
+// an account. Written by `pnpm samples`; kept free of runtime imports so Node runs it as is.
 
 type Sample = {
   type: Item['type']

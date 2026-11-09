@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, describe, expect, it } from 'vitest'
 
-// Needs the database (`docker compose up -d db` and `npm run db:migrate`).
+// Needs the database (`docker compose up -d db` and `pnpm db:migrate`).
 describe.skipIf(!process.env.DATABASE_URL)('personal space', async () => {
   const { db } = await import('#/server/db')
   const { space, spaceMember, user } = await import('#/server/db/schema')

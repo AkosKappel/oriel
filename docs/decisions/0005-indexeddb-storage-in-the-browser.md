@@ -14,7 +14,7 @@ PowerSync runs SQLite in the browser through wa-sqlite, which stores the databas
 
 ## Measurements
 
-Production build, Chromium, 390 px, 2,043 items with 10,000 entries (`npm run samples -- --big`), signed out:
+Production build, Chromium, 390 px, 2,043 items with 10,000 entries (`pnpm samples --big`), signed out:
 
 |                                | IndexedDB             | OPFSCoopSyncVFS               |
 | ------------------------------ | --------------------- | ----------------------------- |

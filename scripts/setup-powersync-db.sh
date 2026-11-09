@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Creates the database roles PowerSync uses (scripts/powersync-roles.sql; safe to run again).
 # Passwords come from .env (PS_ROLE_PASSWORD, PS_STORAGE_PASSWORD). Run from the project folder
-# after `docker compose up -d db` and `npm run db:migrate`.
+# after `docker compose up -d db` and `pnpm db:migrate`.
 set -euo pipefail
 
 set -a

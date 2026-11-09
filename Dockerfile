@@ -2,10 +2,12 @@
 
 FROM node:24-slim AS build
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm npm ci
+RUN corepack enable && corepack prepare pnpm@12 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 COPY . .
-RUN npm run build \
+RUN pnpm build \
     # The migration script needs only these two packages (neither has dependencies).
     && mkdir -p /migrate/node_modules \
     && cp -rL node_modules/drizzle-orm node_modules/postgres /migrate/node_modules/

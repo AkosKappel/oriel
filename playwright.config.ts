@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 const port = 3100
 
-// End-to-end tests run against the production build (`npm run build` first), a migrated
+// End-to-end tests run against the production build (`pnpm build` first), a migrated
 // database and the PowerSync Service (see README, Getting started). Every test signs up its own
 // accounts; the teardown deletes them.
 export default defineConfig({

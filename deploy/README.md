@@ -7,7 +7,7 @@ can change branches and reset its database without touching it.
 | --------------- | ------------------------------------- | ----------------------------------------------------------------------------- |
 | Folder          | `~/projects/oriel`                    | `~/deploy/oriel`                                                              |
 | Compose project | `oriel`                               | `oriel-prod`                                                                  |
-| App             | `npm run dev` on port 3000            | image from GHCR behind nginx on `127.0.0.1:8087`, public via Tailscale Funnel |
+| App             | `pnpm dev` on port 3000               | image from GHCR behind nginx on `127.0.0.1:8087`, public via Tailscale Funnel |
 | Sync service    | `oriel-powersync` on `127.0.0.1:8086` | `oriel-prod-powersync`, reached through nginx at `/powersync/`                |
 | Database        | `oriel-db` on `127.0.0.1:5437`        | `oriel-prod-db`, no host port                                                 |
 
@@ -45,7 +45,7 @@ service start.
    ```
 
 3. Fill in `~/deploy/oriel/.env` with fresh secrets (the comments say how to make each),
-   `IMAGE_TAG` from the latest green CI run on `main`, a production `RESEND_API_KEY` and, for notifications, a VAPID key pair (`npx web-push generate-vapid-keys`). Put
+   `IMAGE_TAG` from the latest green CI run on `main`, a production `RESEND_API_KEY` and, for notifications, a VAPID key pair (`pnpm exec web-push generate-vapid-keys`). Put
    the Tailscale auth key into `tailscale/ts.env` (`TS_AUTHKEY=...`, the same reusable key as
    the other apps). `chmod 600` both files.
 4. Start it: `cd ~/deploy/oriel && docker compose up -d`.

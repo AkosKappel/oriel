@@ -1,4 +1,4 @@
-// Writes sample data as an Oriel JSON export: `npm run samples` (add `-- --big` for 2,000 more
+// Writes sample data as an Oriel JSON export: `pnpm samples` (add `--big` for 2,000 more
 // plain items). Load it in the app with Settings → Import a JSON export, signed in or not.
 // Importing the same file twice adds nothing; a new file has new creation times, so it adds again.
 import { writeFileSync } from 'node:fs'

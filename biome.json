@@ -7,12 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!src/routeTree.gen.ts",
-      "!package-lock.json",
-      "!drizzle"
-    ]
+    "includes": ["**", "!src/routeTree.gen.ts", "!pnpm-lock.yaml", "!drizzle"]
   },
   "formatter": {
     "indentStyle": "space"

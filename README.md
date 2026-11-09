@@ -106,17 +106,17 @@ Why it is built this way (PowerSync, the upload checks, the conflict rules, the 
 Requires Node.js 24 and Docker (PostgreSQL and the PowerSync Service).
 
 ```bash
-npm install
+pnpm install
 cp .env.example .env    # set the passwords, BETTER_AUTH_SECRET, and the same DB password in DATABASE_URL
 node scripts/generate-sync-keys.mjs >> .env
 docker compose up -d db
-npm run db:migrate
+pnpm db:migrate
 ./scripts/setup-powersync-db.sh
 docker compose up -d powersync
-npm run dev
+pnpm dev
 ```
 
-For sample data, run `npm run samples` and load the written `oriel-samples.json` with Settings → Import a JSON export, signed in or not. It covers edge cases: very short and very long text, punctuation, Markdown and HTML, emoji, diacritics, other scripts including right to left, and every item state. Add `-- --big` for 2,000 more plain items.
+For sample data, run `pnpm samples` and load the written `oriel-samples.json` with Settings → Import a JSON export, signed in or not. It covers edge cases: very short and very long text, punctuation, Markdown and HTML, emoji, diacritics, other scripts including right to left, and every item state. Add `--big` for 2,000 more plain items.
 
 The app runs at http://localhost:3000 and the PowerSync Service at http://localhost:8086. Without the database the app still works fully on the device; accounts and sync need both services.
 
@@ -133,19 +133,19 @@ The production stack (app, PostgreSQL, PowerSync, nginx, nightly backups and a T
 
 ## Scripts
 
-| Command               | What it does                           |
-| --------------------- | -------------------------------------- |
-| `npm run dev`         | Start the dev server                   |
-| `npm run build`       | Build for production into `.output/`   |
-| `npm start`           | Run the production build               |
-| `npm run check`       | Lint and format check (Biome)          |
-| `npm run check:fix`   | Fix lint and formatting                |
-| `npm run typecheck`   | Type-check the project                 |
-| `npm test`            | Run the unit and component tests       |
-| `npm run test:e2e`    | Run the end-to-end tests (Playwright)  |
-| `npm run db:generate` | Create a migration from schema changes |
-| `npm run db:migrate`  | Apply migrations                       |
-| `npm run samples`     | Write sample data to import            |
+| Command            | What it does                           |
+| ------------------ | -------------------------------------- |
+| `pnpm dev`         | Start the dev server                   |
+| `pnpm build`       | Build for production into `.output/`   |
+| `pnpm start`       | Run the production build               |
+| `pnpm check`       | Lint and format check (Biome)          |
+| `pnpm check:fix`   | Fix lint and formatting                |
+| `pnpm typecheck`   | Type-check the project                 |
+| `pnpm test`        | Run the unit and component tests       |
+| `pnpm test:e2e`    | Run the end-to-end tests (Playwright)  |
+| `pnpm db:generate` | Create a migration from schema changes |
+| `pnpm db:migrate`  | Apply migrations                       |
+| `pnpm samples`     | Write sample data to import            |
 
 ## License
 
