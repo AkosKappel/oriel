@@ -7,13 +7,13 @@ can change branches and reset its database without touching it.
 | --------------- | ------------------------------------- | ----------------------------------------------------------------------------- |
 | Folder          | `~/projects/oriel`                    | `~/deploy/oriel`                                                              |
 | Compose project | `oriel`                               | `oriel-prod`                                                                  |
-| App             | `pnpm dev` on port 3000               | image from GHCR behind nginx on `127.0.0.1:8087`, public via Tailscale Funnel |
+| App             | `pnpm dev` on port 3000               | image from GHCR behind nginx on `127.0.0.1:8087`, public via Cloudflare Tunnel (the old Tailscale Funnel address redirects) |
 | Sync service    | `oriel-powersync` on `127.0.0.1:8086` | `oriel-prod-powersync`, reached through nginx at `/powersync/`                |
 | Database        | `oriel-db` on `127.0.0.1:5437`        | `oriel-prod-db`, no host port                                                 |
 
 ```mermaid
 flowchart LR
-  Browser -->|HTTPS| TS[Tailscale sidecar, Funnel]
+  Browser -->|HTTPS| TS[Cloudflare Tunnel connector]
   TS --> nginx
   nginx -->|/| App[app :3000]
   nginx -->|/powersync/| PS[PowerSync :8080]
@@ -22,7 +22,7 @@ flowchart LR
 ```
 
 Browsers reach the app and the sync service on one origin (`POWERSYNC_URL` is the app's URL plus
-`/powersync`), so there is no second hostname, no CORS and no extra Funnel port. On start, the
+`/powersync`), so there is no second hostname, no CORS and no extra public port. On start, the
 `migrate` container applies migrations, then `powersync-setup` creates PowerSync's roles and
 storage database (`powersync/roles.sql`, safe to repeat), and only then do the app and the sync
 service start.
@@ -34,8 +34,8 @@ service start.
 2. Create the folders and copy the files, from the repository root:
 
    ```bash
-   mkdir -p ~/deploy/oriel/{tailscale,maintenance,nginx,powersync} ~/logs/oriel ~/backups/oriel
-   cp deploy/compose.yaml deploy/compose.tailscale.yaml deploy/deploy.sh deploy/restore-test.sh scripts/smoke.ts ~/deploy/oriel/
+   mkdir -p ~/deploy/oriel/{tailscale,cloudflared,maintenance,nginx,powersync} ~/logs/oriel ~/backups/oriel
+   cp deploy/compose.yaml deploy/compose.tailscale.yaml deploy/compose.cloudflare.yaml deploy/deploy.sh deploy/restore-test.sh scripts/smoke.ts ~/deploy/oriel/
    cp deploy/tailscale/serve.json ~/deploy/oriel/tailscale/
    cp deploy/maintenance/index.html ~/deploy/oriel/maintenance/
    cp deploy/nginx/default.conf ~/deploy/oriel/nginx/
@@ -49,7 +49,7 @@ service start.
    the Tailscale auth key into `tailscale/ts.env` (`TS_AUTHKEY=...`, the same reusable key as
    the other apps). `chmod 600` both files.
 4. Start it: `cd ~/deploy/oriel && docker compose up -d`.
-5. Check: `node smoke.ts https://oriel.tailb52c43.ts.net`, then sign up on a phone over mobile
+5. Check: `node smoke.ts https://oriel.akoskappel.dev`, then sign up on a phone over mobile
    data and see a note arrive on a second device.
 
 ## Deploy a new version
@@ -74,7 +74,7 @@ copy it to the deploy folder before running the script. After a change to `nginx
 `docker compose restart powersync`.
 
 After the first deploy, check `docker compose logs app` for Better Auth's warning that it "could
-not determine a client IP": without the visitor's address from the sidecar, rate limits fall back
+not determine a client IP": without the visitor's address from the tunnel, rate limits fall back
 to one bucket shared by everyone.
 
 ## Maintenance mode
@@ -116,3 +116,12 @@ sidecar: everything started in order, the smoke test passed, two browser session
 synced through nginx in both directions (a new note arrived on the other in under a second),
 maintenance mode answered every path, the backup wrote its first dump, and the restore test
 passed on it.
+
+## Public address
+
+https://oriel.akoskappel.dev goes through a Cloudflare Tunnel: `compose.cloudflare.yaml` runs a
+`cloudflared` connector that forwards every request to nginx. Its token goes into
+`cloudflared/tunnel.env` (`TUNNEL_TOKEN=...`, `chmod 600`; print it with
+`cloudflared tunnel token oriel` on a machine logged in to the `akoskappel.dev` zone).
+The Tailscale sidecar still serves the old `oriel.tailb52c43.ts.net` address, where nginx
+answers with a 301 to the new domain.

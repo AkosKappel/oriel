@@ -129,7 +129,7 @@ docker run --rm -e DATABASE_URL=... ghcr.io/akoskappel/oriel node scripts/migrat
 docker run -p 3000:3000 --env-file .env ghcr.io/akoskappel/oriel
 ```
 
-The production stack (app, PostgreSQL, PowerSync, nginx, nightly backups and a Tailscale Funnel sidecar), its deploy script and the maintenance page are in [`deploy/`](deploy/README.md).
+The production stack (app, PostgreSQL, PowerSync, nginx, nightly backups and a Cloudflare Tunnel connector), its deploy script and the maintenance page are in [`deploy/`](deploy/README.md).
 
 ## Scripts
 

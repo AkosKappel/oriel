@@ -7,4 +7,4 @@ Allow: /terms
 Allow: /accessibility
 Allow: /sign-in
 Disallow: /
-Sitemap: https://oriel.tailb52c43.ts.net/sitemap.xml
+Sitemap: https://oriel.akoskappel.dev/sitemap.xml

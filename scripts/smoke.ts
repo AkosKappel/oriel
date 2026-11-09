@@ -1,4 +1,4 @@
-// Post-deploy smoke test: `node scripts/smoke.ts https://oriel.tailb52c43.ts.net`.
+// Post-deploy smoke test: `node scripts/smoke.ts https://oriel.akoskappel.dev`.
 // Checks the app, its security headers and the sync service behind the same origin, without
 // creating anything. Exits non-zero on the first failure.
 

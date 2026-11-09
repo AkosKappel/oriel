@@ -1,0 +1,24 @@
+# Public HTTPS entry point: a Cloudflare Tunnel connector that serves the app at
+# https://oriel.akoskappel.dev, forwarding every request to nginx on app-network.
+# Enabled through COMPOSE_FILE in .env; the token lives in cloudflared/tunnel.env.
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.7
+    container_name: oriel-prod-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://nginx:80 run
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    env_file:
+      - cloudflared/tunnel.env
+    networks:
+      - app-network
+    depends_on:
+      - nginx
