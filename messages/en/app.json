@@ -287,7 +287,7 @@
   "append_added": "Added {count} to {list}",
   "append_too_long": "Could not add. Keep each entry under 500 characters.",
   "draft_task_due": "Due {day}",
-  "draft_keep_day_word": "Keep the word",
+  "draft_keep_day_word": "Keep as typed",
   "draft_list_items": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],

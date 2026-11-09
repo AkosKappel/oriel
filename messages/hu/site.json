@@ -55,7 +55,7 @@
   "about_title": "Az Orielről",
   "about_lead": "Az Oriel egy nyugodt hely jegyzeteknek, listáknak és feladatoknak. Minden először az eszközödre mentődik, így azonnal megnyílik, és kapcsolat nélkül is működik. Fiókkal szinkronizál az eszközeid között, a közös terekben pedig egy háztartás vagy csapat ugyanazt a listát látja, ahogy változik.",
   "about_what": "Mit tud",
-  "about_w1": "Gyors rögzítés: írj be egy sort, és nyomj Entert. Az első sor lesz a cím, a „Bevásárlás: tej, tojás, kenyér” pedig listává válik. A nappal végződő feladat, például „Fogorvos holnap”, megkapja azt a határidőt. Az ezt támogató telefonokon diktálhatsz is, vagy beolvashatod egy termék vonalkódját egy listába.",
+  "about_w1": "Gyors rögzítés: írj be egy sort, és nyomj Entert. Az első sor lesz a cím, a „Bevásárlás: tej, tojás, kenyér” pedig listává válik. A nappal vagy dátummal végződő feladat, például „Fogorvos holnap” vagy „Lakbér 11.12.”, megkapja azt a határidőt. Az ezt támogató telefonokon diktálhatsz is, vagy beolvashatod egy termék vonalkódját egy listába.",
   "about_w2": "Markdown-jegyzetek, formázva megjelenítve és sima szövegként szerkesztve, visszaállítható korábbi változatokkal.",
   "about_w3": "Kipipálható listák, amelyeket húzással vagy billentyűzettel rendezhetsz át és újra felhasználhatsz; gépelés közben a korábbi listák tételeit ajánlja.",
   "about_w4": "Feladatok prioritással, állapottal, határidővel és ismétlődéssel, bárkinek vagy egy tagnak, Ma és Közelgő nézettel.",

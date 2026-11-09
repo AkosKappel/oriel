@@ -209,3 +209,96 @@ describe('readDueDay', () => {
     expect(readDueDay('Party fri', '2027-02-27', 'en')?.due).toBe('2027-03-05')
   })
 })
+
+describe('readDueDay with dates and phrases', () => {
+  // Monday 9 November 2026.
+  const today = '2026-11-09'
+  const due = (title: string, locale: 'en' | 'hu' | 'sk' = 'en') =>
+    readDueDay(title, today, locale)?.due ?? null
+
+  it('reads dates in English, day first as in Ireland', () => {
+    expect(readDueDay('Dentist 12/11', today, 'en')).toEqual({
+      title: 'Dentist',
+      due: '2026-11-12',
+    })
+    expect(due('Dentist 12.11.')).toBe('2026-11-12')
+    expect(due('Party 12/11/2027')).toBe('2027-11-12')
+    expect(due('Trip 2026-12-24')).toBe('2026-12-24')
+    expect(due('Dentist 12 Nov')).toBe('2026-11-12')
+    expect(due('Dentist on November 12th')).toBe('2026-11-12')
+    expect(due('Dentist Dec 3, 2027')).toBe('2027-12-03')
+    // A day that has passed this year is next year's.
+    expect(due('Rent 3/1')).toBe('2027-01-03')
+    expect(due('Rent 1 March')).toBe('2027-03-01')
+    expect(due('Rent 9/11')).toBe('2026-11-09')
+  })
+
+  it('reads weeks, months, counts and weekends in English', () => {
+    expect(readDueDay('Plan the trip next week', today, 'en')).toEqual({
+      title: 'Plan the trip',
+      due: '2026-11-16',
+    })
+    expect(due('Review next month')).toBe('2026-12-09')
+    // "next Friday" is next week's; "this Friday" the coming one.
+    expect(due('Call next fri')).toBe('2026-11-20')
+    expect(due('Gym this Friday')).toBe('2026-11-13')
+    expect(due('Renew in 3 days')).toBe('2026-11-12')
+    expect(due('Renew in a week')).toBe('2026-11-16')
+    expect(due('Renew in 2 weeks')).toBe('2026-11-23')
+    expect(due('Renew in 1 month')).toBe('2026-12-09')
+    expect(due('Clean the house this weekend')).toBe('2026-11-14')
+    expect(due('Call the day after tomorrow')).toBe('2026-11-11')
+    expect(readDueDay('Call mom, tomorrow', today, 'en')?.title).toBe(
+      'Call mom',
+    )
+  })
+
+  it('reads Hungarian dates month first, and Hungarian phrases', () => {
+    expect(readDueDay('Fogorvos 11.12.', today, 'hu')).toEqual({
+      title: 'Fogorvos',
+      due: '2026-11-12',
+    })
+    expect(due('Fogorvos 11. 12.', 'hu')).toBe('2026-11-12')
+    expect(due('Fogorvos 12.11.', 'hu')).toBe('2026-12-11')
+    expect(due('Fogorvos 2026.12.24.', 'hu')).toBe('2026-12-24')
+    expect(due('Fogorvos november 12-én', 'hu')).toBe('2026-11-12')
+    expect(due('Fogorvos nov. 12', 'hu')).toBe('2026-11-12')
+    expect(due('Lakbér jövő héten', 'hu')).toBe('2026-11-16')
+    expect(due('Lakbér jövő hónapban', 'hu')).toBe('2026-12-09')
+    expect(due('Lakbér jövő pénteken', 'hu')).toBe('2026-11-20')
+    expect(due('Lakbér 3 nap múlva', 'hu')).toBe('2026-11-12')
+    expect(due('Lakbér egy hét múlva', 'hu')).toBe('2026-11-16')
+    expect(due('Takarítás hétvégén', 'hu')).toBe('2026-11-14')
+  })
+
+  it('reads Slovak dates day first, and Slovak phrases', () => {
+    expect(readDueDay('Zubár 12.11.', today, 'sk')).toEqual({
+      title: 'Zubár',
+      due: '2026-11-12',
+    })
+    expect(due('Zubár 12. 11.', 'sk')).toBe('2026-11-12')
+    expect(due('Zubár 12.11.2027', 'sk')).toBe('2027-11-12')
+    expect(due('Zubár 12. novembra', 'sk')).toBe('2026-11-12')
+    expect(due('Nájom budúci týždeň', 'sk')).toBe('2026-11-16')
+    expect(due('Nájom na budúci týždeň', 'sk')).toBe('2026-11-16')
+    expect(due('Nájom budúci mesiac', 'sk')).toBe('2026-12-09')
+    expect(due('Nájom budúci piatok', 'sk')).toBe('2026-11-20')
+    expect(due('Nájom budúcu stredu', 'sk')).toBe('2026-11-18')
+    expect(due('Nájom o 3 dni', 'sk')).toBe('2026-11-12')
+    expect(due('Nájom o týždeň', 'sk')).toBe('2026-11-16')
+    expect(due('Nájom o 2 mesiace', 'sk')).toBe('2027-01-09')
+    expect(due('Upratať cez víkend', 'sk')).toBe('2026-11-14')
+  })
+
+  it('leaves numbers, versions, times and impossible dates alone', () => {
+    for (const locale of ['en', 'hu', 'sk'] as const) {
+      expect(due('Read chapter 12', locale)).toBeNull()
+      expect(due('Release version 1.2', locale)).toBeNull()
+      expect(due('Meet at 10:30', locale)).toBeNull()
+      expect(due('Buy 2 kg', locale)).toBeNull()
+      expect(due('Fix 31.02.', locale)).toBeNull()
+    }
+    expect(due('next week')).toBeNull()
+    expect(due('Rent 31/2')).toBeNull()
+  })
+})

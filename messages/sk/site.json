@@ -55,7 +55,7 @@
   "about_title": "O Oriel",
   "about_lead": "Oriel je jedno pokojné miesto pre poznámky, zoznamy a úlohy. Všetko sa najprv uloží v tvojom zariadení, takže sa otvorí hneď a funguje bez pripojenia. S účtom sa synchronizuje medzi tvojimi zariadeniami a spoločné priestory držia domácnosť či tím pri rovnakom zozname, aj keď sa mení.",
   "about_what": "Čo dokáže",
-  "about_w1": "Rýchly zápis: napíš riadok a stlač Enter. Prvý riadok bude názov a z „Nákup: mlieko, vajcia, chlieb“ bude zoznam. Úloha, ktorá končí dňom, napríklad „Zubár zajtra“, dostane tento termín. Na telefónoch, ktoré to podporujú, môžeš aj diktovať alebo naskenovať čiarový kód produktu do zoznamu.",
+  "about_w1": "Rýchly zápis: napíš riadok a stlač Enter. Prvý riadok bude názov a z „Nákup: mlieko, vajcia, chlieb“ bude zoznam. Úloha, ktorá končí dňom alebo dátumom, napríklad „Zubár zajtra“ alebo „Nájom 12.11.“, dostane tento termín. Na telefónoch, ktoré to podporujú, môžeš aj diktovať alebo naskenovať čiarový kód produktu do zoznamu.",
   "about_w2": "Poznámky v Markdowne, zobrazené formátovane a upravované ako obyčajný text, so staršími verziami na obnovenie.",
   "about_w3": "Zoznamy na odškrtávanie, preusporiadanie ťahaním alebo klávesnicou a opätovné použitie; pri písaní navrhuje položky zo starších zoznamov.",
   "about_w4": "Úlohy s prioritou, stavom, termínom a opakovaním, pre kohokoľvek alebo pre jedného člena, s pohľadmi Dnes a Nadchádzajúce.",

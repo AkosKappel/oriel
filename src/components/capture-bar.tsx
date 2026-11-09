@@ -121,7 +121,7 @@ export function CaptureBar({
       )
     : null
   const draft = appendDraft ? null : parseCapture(text, type)
-  // "Call the dentist tomorrow": the last word sets the due day, unless the user keeps it as text.
+  // "Call the dentist tomorrow" or "Pay rent 12.11.": the end sets the due day, unless kept as typed.
   const [keepDayWord, setKeepDayWord] = useState(false)
   const due =
     draft?.type === 'task' && !keepDayWord

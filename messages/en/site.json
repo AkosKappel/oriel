@@ -55,7 +55,7 @@
   "about_title": "About Oriel",
   "about_lead": "Oriel is one calm place for notes, lists and tasks. Everything is saved on your device first, so it opens instantly and works without a connection. With an account it syncs between your devices, and shared spaces keep a household or a team on the same list as it changes.",
   "about_what": "What it does",
-  "about_w1": "Quick capture: type a line and press Enter. A first line becomes the title, and “Groceries: milk, eggs, bread” becomes a list. A task ending in a day, such as “Call the dentist tomorrow”, gets that due day. On phones that support it, you can also dictate or scan a product’s barcode into a list.",
+  "about_w1": "Quick capture: type a line and press Enter. A first line becomes the title, and “Groceries: milk, eggs, bread” becomes a list. A task ending in a day or date, such as “Call the dentist tomorrow” or “Pay rent 12/11”, gets that due day. On phones that support it, you can also dictate or scan a product’s barcode into a list.",
   "about_w2": "Notes in Markdown, shown formatted and edited as plain text, with earlier versions to restore.",
   "about_w3": "Lists to check off, reorder by dragging or with the keyboard, and reuse; entries from earlier lists are suggested as you type.",
   "about_w4": "Tasks with a priority, a status, a due day and a repeat, for anyone or for one member, with Today and Upcoming views.",

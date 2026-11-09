@@ -53,7 +53,7 @@ describe('CaptureBar', () => {
     })
   })
 
-  it('sets a due day from the last word of a task, unless the word is kept', async () => {
+  it('sets a due day from the end of a task, unless it is kept as typed', async () => {
     const user = userEvent.setup()
     renderPage(<CaptureBar store={store} preferredType="task" />)
     const field = await screen.findByRole('textbox', { name: 'New task' })
@@ -69,11 +69,20 @@ describe('CaptureBar', () => {
       due_on: tomorrow,
     })
 
-    await user.type(field, 'Read Tomorrow')
-    await user.click(screen.getByRole('button', { name: 'Keep the word' }))
-    expect(document.activeElement).toBe(field)
+    await user.type(field, 'Book the venue in 3 days')
     await user.keyboard('{Enter}')
     await waitFor(() => expect(store.items.size).toBe(2))
+    expect(
+      store.items.toArray.find((item) => item.title === 'Book the venue'),
+    ).toMatchObject({
+      due_on: nextDue(nextDue(tomorrow, 'daily', today), 'daily', today),
+    })
+
+    await user.type(field, 'Read Tomorrow')
+    await user.click(screen.getByRole('button', { name: 'Keep as typed' }))
+    expect(document.activeElement).toBe(field)
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(store.items.size).toBe(3))
     expect(
       store.items.toArray.find((item) => item.title === 'Read Tomorrow'),
     ).toMatchObject({ due_on: null })
