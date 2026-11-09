@@ -2,6 +2,7 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { localDay, nextDue } from '#/lib/dates'
 import { store } from '#/test/client'
 import { findUndo, renderPage } from '#/test/dom'
 import { CaptureBar } from './capture-bar'
@@ -50,6 +51,32 @@ describe('CaptureBar', () => {
       type: 'list',
       title: 'Groceries',
     })
+  })
+
+  it('sets a due day from the last word of a task, unless the word is kept', async () => {
+    const user = userEvent.setup()
+    renderPage(<CaptureBar store={store} preferredType="task" />)
+    const field = await screen.findByRole('textbox', { name: 'New task' })
+    const today = localDay(new Date())
+    const tomorrow = nextDue(today, 'daily', today)
+
+    await user.type(field, 'Call the dentist tomorrow')
+    expect(screen.getByText(/^Due \w+day, /)).toBeTruthy()
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(store.items.size).toBe(1))
+    expect(store.items.toArray[0]).toMatchObject({
+      title: 'Call the dentist',
+      due_on: tomorrow,
+    })
+
+    await user.type(field, 'Read Tomorrow')
+    await user.click(screen.getByRole('button', { name: 'Keep the word' }))
+    expect(document.activeElement).toBe(field)
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(store.items.size).toBe(2))
+    expect(
+      store.items.toArray.find((item) => item.title === 'Read Tomorrow'),
+    ).toMatchObject({ due_on: null })
   })
 
   it('ignores Enter on an empty field', async () => {

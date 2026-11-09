@@ -11,15 +11,17 @@ import { toast } from 'sonner'
 import { DictateButton } from '#/components/dictate-button'
 import { itemLabel } from '#/components/item-labels'
 import { ChoiceGroup } from '#/components/ui/choice-group'
-import { parseAppend, parseCapture } from '#/data/capture'
+import { parseAppend, parseCapture, readDueDay } from '#/data/capture'
 import { itemsInView } from '#/data/organize'
 import { type ItemType, itemTypes, newItemSchema } from '#/data/schema'
 import type { Store } from '#/data/store'
+import { formatDay, localDay } from '#/lib/dates'
 import { canEdit, useSpaces } from '#/lib/spaces'
 import { requestPersistentStorage } from '#/lib/storage'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 import { m } from '#/paraglide/messages.js'
+import { getLocale } from '#/paraglide/runtime.js'
 
 const captureChoices = () =>
   itemTypes.map((value) => ({ value, label: itemLabel(value) }))
@@ -119,6 +121,12 @@ export function CaptureBar({
       )
     : null
   const draft = appendDraft ? null : parseCapture(text, type)
+  // "Call the dentist tomorrow": the last word sets the due day, unless the user keeps it as text.
+  const [keepDayWord, setKeepDayWord] = useState(false)
+  const due =
+    draft?.type === 'task' && !keepDayWord
+      ? readDueDay(draft.title, localDay(new Date()), getLocale())
+      : null
 
   function chooseType(next: ItemType) {
     setType(next)
@@ -179,7 +187,9 @@ export function CaptureBar({
     const captured = text
     setText('')
     setError(null)
-    store.createItem(draft, { spaceId }).then(
+    setKeepDayWord(false)
+    const saving = due ? { ...draft, title: due.title } : draft
+    store.createItem(saving, { spaceId, dueOn: due?.due }).then(
       (id) => {
         toast(m.capture_saved({ type: draft.type }), {
           action: {
@@ -229,7 +239,11 @@ export function CaptureBar({
               title: draft.title,
               count: draft.entries.length,
             })
-          : '')
+          : due
+            ? m.draft_task_due({
+                day: formatDay(new Date(`${due.due}T12:00:00`)),
+              })
+            : '')
 
   return (
     <form
@@ -260,6 +274,7 @@ export function CaptureBar({
           onChange={(event) => {
             setText(event.target.value)
             setError(null)
+            if (!event.target.value.trim()) setKeepDayWord(false)
           }}
           onKeyDown={handleKeyDown}
           placeholder={m.capture_placeholder({ type })}
@@ -291,11 +306,22 @@ export function CaptureBar({
         id={hintId}
         role={error ? 'alert' : undefined}
         className={cn(
-          'min-h-6 truncate pt-1.5 text-xs',
+          'flex min-h-6 pt-1.5 text-xs',
           error ? 'text-destructive' : 'text-muted-foreground',
         )}
       >
-        {hint}
+        <span className="min-w-0 truncate">{hint}</span>
+        {due && !error && (
+          <Button
+            onPress={() => {
+              setKeepDayWord(true)
+              fieldRef.current?.focus()
+            }}
+            className="ml-3 shrink-0 rounded-sm text-muted-foreground underline underline-offset-2 hover:text-foreground data-focus-visible:outline-2"
+          >
+            {m.draft_keep_day_word()}
+          </Button>
+        )}
       </p>
     </form>
   )

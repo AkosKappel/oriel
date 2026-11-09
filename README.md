@@ -31,6 +31,7 @@ The capture field sits at the bottom of the screen. Pick Note, List or Task, typ
 
 - The first line is the title. Further lines become the note body, the task details or the list entries (bullets and `[ ]` are removed).
 - A list fits on one line: `Groceries: milk, eggs, bread`.
+- A task ending in a day gets that due day: `Call the dentist tomorrow`, `Pay rent fri`, `Gym on Monday` (a weekday means the next one to come). Hungarian and Slovak words work too (`holnap`, `pénteken`, `zajtra`, `v piatok`). The line under the field shows the day before saving, and "Keep the word" leaves the title as typed.
 - A long pasted paragraph becomes a note with a short title and the full text kept.
 - Where the browser supports speech recognition (Chrome, Safari), the microphone button dictates into the field. The browser's speech service needs a connection, so it is off while offline.
 

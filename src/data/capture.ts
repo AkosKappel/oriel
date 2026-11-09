@@ -1,3 +1,4 @@
+import type { Locale } from '#/paraglide/runtime.js'
 import { fold } from './organize'
 import type { Item, ItemType } from './schema'
 
@@ -108,4 +109,94 @@ export function parseAppend(text: string, lists: Item[]): AppendDraft | null {
     .map((line) => stripBullet(line.trim()).trim())
     .filter(Boolean)
   return { list, entries }
+}
+
+// Day words a task may end with, folded (lowercase, no accents). A number is days from today, a
+// weekday (0 Sunday to 6 Saturday) the next one to come. English counts in every language.
+type DayWord = { days: number } | { weekday: number }
+const weekdays = (names: string[][]) =>
+  names.flatMap((forms, weekday) =>
+    forms.map((form) => [form, { weekday }] as const),
+  )
+const dayWords: Record<Locale, Map<string, DayWord>> = {
+  en: new Map<string, DayWord>([
+    ['today', { days: 0 }],
+    ['tonight', { days: 0 }],
+    ['tomorrow', { days: 1 }],
+    ['tmrw', { days: 1 }],
+    ...weekdays([
+      ['sunday', 'sun'],
+      ['monday', 'mon'],
+      ['tuesday', 'tue', 'tues'],
+      ['wednesday', 'wed'],
+      ['thursday', 'thu', 'thurs'],
+      ['friday', 'fri'],
+      ['saturday', 'sat'],
+    ]),
+  ]),
+  hu: new Map<string, DayWord>([
+    ['ma', { days: 0 }],
+    ['holnap', { days: 1 }],
+    ['holnaputan', { days: 2 }],
+    ...weekdays([
+      ['vasarnap'],
+      ['hetfo', 'hetfon'],
+      ['kedd', 'kedden'],
+      ['szerda', 'szerdan'],
+      ['csutortok', 'csutortokon'],
+      ['pentek', 'penteken'],
+      ['szombat', 'szombaton'],
+    ]),
+  ]),
+  sk: new Map<string, DayWord>([
+    ['dnes', { days: 0 }],
+    ['zajtra', { days: 1 }],
+    ['pozajtra', { days: 2 }],
+    ...weekdays([
+      ['nedela', 'nedelu'],
+      ['pondelok'],
+      ['utorok'],
+      ['streda', 'stredu'],
+      ['stvrtok'],
+      ['piatok'],
+      ['sobota', 'sobotu'],
+    ]),
+  ]),
+}
+// Words that may stand before a weekday: "on Friday", "v piatok", "vo štvrtok".
+const dayPrepositions = new Set(['on', 'v', 'vo'])
+
+/**
+ * Reads a due day from the last word of a task's title ("Call the dentist tomorrow", "Pay rent
+ * fri", "Nájom v piatok") and returns the title without it. `today` is the device's day
+ * (`YYYY-MM-DD`). Returns null when the title does not end in a day word, or is nothing else.
+ */
+export function readDueDay(
+  title: string,
+  today: string,
+  locale: Locale,
+): { title: string; due: string } | null {
+  const words = title.trim().split(/\s+/)
+  const last = fold(words.at(-1) ?? '').replace(/[.,!?]+$/, '')
+  const word = dayWords[locale].get(last) ?? dayWords.en.get(last)
+  if (!word) return null
+  let used = 1
+  if (
+    'weekday' in word &&
+    words.length > 2 &&
+    dayPrepositions.has(fold(words.at(-2) ?? ''))
+  )
+    used = 2
+  if (words.length <= used) return null
+
+  // Noon UTC, so no time zone or daylight saving change moves the day.
+  const [year, month, day] = today.split('-').map(Number)
+  const start = new Date(Date.UTC(year, month - 1, day, 12))
+  const ahead =
+    'days' in word ? word.days : (word.weekday - start.getUTCDay() + 7) % 7 || 7
+  start.setUTCDate(start.getUTCDate() + ahead)
+  return {
+    title: words.slice(0, -used).join(' '),
+    due: start.toISOString().slice(0, 10),
+  }
 }

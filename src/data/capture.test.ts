@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseAppend, parseCapture, readEntryLine } from './capture'
+import { parseAppend, parseCapture, readDueDay, readEntryLine } from './capture'
 import type { Item } from './schema'
 
 describe('parseCapture', () => {
@@ -137,5 +137,75 @@ describe('parseAppend', () => {
       list: lists[1],
       entries: [],
     })
+  })
+})
+
+describe('readDueDay', () => {
+  // Monday 9 November 2026.
+  const today = '2026-11-09'
+
+  it('reads today, tomorrow and the day after from the end of a task', () => {
+    expect(readDueDay('Call the dentist tomorrow', today, 'en')).toEqual({
+      title: 'Call the dentist',
+      due: '2026-11-10',
+    })
+    expect(readDueDay('Water the plants today', today, 'en')?.due).toBe(
+      '2026-11-09',
+    )
+    expect(readDueDay('Pay rent tmrw.', today, 'en')).toEqual({
+      title: 'Pay rent',
+      due: '2026-11-10',
+    })
+  })
+
+  it('takes a weekday as the next one to come, never today', () => {
+    expect(readDueDay('Pay rent fri', today, 'en')?.due).toBe('2026-11-13')
+    expect(readDueDay('Gym on Monday', today, 'en')).toEqual({
+      title: 'Gym',
+      due: '2026-11-16',
+    })
+    expect(readDueDay('Book tickets Sunday', today, 'en')?.due).toBe(
+      '2026-11-15',
+    )
+  })
+
+  it('reads Hungarian and Slovak, with their case endings and prepositions', () => {
+    expect(readDueDay('Fogorvos holnap', today, 'hu')).toEqual({
+      title: 'Fogorvos',
+      due: '2026-11-10',
+    })
+    expect(readDueDay('Lakbér pénteken', today, 'hu')?.due).toBe('2026-11-13')
+    expect(readDueDay('Bevásárlás holnapután', today, 'hu')?.due).toBe(
+      '2026-11-11',
+    )
+    expect(readDueDay('Zubár zajtra', today, 'sk')).toEqual({
+      title: 'Zubár',
+      due: '2026-11-10',
+    })
+    expect(readDueDay('Nájom v piatok', today, 'sk')).toEqual({
+      title: 'Nájom',
+      due: '2026-11-13',
+    })
+    expect(readDueDay('Tréning vo štvrtok', today, 'sk')?.due).toBe(
+      '2026-11-12',
+    )
+    // English works in every language.
+    expect(readDueDay('Zubár tomorrow', today, 'sk')?.due).toBe('2026-11-10')
+  })
+
+  it('leaves titles alone when the day word is not a date at their end', () => {
+    expect(readDueDay('Tomorrow', today, 'en')).toBeNull()
+    expect(readDueDay('Monday meeting notes', today, 'en')).toBeNull()
+    expect(readDueDay('Read Tomorrowland', today, 'en')).toBeNull()
+    expect(readDueDay('Visit grandma', today, 'hu')).toBeNull()
+    // Another language's words only count in that language.
+    expect(readDueDay('Fogorvos holnap', today, 'en')).toBeNull()
+  })
+
+  it('crosses months and years', () => {
+    expect(readDueDay('Party tomorrow', '2026-12-31', 'en')?.due).toBe(
+      '2027-01-01',
+    )
+    expect(readDueDay('Party fri', '2027-02-27', 'en')?.due).toBe('2027-03-05')
   })
 })

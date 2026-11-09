@@ -299,6 +299,8 @@
   "append_add_count": "Pridať {count} do zoznamu {list}",
   "append_added": "Pridané do zoznamu {list}: {count}",
   "append_too_long": "Nepodarilo sa pridať. Každá položka musí mať menej ako 500 znakov.",
+  "draft_task_due": "Termín: {day}",
+  "draft_keep_day_word": "Nechať v názve",
   "draft_list_items": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],

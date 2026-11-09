@@ -283,6 +283,8 @@
   "append_add_count": "{count} hozzáadása ehhez: {list}",
   "append_added": "{count} hozzáadva ehhez: {list}",
   "append_too_long": "Nem sikerült hozzáadni. Minden tétel legyen 500 karakternél rövidebb.",
+  "draft_task_due": "Határidő: {day}",
+  "draft_keep_day_word": "Maradjon a címben",
   "draft_list_items": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],

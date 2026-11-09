@@ -322,8 +322,12 @@ export function createStore(database: CommonPowerSyncDatabase) {
     },
 
     /** Creates an item, and for a list its entries, in one transaction. */
-    async createItem(input: NewItem, options: { spaceId?: string } = {}) {
+    async createItem(
+      input: NewItem,
+      options: { spaceId?: string; dueOn?: string } = {},
+    ) {
       const { type, title, body, entries: texts } = newItemSchema.parse(input)
+      const dueOn = dueSchema.parse(options.dueOn ?? null)
       // A shared space when capturing into one, otherwise the owner's personal space.
       const spaceId = options.spaceId ?? owner?.spaceId ?? null
       const id = crypto.randomUUID()
@@ -341,7 +345,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           pinned_at: null,
           priority: 0,
           status: null,
-          due_on: null,
+          due_on: dueOn,
           repeat: null,
           snoozed_until: null,
           assigned_to: null,
