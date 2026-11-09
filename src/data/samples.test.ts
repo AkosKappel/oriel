@@ -3,6 +3,12 @@ import { database, store } from '#/test/client'
 import { parseExport } from './export'
 import { searchItems } from './organize'
 import { buildSamples } from './samples'
+import {
+  entrySearchQuery,
+  groupMatches,
+  prepareSearch,
+  queryWords,
+} from './search'
 
 describe('sample data', () => {
   it('imports completely through the normal import, on a device without an account', async () => {
@@ -19,12 +25,18 @@ describe('sample data', () => {
     )
     expect(stored.n).toBe(entryCount)
 
+    await prepareSearch(database)
     const rows = store.items.toArray
-    const titles = (query: string) =>
-      searchItems(rows, store.entries.toArray, query).map((item) => item.title)
-    expect(titles('arvizturo')).toEqual(['Árvíztűrő tükörfúrógép'])
-    expect(titles('cafe')).toContain('Größe, Straße, façade, niño, smörgåsbord')
-    expect(titles('Молоко')).toEqual(['Список покупок'])
+    const titles = async (query: string) => {
+      const { sql, params } = entrySearchQuery(queryWords(query))
+      const matches = groupMatches(await database.getAll(sql, params))
+      return searchItems(rows, query, matches).map((item) => item.title)
+    }
+    expect(await titles('arvizturo')).toEqual(['Árvíztűrő tükörfúrógép'])
+    expect(await titles('cafe')).toContain(
+      'Größe, Straße, façade, niño, smörgåsbord',
+    )
+    expect(await titles('Молоко')).toEqual(['Список покупок'])
   })
 
   it('puts due dates relative to the given day', () => {

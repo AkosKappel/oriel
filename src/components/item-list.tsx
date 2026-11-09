@@ -11,7 +11,6 @@ import {
 import { Checkbox } from '#/components/ui/checkbox'
 import {
   assignedTo,
-  countEntries,
   type DueFilter,
   itemsInView,
   matchRanges,
@@ -24,16 +23,18 @@ import {
   withStatus,
 } from '#/data/organize'
 import type { Item, ItemType, TaskStatus } from '#/data/schema'
+import type { EntrySummary } from '#/data/search'
 import type { Store } from '#/data/store'
 import { useAccount } from '#/lib/account'
 import { describeDue, formatDay, formatShortDate, localDay } from '#/lib/dates'
 import { tick } from '#/lib/haptics'
 import { canEdit, type SpaceView } from '#/lib/spaces'
+import { useEntryMatches, useEntrySummaries } from '#/lib/use-entry-search'
 import { useRows } from '#/lib/use-rows'
 import { cn } from '#/lib/utils'
 import { m } from '#/paraglide/messages.js'
 
-type EntryCounts = ReturnType<typeof countEntries>
+type EntryCounts = Map<string, EntrySummary>
 
 export function ItemList({
   store,
@@ -63,7 +64,9 @@ export function ItemList({
   spaces: Map<string, SpaceView>
 }) {
   const { data: items, isLoading } = useRows(store.items)
-  const { data: entries, isLoading: entriesLoading } = useRows(store.entries)
+  const entryMatches = useEntryMatches(store.database, query)
+  // Null until read, so lists do not read "Empty list" for a moment.
+  const counts = useEntrySummaries(store.database)
   const account = useAccount()
 
   if (isLoading) return null
@@ -77,8 +80,8 @@ export function ItemList({
             spaceId ? items.filter((item) => item.space_id === spaceId) : items,
             view,
           ),
-          entries,
           query,
+          entryMatches,
         ),
         type === 'task' ? status : undefined,
       ),
@@ -87,8 +90,6 @@ export function ItemList({
     ),
     type === 'task' && mine ? account?.userId : undefined,
   )
-  // Until entries arrive every list would read "Empty list" for a moment.
-  const counts = entriesLoading ? null : countEntries(entries)
 
   if (view) {
     return (

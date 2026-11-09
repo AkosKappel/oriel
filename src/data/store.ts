@@ -65,15 +65,23 @@ export function createStore(database: CommonPowerSyncDatabase) {
     }),
   )
 
-  const entries = createCollection(
-    powerSyncCollectionOptions({
-      id: 'entries',
-      database,
-      table: appSchema.props.entries,
-      schema: entrySchema,
-      onDeserializationError,
-    }),
-  )
+  // Created on first use: PowerSync collections load their whole table as soon as they exist, and
+  // home reads entries through SQL (`search.ts`), so they load once a list is opened.
+  const createEntries = () =>
+    createCollection(
+      powerSyncCollectionOptions({
+        id: 'entries',
+        database,
+        table: appSchema.props.entries,
+        schema: entrySchema,
+        onDeserializationError,
+      }),
+    )
+  let entriesCollection: ReturnType<typeof createEntries> | undefined
+  const entries = () => {
+    entriesCollection ??= createEntries()
+    return entriesCollection
+  }
 
   // Read-only on the device: filled by sync, changed through the sharing server functions.
   const spaces = createCollection(
@@ -153,14 +161,18 @@ export function createStore(database: CommonPowerSyncDatabase) {
     const spaceId = items.get(itemId)?.space_id ?? owner?.spaceId ?? null
     const rows = newEntries(itemId, spaceId, parsed, now())
     await inTransaction(() => {
-      entries.insert(rows)
+      entries().insert(rows)
     })
     return rows.map((row) => row.id)
   }
 
   const store = {
+    /** For SQL reads that would otherwise load a whole collection (`search.ts`). */
+    database,
     items,
-    entries,
+    get entries() {
+      return entries()
+    },
     spaces,
     members,
 
@@ -248,12 +260,12 @@ export function createStore(database: CommonPowerSyncDatabase) {
      * were, for `undoConversion`.
      */
     async convertItem(id: string, type: 'note' | 'list'): Promise<Snapshot> {
-      await Promise.all([items.preload(), entries.preload()])
+      await Promise.all([items.preload(), entries().preload()])
       const item = items.get(id)
       if (!item || item.type === type || item.type === 'task') {
         return { items: [], entries: [] }
       }
-      const before = entries.toArray.filter((entry) => entry.item_id === id)
+      const before = entries().toArray.filter((entry) => entry.item_id === id)
       const timestamp = now()
 
       if (type === 'list') {
@@ -281,7 +293,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
             draft.body = ''
             draft.updated_at = timestamp
           })
-          if (rows.length > 0) entries.insert(rows)
+          if (rows.length > 0) entries().insert(rows)
         })
       } else {
         const lines = sortEntries(before).map(
@@ -296,7 +308,8 @@ export function createStore(database: CommonPowerSyncDatabase) {
             draft.body = body
             draft.updated_at = timestamp
           })
-          if (before.length > 0) entries.delete(before.map((entry) => entry.id))
+          if (before.length > 0)
+            entries().delete(before.map((entry) => entry.id))
         })
       }
       return { items: [item], entries: before }
@@ -306,8 +319,8 @@ export function createStore(database: CommonPowerSyncDatabase) {
     async undoConversion(snapshot: Snapshot) {
       const [previous] = snapshot.items
       if (!previous || !items.has(previous.id)) return
-      await entries.preload()
-      const current = entries.toArray.filter(
+      await entries().preload()
+      const current = entries().toArray.filter(
         (entry) => entry.item_id === previous.id,
       )
       await inTransaction(() => {
@@ -316,8 +329,9 @@ export function createStore(database: CommonPowerSyncDatabase) {
           draft.body = previous.body
           draft.updated_at = now()
         })
-        if (current.length > 0) entries.delete(current.map((entry) => entry.id))
-        if (snapshot.entries.length > 0) entries.insert(snapshot.entries)
+        if (current.length > 0)
+          entries().delete(current.map((entry) => entry.id))
+        if (snapshot.entries.length > 0) entries().insert(snapshot.entries)
       })
     },
 
@@ -356,7 +370,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
           updated_at: timestamp,
         })
         if (texts.length > 0) {
-          entries.insert(newEntries(id, spaceId, texts, timestamp))
+          entries().insert(newEntries(id, spaceId, texts, timestamp))
         }
       })
       return id
@@ -370,8 +384,8 @@ export function createStore(database: CommonPowerSyncDatabase) {
     async duplicateItem(id: string, copyTitle: (title: string) => string) {
       const source = items.get(id)
       if (!source) throw new Error('No such item')
-      const texts = entries.toArray
-        .filter((entry) => entry.item_id === id)
+      const texts = entries()
+        .toArray.filter((entry) => entry.item_id === id)
         .sort((a, b) => a.position - b.position)
         .map((entry) => entry.text)
       return store.createItem(
@@ -545,7 +559,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
      * owner edits; the server refuses the rest anyway, and some editor's device will do them.
      */
     async deleteTrashedBefore(cutoff: string): Promise<Snapshot> {
-      await Promise.all([items.preload(), entries.preload(), members.preload()])
+      await Promise.all([items.preload(), members.preload()])
       const editable = new Set(
         members.toArray
           .filter(
@@ -560,18 +574,19 @@ export function createStore(database: CommonPowerSyncDatabase) {
           item.deleted_at <= cutoff &&
           (item.space_id === null || editable.has(item.space_id)),
       )
+      // Runs on every start of home: entries load only when there is something to delete.
+      if (doomed.length === 0) return { items: [], entries: [] }
       const ids = new Set(doomed.map((item) => item.id))
-      const doomedEntries = entries.toArray.filter((entry) =>
+      await entries().preload()
+      const doomedEntries = entries().toArray.filter((entry) =>
         ids.has(entry.item_id),
       )
-      if (doomed.length > 0) {
-        await inTransaction(() => {
-          if (doomedEntries.length > 0) {
-            entries.delete(doomedEntries.map((entry) => entry.id))
-          }
-          items.delete([...ids])
-        })
-      }
+      await inTransaction(() => {
+        if (doomedEntries.length > 0) {
+          entries().delete(doomedEntries.map((entry) => entry.id))
+        }
+        items.delete([...ids])
+      })
       return { items: doomed, entries: doomedEntries }
     },
 
@@ -580,12 +595,13 @@ export function createStore(database: CommonPowerSyncDatabase) {
      * orphaned. Returns what was deleted, for `restore`.
      */
     async deleteItem(id: string): Promise<Snapshot> {
-      await Promise.all([items.preload(), entries.preload()])
+      await Promise.all([items.preload(), entries().preload()])
       const item = items.get(id)
       if (!item) return { items: [], entries: [] }
-      const removed = entries.toArray.filter((entry) => entry.item_id === id)
+      const removed = entries().toArray.filter((entry) => entry.item_id === id)
       await inTransaction(() => {
-        if (removed.length > 0) entries.delete(removed.map((entry) => entry.id))
+        if (removed.length > 0)
+          entries().delete(removed.map((entry) => entry.id))
         items.delete(id)
       })
       return { items: [item], entries: removed }
@@ -642,7 +658,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
       if (newItems.length > 0) {
         await inTransaction(() => {
           items.insert(newItems)
-          if (newEntries.length > 0) entries.insert(newEntries)
+          if (newEntries.length > 0) entries().insert(newEntries)
         })
       }
       return {
@@ -656,7 +672,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
       if (snapshot.items.length === 0 && snapshot.entries.length === 0) return
       await inTransaction(() => {
         if (snapshot.items.length > 0) items.insert(snapshot.items)
-        if (snapshot.entries.length > 0) entries.insert(snapshot.entries)
+        if (snapshot.entries.length > 0) entries().insert(snapshot.entries)
       })
     },
 
@@ -670,7 +686,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
     async updateEntryText(id: string, text: string) {
       const parsed = entryTextSchema.parse(text)
       await saved(
-        entries.update(id, (draft) => {
+        entries().update(id, (draft) => {
           draft.text = parsed
           draft.updated_at = now()
         }),
@@ -679,7 +695,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
 
     async setEntryPosition(id: string, position: number) {
       await saved(
-        entries.update(id, (draft) => {
+        entries().update(id, (draft) => {
           draft.position = position
           draft.updated_at = now()
         }),
@@ -689,7 +705,7 @@ export function createStore(database: CommonPowerSyncDatabase) {
     async setEntryCompleted(id: string, completed: boolean) {
       const timestamp = now()
       await saved(
-        entries.update(id, (draft) => {
+        entries().update(id, (draft) => {
           draft.completed_at = completed ? timestamp : null
           draft.completed_by = completed ? (owner?.userId ?? null) : null
           draft.updated_at = timestamp
@@ -698,18 +714,18 @@ export function createStore(database: CommonPowerSyncDatabase) {
     },
 
     async deleteEntry(id: string) {
-      await saved(entries.delete(id))
+      await saved(entries().delete(id))
     },
 
     /** Removes the checked entries of a list. Returns them, for `restore`. */
     async clearCompletedEntries(itemId: string): Promise<Snapshot> {
-      await entries.preload()
-      const removed = entries.toArray.filter(
+      await entries().preload()
+      const removed = entries().toArray.filter(
         (entry) => entry.item_id === itemId && entry.completed_at !== null,
       )
       if (removed.length > 0) {
         await inTransaction(() => {
-          entries.delete(removed.map((entry) => entry.id))
+          entries().delete(removed.map((entry) => entry.id))
         })
       }
       return { items: [], entries: removed }
@@ -720,14 +736,14 @@ export function createStore(database: CommonPowerSyncDatabase) {
      * entries as they were, for `restoreChecks`.
      */
     async uncheckAllEntries(itemId: string): Promise<Entry[]> {
-      await entries.preload()
-      const checked = entries.toArray.filter(
+      await entries().preload()
+      const checked = entries().toArray.filter(
         (entry) => entry.item_id === itemId && entry.completed_at !== null,
       )
       if (checked.length > 0) {
         const timestamp = now()
         await inTransaction(() => {
-          entries.update(
+          entries().update(
             checked.map((entry) => entry.id),
             (drafts) => {
               for (const draft of drafts) {
@@ -744,11 +760,11 @@ export function createStore(database: CommonPowerSyncDatabase) {
 
     /** Puts back who checked what and when, for Undo after `uncheckAllEntries`. */
     async restoreChecks(previous: Entry[]) {
-      const present = previous.filter((entry) => entries.has(entry.id))
+      const present = previous.filter((entry) => entries().has(entry.id))
       if (present.length === 0) return
       const byId = new Map(present.map((entry) => [entry.id, entry]))
       await inTransaction(() => {
-        entries.update(
+        entries().update(
           present.map((entry) => entry.id),
           (drafts) => {
             for (const draft of drafts) {

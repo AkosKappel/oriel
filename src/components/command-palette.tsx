@@ -17,6 +17,7 @@ import { fold, itemsInView, searchItems } from '#/data/organize'
 import type { ItemType } from '#/data/schema'
 import type { Store } from '#/data/store'
 import { useAccount } from '#/lib/account'
+import { useEntryMatches } from '#/lib/use-entry-search'
 import { useRows } from '#/lib/use-rows'
 import { m } from '#/paraglide/messages.js'
 
@@ -52,7 +53,7 @@ export function CommandPalette({
   const navigate = useNavigate()
   const account = useAccount()
   const { data: items } = useRows(store.items)
-  const { data: entries } = useRows(store.entries)
+  const entryMatches = useEntryMatches(store.database, query)
 
   const newItem = (type: ItemType) => () => {
     void navigate({ to: '/app', search: { type } }).then(focusCapture)
@@ -116,7 +117,7 @@ export function CommandPalette({
   )
   const inView = itemsInView(items)
   const matchingItems = words
-    ? searchItems(inView, entries, query).slice(0, itemLimit)
+    ? searchItems(inView, query, entryMatches).slice(0, itemLimit)
     : [...inView]
         .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
         .slice(0, recentLimit)

@@ -214,10 +214,11 @@ describe('searchItems', () => {
     item({ id: 'list', type: 'list', title: 'Groceries' }),
     item({ id: 'cafe', type: 'note', title: 'Café on Main Street' }),
   ]
-  const entries = [entry({ id: 'oat', text: 'Oat milk' })]
+  // As the search index reports it for "oat milk" in Groceries.
+  const entryMatches = new Map([['milk', new Set(['list'])]])
 
   it('keeps everything for an empty query', () => {
-    expect(ids(searchItems(items, entries, '  '))).toEqual([
+    expect(ids(searchItems(items, '  ', entryMatches))).toEqual([
       'vet',
       'list',
       'cafe',
@@ -225,14 +226,19 @@ describe('searchItems', () => {
   })
 
   it('matches titles, text and list entries, ignoring case and accents', () => {
-    expect(ids(searchItems(items, entries, 'bodri'))).toEqual(['vet'])
-    expect(ids(searchItems(items, entries, 'MILK'))).toEqual(['list'])
-    expect(ids(searchItems(items, entries, 'cafe'))).toEqual(['cafe'])
+    expect(ids(searchItems(items, 'bodri', entryMatches))).toEqual(['vet'])
+    expect(ids(searchItems(items, 'MILK', entryMatches))).toEqual(['list'])
+    expect(ids(searchItems(items, 'cafe', entryMatches))).toEqual(['cafe'])
   })
 
-  it('needs every word, in any order', () => {
-    expect(ids(searchItems(items, entries, 'street main'))).toEqual(['cafe'])
-    expect(ids(searchItems(items, entries, 'main vet'))).toEqual([])
+  it('needs every word, in any order, across the title and the entries', () => {
+    expect(ids(searchItems(items, 'street main', entryMatches))).toEqual([
+      'cafe',
+    ])
+    expect(ids(searchItems(items, 'main vet', entryMatches))).toEqual([])
+    expect(ids(searchItems(items, 'milk groceries', entryMatches))).toEqual([
+      'list',
+    ])
   })
 })
 
